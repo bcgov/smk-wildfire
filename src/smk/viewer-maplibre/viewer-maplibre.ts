@@ -913,16 +913,46 @@ ViewerMapLibre.prototype.temporaryFeature = function ( acetate: string, geometry
     const sourceId = 'smk-acetate-' + acetate
     const layerId  = sourceId
 
-    if ( !this.acetate[ acetate ] ) this.acetate[ acetate ] = { sourceId, layerId }
+    if ( !this.acetate[ acetate ] ) this.acetate[ acetate ] = { sourceId, layerId, markers: [] }
+
+    const ac = this.acetate[ acetate ]
+    if ( !ac.markers ) ac.markers = []
+
+    // MapLibre has no layer group to clear, so drop the markers from the last call.
+    ac.markers.forEach( function ( m: any ) { m.remove() } )
+    ac.markers = []
+
+    const all = toFeatureCollection( geometry )
+
+    // htmlMarker is the MapLibre answer to Leaflet's pointToLayer. A circle layer
+    // cannot draw a rotated icon, so a caller that needs one supplies an element.
+    const useMarkers     = typeof opt?.htmlMarker === 'function'
+    const markerFeatures = useMarkers ? all.features.filter( isPointFeature ) : []
+    const layerFeatures  = useMarkers ? all.features.filter( function ( f: any ) { return !isPointFeature( f ) } ) : all.features
+
+    markerFeatures.forEach( function ( this: any, f: any ) {
+        const el = opt.htmlMarker( f )
+        if ( !el ) return
+
+        ac.markers.push(
+            new maplibregl.Marker( Object.assign( { element: el }, opt.markerOptions ) )
+                .setLngLat( f.geometry.coordinates )
+                .addTo( this.map )
+        )
+    }, this )
+
+    // Skip the source and layer while only markers are drawn, so an empty
+    // acetate does not leave a stray layer of the wrong type behind.
+    if ( !layerFeatures.length && !this.map.getSource( sourceId ) ) return
 
     if ( !this.map.getSource( sourceId ) ) {
         this.map.addSource( sourceId, { type: 'geojson', data: emptyFC() } )
     }
 
     if ( !this.map.getLayer( layerId ) ) {
-        const geomType = geometry?.type || 'Feature'
-        const isPoint  = /Point/.test( geomType ) || /Point/.test( geometry?.geometry?.type || '' )
-        const isLine   = /LineString/.test( geomType ) || /LineString/.test( geometry?.geometry?.type || '' )
+        const geomType = layerFeatures[ 0 ]?.geometry?.type || ''
+        const isPoint  = /Point/.test( geomType )
+        const isLine   = /LineString/.test( geomType )
 
         const layerSpec: any = isPoint
             ? { id: layerId, type: 'circle', source: sourceId,
@@ -936,16 +966,19 @@ ViewerMapLibre.prototype.temporaryFeature = function ( acetate: string, geometry
         this.map.addLayer( layerSpec )
     }
 
-    const data = geometry
-        ? ( geometry.type === 'FeatureCollection' ? geometry
-          : geometry.type === 'Feature'           ? { type: 'FeatureCollection', features: [ geometry ] }
-          :                                         { type: 'FeatureCollection', features: [ { type: 'Feature', geometry, properties: {} } ] } )
-        : emptyFC()
-
-    this.map.getSource( sourceId )?.setData( data )
+    this.map.getSource( sourceId )?.setData( { type: 'FeatureCollection', features: layerFeatures } )
 }
 
 function emptyFC() { return { type: 'FeatureCollection', features: [] } }
+
+function isPointFeature( f: any ) { return f?.geometry?.type === 'Point' }
+
+function toFeatureCollection( geometry: any ): any {
+    if ( !geometry )                             return emptyFC()
+    if ( geometry.type === 'FeatureCollection' ) return geometry
+    if ( geometry.type === 'Feature' )           return { type: 'FeatureCollection', features: [ geometry ] }
+    return { type: 'FeatureCollection', features: [ { type: 'Feature', geometry, properties: {} } ] }
+}
 
 ViewerMapLibre.prototype.panToFeature = function ( feature: any, zoomIn: any ) {
     let bbox: number[]
