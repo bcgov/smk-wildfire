@@ -141,13 +141,28 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
     }
 
     const strokeColor   = style.strokeColor   || style.color     || '#3388ff'
-    const strokeWidth   = style.strokeWidth   || style.weight    || 2
-    const strokeOpacity = ( style.strokeOpacity != null ? style.strokeOpacity
-                          : style.opacity     != null ? style.opacity
+    const strokeWidth   = Number( style.strokeWidth || style.weight || 2 )
+    const strokeOpacity = ( style.strokeOpacity != null ? Number( style.strokeOpacity )
+                          : style.opacity     != null ? Number( style.opacity )
                           : 1 ) * opacity
     const fillColor     = style.fillColor     || strokeColor
-    const fillOpacity   = ( style.fillOpacity != null ? style.fillOpacity : 0.3 ) * opacity
-    const radius        = style.radius || 5
+    const fillOpacity   = ( style.fillOpacity != null ? Number( style.fillOpacity ) : 0.3 ) * opacity
+
+    // A point takes strokeWidth as its diameter and a fixed 2px ring, which is
+    // the rule the Leaflet adapter uses. One style config then draws the same
+    // dot in either viewer.
+    const radius        = style.radius != null ? Number( style.radius )
+                        : style.strokeWidth != null ? strokeWidth / 2
+                        : 5
+    const pointStroke   = style.radius != null ? Math.max( 1, strokeWidth - 1 ) : 2
+
+    // A marker image replaces the dot, the same as Leaflet's L.icon.
+    const markerUrl     = style.markerUrl
+        ? self.resolveAttachmentUrl( style.markerUrl, null, 'png' )
+        : null
+    const markerSize    = ( style.markerSize   || [] ).map( Number )
+    const markerOffset  = ( style.markerOffset || [] ).map( Number )
+    const iconImageId   = id + '_icon'
 
     // ------------------------------------------------------------------
     // Clustering — used to prevent point overlap at low zooms.
@@ -162,9 +177,11 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
     //
     // Only Point/MultiPoint inputs cluster; polygons/lines pass through.
     // ------------------------------------------------------------------
-    const clusterCfg: any = ( cfg.cluster === true )
+    // useClustering is the name the Leaflet adapter and every SMK config use.
+    const clusterOpt: any = cfg.cluster != null ? cfg.cluster : cfg.useClustering
+    const clusterCfg: any = ( clusterOpt === true )
         ? {}
-        : ( cfg.cluster && typeof cfg.cluster === 'object' ? cfg.cluster : null )
+        : ( clusterOpt && typeof clusterOpt === 'object' ? clusterOpt : null )
 
     const clusterId        = id + '_cluster'
     const clusterCountId   = id + '_cluster_count'
@@ -176,6 +193,64 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
         sourceObj.clusterRadius  = clusterCfg.radius   != null ? clusterCfg.radius   : 50
         sourceObj.clusterMaxZoom = clusterCfg.maxZoom  != null ? clusterCfg.maxZoom  : 14
         if ( clusterCfg.minPoints != null ) sourceObj.clusterMinPoints = clusterCfg.minPoints
+    }
+
+    // A point is a marker image or a dot. The cluster case and the plain case
+    // build theirs from here, with a different filter.
+    function pointLayer( layerId: string, filter: any ): any {
+        if ( markerUrl ) {
+            const w = markerSize[ 0 ]
+            const h = markerSize[ 1 ]
+            return {
+                id:     layerId,
+                type:   'symbol',
+                source: id,
+                filter,
+                layout: {
+                    'icon-image':            iconImageId,
+                    'icon-allow-overlap':    true,
+                    'icon-ignore-placement': true,
+                    // markerOffset is Leaflet iconAnchor: pixels from the icon's
+                    // top left to the point. MapLibre offsets from the centre.
+                    ...( w && h && markerOffset.length === 2
+                        ? { 'icon-offset': [ w / 2 - markerOffset[ 0 ], h / 2 - markerOffset[ 1 ] ] }
+                        : {} ),
+                },
+            }
+        }
+
+        return {
+            id:     layerId,
+            type:   'circle',
+            source: id,
+            filter,
+            paint: {
+                'circle-radius':         radius,
+                'circle-color':          fillColor,
+                'circle-opacity':        fillOpacity || strokeOpacity,
+                'circle-stroke-color':   strokeColor,
+                'circle-stroke-width':   pointStroke,
+                'circle-stroke-opacity': strokeOpacity,
+            },
+        }
+    }
+
+    // MapLibre draws an icon from a registered image, not from a URL.
+    function loadIcon(): Promise<void> {
+        if ( !markerUrl || !self.map || !self.map.loadImage ) return Promise.resolve()
+        if ( self.map.hasImage( iconImageId ) ) return Promise.resolve()
+
+        return Promise.resolve( self.map.loadImage( markerUrl ) )
+            .then( ( res: any ) => {
+                const img = res && res.data ? res.data : res
+                if ( !img || self.map.hasImage( iconImageId ) ) return
+                self.map.addImage( iconImageId, img, {
+                    pixelRatio: markerSize[ 0 ] ? img.width / markerSize[ 0 ] : 1,
+                } )
+            } )
+            .catch( ( e: any ) => {
+                console.warn( 'vector maplibre layer "' + cfg.id + '" marker load failed:', e )
+            } )
     }
 
     const spec: any = {
@@ -254,19 +329,7 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
             },
         } )
 
-        spec.layers.push( {
-            id:     unclusteredId,
-            type:   'circle',
-            source: id,
-            filter: [ '!', [ 'has', 'point_count' ] ],
-            paint: {
-                'circle-radius':       radius,
-                'circle-color':        fillColor,
-                'circle-opacity':      fillOpacity || strokeOpacity,
-                'circle-stroke-color': strokeColor,
-                'circle-stroke-width': Math.max( 1, strokeWidth - 1 ),
-            },
-        } )
+        spec.layers.push( pointLayer( unclusteredId, [ '!', [ 'has', 'point_count' ] ] ) )
 
         // Click a cluster → zoom to its expansion zoom.
         spec._smk_onAdd = function ( map: any ) {
@@ -288,19 +351,8 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
             }
         }
     } else {
-        spec.layers.push( {
-            id:     circleId,
-            type:   'circle',
-            source: id,
-            filter: [ 'in', [ 'geometry-type' ], [ 'literal', [ 'Point', 'MultiPoint' ] ] ],
-            paint: {
-                'circle-radius':       radius,
-                'circle-color':        fillColor,
-                'circle-opacity':      fillOpacity || strokeOpacity,
-                'circle-stroke-color': strokeColor,
-                'circle-stroke-width': Math.max( 1, strokeWidth - 1 ),
-            },
-        } )
+        spec.layers.push( pointLayer( circleId,
+            [ 'in', [ 'geometry-type' ], [ 'literal', [ 'Point', 'MultiPoint' ] ] ] ) )
     }
 
     // ------------------------------------------------------------------
@@ -326,9 +378,10 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
     // Heatmap and cluster are independent; cluster always wins for the
     // unclustered points layer (since the source is clustered).
     // ------------------------------------------------------------------
-    const heatCfg: any = ( cfg.heatmap === true )
+    const heatOpt: any = cfg.heatmap != null ? cfg.heatmap : cfg.useHeatmap
+    const heatCfg: any = ( heatOpt === true )
         ? {}
-        : ( cfg.heatmap && typeof cfg.heatmap === 'object' ? cfg.heatmap : null )
+        : ( heatOpt && typeof heatOpt === 'object' ? heatOpt : null )
 
     if ( heatCfg ) {
         const heatId   = id + '_heat'
@@ -472,7 +525,7 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
         ? getProjection( cfg.projection )
         : Promise.resolve( ( pt: number[] ) => pt )
 
-    return projectPromise.then( function ( reproject ) {
+    return loadIcon().then( () => projectPromise ).then( function ( reproject ) {
         function project( data: any ) {
             return cfg.projection && data ? reprojectGeoJSON( data, reproject ) : data
         }

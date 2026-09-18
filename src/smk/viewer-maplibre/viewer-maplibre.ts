@@ -184,8 +184,19 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
 }
 
 ViewerMapLibre.prototype.destroy = function () {
-    if ( this.map ) this.map.remove()
-    Viewer.prototype.destroy.call( this )
+    const self = this
+
+    // Each layer adapter's cleanup cancels its queued frame and pending image.
+    // Without it they run after map.remove() and throw inside map.getSource.
+    Object.keys( self.viewerLayers || {} ).forEach( function ( id: string ) {
+        const vl = self.viewerLayers[ id ]
+        if ( !vl || typeof vl._smk_cleanup !== 'function' ) return
+        try { vl._smk_cleanup() } catch ( err ) { console.warn( err ) }
+        vl._smk_cleanup = null
+    } )
+
+    if ( self.map ) self.map.remove()
+    Viewer.prototype.destroy.call( self )
 }
 
 // ---------------------------------------------------------------------------
