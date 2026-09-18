@@ -20,6 +20,7 @@
     "release": "npm run build",
     "serve": "live-server . --open=debug --wait=100 --watch=dist/smk.umd.js,debug,test",
     "vite:dev": "vite",
+    "gallery": "vite --open /debug/gallery/",
     "vite:build": "vite build",
     "vite:preview": "vite preview",
     "typecheck": "tsc --noEmit",

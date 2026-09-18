@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SMK Gallery</title>
+    <link rel="stylesheet" href="./gallery.css">
+    <!-- TypeScript: serve with `npm run gallery`, not live-server. -->
+    <script type="module" src="./gallery.ts"></script>
+</head>
+<body data-gallery="starting">
+    <header class="g-bar">
+        <strong>SMK Gallery</strong>
+        <span class="g-muted">One component, no map</span>
+        <span class="g-spacer"></span>
+        <label>Theme <select id="g-theme"></select></label>
+        <label><input type="checkbox" id="g-mobile"> Mobile</label>
+    </header>
+
+    <nav id="g-nav" aria-label="Components"></nav>
+
+    <main class="g-main">
+        <section class="g-view">
+            <div class="g-title">
+                <h1 id="g-name"></h1>
+                <code id="g-source"></code>
+            </div>
+            <p class="g-muted"><span id="g-kind"></span> <span id="g-note"></span></p>
+            <p id="g-mobile-note" class="g-muted" hidden>SMK's orientation media queries read the window, not this frame.</p>
+            <div id="g-stage" class="g-stage"></div>
+        </section>
+
+        <aside class="g-inspector">
+            <section>
+                <div class="g-section-head">
+                    <h2>Props</h2>
+                    <button id="g-apply" type="button">Apply</button>
+                    <button id="g-reset" type="button">Reset</button>
+                </div>
+                <textarea id="g-props" spellcheck="false" aria-label="Props as JSON"></textarea>
+                <p id="g-json-error" class="g-error" role="alert"></p>
+            </section>
+            <section>
+                <div class="g-section-head">
+                    <h2>Events</h2>
+                    <button id="g-clear" type="button">Clear</button>
+                </div>
+                <ol id="g-log" class="g-log" aria-live="polite"></ol>
+            </section>
+        </aside>
+    </main>
+</body>
+</html>
