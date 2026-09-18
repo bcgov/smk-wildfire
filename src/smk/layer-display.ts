@@ -313,6 +313,20 @@ export interface View {
     [key: string]: unknown
 }
 
+/**
+ * Does this legend need the layer's name beside it?
+ *
+ * SMK 1.0 names a legend in the Legend panel only for a display a config
+ * classed 'smk-inline-legend' - one swatch that cannot say what it is. A
+ * GetLegendGraphic usually bakes its labels into the image and needs no name.
+ * A lone small untitled symbol does, so it gets the same class.
+ */
+function cannotNameItself( ls: any[] ): boolean {
+    if ( !Array.isArray( ls ) || ls.length !== 1 ) return false
+    const l = ls[ 0 ]
+    return !l.title && l.width <= 32 && l.height <= 32
+}
+
 export class LayerDisplayContext {
     root:    LayerDisplay.folder
     itemId:  Record<string, LayerDisplay[]>
@@ -443,6 +457,8 @@ export class LayerDisplayContext {
                 item.showLegend = 'waiting'
                 item.getLegends( layerCatalog, viewer, self )
                     .then( ls => {
+                        if ( !item.class && cannotNameItself( ls ) )
+                            item.class = 'smk-inline-legend'
                         item.legends = ls
                         if ( item.showLegend === 'waiting' ) item.showLegend = true
                     }, () => {

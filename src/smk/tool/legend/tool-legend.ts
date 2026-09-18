@@ -25,8 +25,11 @@ const factory = Tool.define( 'LegendTool',
     function ( this: any, smk: any ) {
         const self = this
 
+        // The pane floats over the map with nothing to say what it is. A host
+        // that wants no header sets title to null in its config.
         const model = {
             contexts: [],
+            title:    self.title == null ? 'Legend' : self.title,
         }
 
         this.vm = new Vue( {

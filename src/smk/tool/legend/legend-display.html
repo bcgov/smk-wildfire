@@ -13,11 +13,11 @@
         v-if="display.id != 'root'"
     >
         <span class="smk-legend-title"
-            v-if="!inGroup && display.class && display.legends && display.isActuallyVisible"
+            v-if="!inGroup && display.class && display.legends && display.legends.length && display.isActuallyVisible"
         >{{ display.title }}</span>
 
         <div class="smk-legend" 
-            v-if="display.legends && display.isActuallyVisible"
+            v-if="display.legends && display.legends.length && display.isActuallyVisible"
         >
             <div class="smk-legend-item" 
                 v-for="legend in display.legends"

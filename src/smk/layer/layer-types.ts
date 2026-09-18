@@ -128,6 +128,10 @@ class VectorLayer extends Layer {
                    + ( !!legend.line  ? 1 : 0 )
                    + ( !!legend.fill  ? 1 : 0 )
 
+        // Nothing to draw. A zero-width canvas gives toDataURL() 'data:,',
+        // which every legend renders as a broken image.
+        if ( mult === 0 ) return resolved( [] )
+
         const cv  = document.createElement( 'canvas' )
         cv.width  = width * mult
         cv.height = height
