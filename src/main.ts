@@ -24,7 +24,6 @@ import type { UTIL as UTILType }    from './smk/util'
 declare global {
     interface Window {
         SMK:       SMKNamespace
-        include:   IncludeLoader
         dojoConfig: Record<string, any>
     }
 }
@@ -93,12 +92,6 @@ export interface LayerConfig {
     minScale?:    number
     maxScale?:    number
     [key: string]: unknown
-}
-
-export interface IncludeLoader {
-    module: ( name: string, deps: string[] | null, factory: Function ) => void
-    tag:    ( name: string, attr?: any ) => any
-    SMK?:   boolean
 }
 
 // ---------------------------------------------------------------------------
