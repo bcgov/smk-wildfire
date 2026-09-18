@@ -16,6 +16,7 @@
 
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import { scanSupport } from './build/scan-support.js'
 import { execSync } from 'child_process'
 import { createRequire } from 'module'
 
@@ -37,6 +38,10 @@ export default defineConfig( {
         // The bundled Vue 2 reads process.env.NODE_ENV, which does not exist in a
         // browser. Without this the whole bundle throws before SMK is defined.
         'process.env.NODE_ENV': JSON.stringify( 'production' ),
+
+        // Which viewer implements which tool and layer type. Read from the
+        // file tree at build time, because nothing registers it at run time.
+        __SMK_SUPPORT__:     JSON.stringify( scanSupport( import.meta.dirname ) ),
 
         __SMK_COMMIT__:      JSON.stringify( git( 'rev-parse HEAD' ) ),
         __SMK_BRANCH__:      JSON.stringify( git( 'rev-parse --abbrev-ref HEAD' ) ),

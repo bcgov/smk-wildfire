@@ -22,6 +22,9 @@
 import { resolveContainer } from './util'
 import { BUILD } from './build-info'
 
+// Build-time constant injected by vite.config.js via `define`
+declare const __SMK_SUPPORT__:     { viewers: string[], tools: Record<string, { shared: boolean, viewers: string[] }>, layers: Record<string, string[]> }
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -136,6 +139,12 @@ function setupGlobalSMK(): void {
     smk.TAGS_DEFINED = false
 
     smk.BUILD = BUILD
+
+    // Which viewer implements which tool and which layer type. A layer adapter
+    // registers itself so a browser could work the layers out, but a tool
+    // initializer registers nothing — it tests smk.$viewer.type inside itself.
+    // So the file tree is read at build time and the answer shipped here.
+    smk.SUPPORT = __SMK_SUPPORT__
 
     // Always install the full HANDLER (main.ts only stubs it with has/get)
     smk.HANDLER = {

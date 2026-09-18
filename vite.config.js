@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import { scanSupport } from './build/scan-support.js'
 import { execSync } from 'child_process'
 import { playwright } from '@vitest/browser-playwright'
 
@@ -20,6 +21,10 @@ function git( cmd ) {
 export default defineConfig( {
     // Build-time constants substituted into src/smk/bootstrap.ts
     define: {
+        // Which viewer implements which tool and layer type. Read from the
+        // file tree at build time, because nothing registers it at run time.
+        __SMK_SUPPORT__:     JSON.stringify( scanSupport( import.meta.dirname ) ),
+
         __SMK_COMMIT__:      JSON.stringify( git( 'rev-parse HEAD' ) ),
         __SMK_BRANCH__:      JSON.stringify( git( 'rev-parse --abbrev-ref HEAD' ) ),
         __SMK_LAST_COMMIT__: JSON.stringify( git( 'log -1 --format=%ci' ) ),
