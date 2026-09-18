@@ -1,4 +1,4 @@
-@import 'material-design-icons-iconfont/dist/material-design-icons-no-codepoints.css';
+@import './material-icons.css';
 
 .smk-map-frame {
     --overlay-padding: 7px;

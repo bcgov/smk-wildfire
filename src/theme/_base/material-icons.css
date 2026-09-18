@@ -1,0 +1,45 @@
+@charset "UTF-8";
+
+/*
+ * Material Icons, woff2 only.
+ *
+ * The package's own stylesheet lists four formats: eot, woff2, woff and ttf.
+ * Vite's library mode inlines every asset a stylesheet references, so all four
+ * arrived in smk.standalone.css as base64 — 635 KB, of which only the woff2 is
+ * ever used by a browser that can run MapLibre. eot is for Internet Explorer 8.
+ *
+ * Everything below is that stylesheet, with the three dead src entries removed.
+ */
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: local("☺"),
+    url("material-design-icons-iconfont/dist/fonts/MaterialIcons-Regular.woff2") format("woff2");
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  /* Respect document layout direction */
+  direction: inherit;
+  /* Support for all WebKit browsers. */
+  -webkit-font-smoothing: antialiased;
+  /* Support for Safari and Chrome. */
+  text-rendering: optimizeLegibility;
+  /* Support for Firefox. */
+  -moz-osx-font-smoothing: grayscale;
+  /* Support for IE. */
+  font-feature-settings: 'liga';
+}
