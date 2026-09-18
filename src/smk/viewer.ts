@@ -45,11 +45,15 @@ const ViewerEvent = SMKEvent.define( [
     'changedPopup',
     'changedLayerVisibility',
     'changedDevice',
+    'changedDisplayContext',
 ] )
 
 // ---------------------------------------------------------------------------
 // Viewer — base class extended by viewer-leaflet and viewer-esri3d
 // ---------------------------------------------------------------------------
+
+/** How long a refresh waits for the layers to finish loading. */
+const LOADING_WAIT_MS = 30000
 
 export class Viewer {
     // Loading state (accessor — fires startedLoading / finishedLoading events)
@@ -100,6 +104,7 @@ export class Viewer {
     refreshLayersPromise?: Promise<void>
     refreshLayersResolve?: () => void
     refreshLayersReject?:  ( e: Error ) => void
+    refreshLayersAgain?:   boolean
 
     // Loading promise pair
     layersLoading!: Promise<void>
@@ -369,6 +374,10 @@ export class Viewer {
             clearTimeout( this.refreshLayersTimer )
             this.refreshLayersTimer = undefined
         } else if ( this.refreshLayersPromise ) {
+            // A pass is already running. Remember that the display context
+            // changed again, or the change is lost and the layer a user just
+            // switched on never reaches the map.
+            this.refreshLayersAgain = true
             return this.refreshLayersPromise
         }
 
@@ -383,8 +392,15 @@ export class Viewer {
             self.refreshLayersTimer = undefined
             self.updateLayersVisible()
                 .then( () => {
-                    if ( !self.loading ) return self.refreshLayersResolve!()
-                    return self.waitFinishedLoading()
+                    if ( !self.loading ) return
+                    // Waiting for every layer to report finished is a nicety.
+                    // One layer that never reports it must not hold the pass
+                    // open, because a pass that never ends blocks every later
+                    // refresh, and the layer tools then do nothing at all.
+                    return Promise.race( [
+                        self.waitFinishedLoading(),
+                        new Promise<void>( res => setTimeout( res, LOADING_WAIT_MS ) ),
+                    ] )
                 } )
                 .then( () => self.refreshLayersResolve!() )
                 .catch( ( e: Error ) => self.refreshLayersReject!( e ) )
@@ -392,6 +408,11 @@ export class Viewer {
                     self.refreshLayersPromise  = undefined
                     self.refreshLayersResolve  = undefined
                     self.refreshLayersReject   = undefined
+
+                    if ( self.refreshLayersAgain ) {
+                        self.refreshLayersAgain = false
+                        self.refreshLayers( 0 )
+                    }
                 } )
         }, delay || 200 )
 
@@ -462,10 +483,26 @@ export class Viewer {
 
         dc.changedVisibility( () => { ( self as any ).changedLayerVisibility() } )
         ;( this as any ).changedView( () => { dc.setView( self.getView() ) } )
+
+        // Only when a context is added. The legend's handler calls
+        // getDisplayContexts(), which calls setView, which can change
+        // visibility — firing this from changedVisibility loops forever.
+        ;( this as any ).changedDisplayContext()
     }
 
     eachDisplayContext( cb: ( dc: any, context: string ) => void ): void {
-        Object.keys( this.displayContext ).forEach( k => cb.call( this, this.displayContext[ k ], k ) )
+        Object.keys( this.displayContext ).forEach( k => {
+            const dc = this.displayContext[ k ]
+
+            // The viewer seeds `{ layers: null }` and fills it later, so a walk
+            // before that handed every caller a null and each one threw. The
+            // event dispatcher caught it, so the map worked and nothing said
+            // so - every viewer threw once on `changedDisplayContext` at start.
+            // The key stays, so `isDisplayContext` still answers. CONTEXT 8.1.
+            if ( !dc ) return
+
+            cb.call( this, dc, k )
+        } )
     }
 
     getDisplayContexts(): any[] {
@@ -584,7 +621,9 @@ export class Viewer {
                     return ly
                 } )
                 .catch( ( e: any ) => {
-                    console.warn( `Failed to create layer ${ cid }:`, e )
+                    // An error, not a warning. The layer is switched off and
+                    // will never draw, and a warning let that hide for months.
+                    console.error( `Failed to create layer ${ cid }:`, e )
                     lys.forEach( ( ly: any ) => self.setDisplayContextItemEnabled( ly.id, false ) )
                 } )
 
@@ -716,7 +755,17 @@ export class Viewer {
             const option = {
                 layer: self.visibleLayer[ id ] || self.offMapLayer[ id ]
             }
-            const p = ly.getFeaturesInArea?.( area, view, option )
+
+            // A layer type can throw here, not reject: the ESRI types read
+            // window.Terraformer before they make a promise. One such throw
+            // used to end the identify for every other layer as well.
+            let p: any
+            try {
+                p = ly.getFeaturesInArea?.( area, view, option )
+            } catch ( e ) {
+                console.warn( id, 'identify failed:', e )
+                return
+            }
             if ( !p ) return
 
             promises.push(

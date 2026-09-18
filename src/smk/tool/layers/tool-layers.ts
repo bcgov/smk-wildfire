@@ -142,9 +142,13 @@ const factory = Tool.define( 'LayersTool',
         } )
 
         smk.$viewer.changedLayerVisibility( function () {
-            self.allVisible = smk.$viewer.displayContext.layers.isItemVisible(
-                smk.$viewer.displayContext.layers.root.id
-            )
+            // The viewer seeds displayContext.layers as null and fills it
+            // later, so an early event finds nothing here. The dispatcher
+            // catches the throw, which is why it went unseen. CONTEXT 8.1.
+            const dc = smk.$viewer.displayContext.layers
+            if ( !dc ) return
+
+            self.allVisible = dc.isItemVisible( dc.root.id )
         } )
 
         smk.$viewer.startedLoading( function ( _ev: any ) {
