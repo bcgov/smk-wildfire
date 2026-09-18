@@ -115,14 +115,16 @@ const factory = Tool.define( 'BaseMapsTool',
             smk.$viewer.setBasemap( basemapId )
         }
 
-        smk.$viewer.changedBaseMap( function ( ev: any ) {
-            self.current = ev.baseMap
-            const bm = self.basemaps.find( ( b: any ) => b.id === self.current )
+        function showBasemap( id: string ) {
+            self.current = id
+            const bm = self.basemaps.find( ( b: any ) => b.id === id )
             if ( bm ) {
                 self.status = 'basemap-' + bm.id
                 self.title  = 'Base Map: ' + bm.title
             }
-        } )
+        }
+
+        smk.$viewer.changedBaseMap( function ( ev: any ) { showBasemap( ev.baseMap ) } )
 
         smk.$viewer.changedView( function () {
             if ( !self.active ) return
@@ -130,6 +132,12 @@ const factory = Tool.define( 'BaseMapsTool',
         } )
 
         smk.$viewer.setBasemap( smk.viewer.baseMap )
+
+        // The maplibre viewer builds a basemap asynchronously, so its
+        // changedBaseMap can be lost in the start-up race when many tools
+        // build, and the tool then shows no status and no title. It knows the
+        // configured id without being told.
+        showBasemap( smk.viewer.baseMap )
     }
 )
 

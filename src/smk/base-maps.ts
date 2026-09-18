@@ -133,7 +133,9 @@ export function defineBaseMaps(
     defineBaseMap( 'topography-hillshade', {
         type: 'esri-tiled-map', order: 13, title: 'Imagery',
         attribution: 'Copyright 117 DataBC, Government of British Columbia',
-        option: { minZoom: 4, maxZoom: 30 },
+        // It sits on top of the vector map in the topography composite, so it
+        // must shade the relief, not cover it.
+        option: { minZoom: 4, maxZoom: 30, opacity: 0.35 },
         url: 'https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Hillshade/MapServer',
     } )
 

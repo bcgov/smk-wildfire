@@ -11,6 +11,7 @@
  */
 
 import { Viewer } from '../viewer'
+import { readEsriTileInfo, tileSourceFromInfo } from './esri-tile-info'
 import { SMK } from '../smk-ref'
 
 declare const maplibregl: any
@@ -245,12 +246,46 @@ ViewerMapLibre.prototype.initializeBasemaps = function (
 // MapLibre style spec builders used by setBasemap()
 // ---------------------------------------------------------------------------
 
-export function basemapSpecForConfig( cfg: any ): MapLibreBasemapSpec[] | Promise<MapLibreBasemapSpec[]> {
-    return specForConfig( cfg )
+/**
+ * `lookup` resolves a composite's child ids. Without it a composite - which is
+ * what the default basemap is - warns and returns nothing.
+ */
+export function basemapSpecForConfig(
+    cfg: any,
+    lookup?: ( id: string ) => any,
+): MapLibreBasemapSpec[] | Promise<MapLibreBasemapSpec[]> {
+    return specForConfig( cfg, undefined, lookup )
 }
 
-function specForConfig( cfg: any, _map?: any ): MapLibreBasemapSpec[] | Promise<MapLibreBasemapSpec[]> {
+function specForConfig( cfg: any, _map?: any, lookup?: ( id: string ) => any ): MapLibreBasemapSpec[] | Promise<MapLibreBasemapSpec[]> {
     switch ( cfg.type ) {
+        // A composite stacks other basemaps by id, bottom first. It is how SMK
+        // defines its own imagery and topography, so without this the default
+        // basemap produces no spec and the map paints empty.
+        case 'composite': {
+            if ( !lookup || !Array.isArray( cfg.layers ) ) {
+                console.warn( 'maplibre viewer: composite basemap "' + cfg.id + '" has no layers to resolve' )
+                return []
+            }
+
+            const parts = cfg.layers.map( function ( id: string ) {
+                let child: any
+                try {
+                    child = lookup( id )
+                } catch {
+                    child = null
+                }
+                if ( !child ) {
+                    console.warn( 'maplibre viewer: composite "' + cfg.id + '" references unknown basemap "' + id + '"' )
+                    return []
+                }
+                return specForConfig( child, _map, lookup )
+            } )
+
+            return Promise.all( parts.map( ( p: any ) => Promise.resolve( p ).catch( () => [] ) ) )
+                .then( ( arrs: any[] ) => arrs.reduce( ( acc, a ) => acc.concat( a || [] ), [] ) )
+        }
+
         case 'tile':
             return [ rasterSpec( cfg.id, [ resolveTileUrl( cfg.url ) ], cfg ) ]
 
@@ -265,8 +300,26 @@ function specForConfig( cfg: any, _map?: any ): MapLibreBasemapSpec[] | Promise<
 
         case 'esri-tiled-map': {
             if ( !cfg.url ) return []
-            const tileUrl = cfg.url.replace( /\/$/, '' ) + '/tile/{z}/{y}/{x}'
-            return [ rasterSpec( cfg.id, [ tileUrl ], cfg ) ]
+            const base = String( cfg.url ).replace( /\/$/, '' )
+
+            // Read the cache's own extent, levels, tile size and hosts, the way
+            // esri-leaflet does. Without the extent MapLibre asks for tiles the
+            // cache does not hold: the Canada hillshade in the topography
+            // composite 404d five times on every start.
+            return readEsriTileInfo( base ).then( ( info: any ) => {
+                const from = tileSourceFromInfo( base, info )
+                const spec = rasterSpec( cfg.id, from.tiles, cfg )
+                const src  = spec.source as any
+
+                if ( from.tileSize ) src.tileSize = from.tileSize
+                if ( from.bounds )   src.bounds   = from.bounds
+
+                // The config may narrow the cache's range. Neither widens it.
+                if ( from.minzoom != null ) src.minzoom = Math.max( src.minzoom ?? 0, from.minzoom )
+                if ( from.maxzoom != null ) src.maxzoom = Math.min( src.maxzoom ?? 22, from.maxzoom )
+
+                return [ spec ]
+            } )
         }
 
         // Direct vector tile source — provide either `tiles: [ '...{z}/{x}/{y}.pbf' ]`
@@ -312,23 +365,51 @@ interface MapLibreBasemapSpec {
     sprite?:   string
 }
 
+/**
+ * A config writes minZoom and maxZoom; a MapLibre source spells them minzoom
+ * and maxzoom. Reading only one spelling drops the other silently.
+ */
+function zoomOpt( opt: any, which: 'min' | 'max' ): number | undefined {
+    const v = which === 'min'
+        ? ( opt.minZoom ?? opt.minzoom ?? opt.minNativeZoom )
+        : ( opt.maxNativeZoom ?? opt.maxZoom ?? opt.maxzoom )
+    return v == null ? undefined : Number( v )
+}
+
 function rasterSpec( id: string, tiles: string[], cfg: any ): MapLibreBasemapSpec {
     const opt = cfg.option || {}
+
+    const source: any = {
+        type:        'raster',
+        tiles,
+        tileSize:    opt.tileSize || 256,
+        attribution: cfg.attribution || opt.attribution || '',
+        maxzoom:     zoomOpt( opt, 'max' ) ?? 22,
+    }
+
+    // Without this the hillshade in the topography composite is asked for tiles
+    // at zoom 0-3, which its cache does not hold, and every one is a 404.
+    const min = zoomOpt( opt, 'min' )
+    if ( min != null ) source.minzoom = min
+
     return {
         sourceId: 'smk-bm-' + id,
-        source: {
-            type:        'raster',
-            tiles,
-            tileSize:    opt.tileSize || 256,
-            attribution: cfg.attribution || opt.attribution || '',
-            maxzoom:     opt.maxNativeZoom || opt.maxZoom || 22,
-        },
+        source,
         layer: {
             id:     'smk-bm-' + id,
             type:   'raster',
             source: 'smk-bm-' + id,
+            // Leaflet honoured the configured opacity. Without it a hillshade
+            // stacked over a basemap paints solid and hides what is beneath.
+            paint:  { 'raster-opacity': rasterOpacity( cfg ) },
         },
     }
+}
+
+function rasterOpacity( cfg: any ): number {
+    const opt = cfg.option || {}
+    const v   = cfg.opacity != null ? cfg.opacity : opt.opacity
+    return v != null ? Number( v ) : 1
 }
 
 // vector-tile: synchronous; caller supplies a `layers` array with style for
@@ -345,8 +426,9 @@ function vectorTileSpec( cfg: any ): MapLibreBasemapSpec {
     const source: any = { type: 'vector', attribution: cfg.attribution || '' }
     if ( cfg.tileJsonUrl ) source.url = cfg.tileJsonUrl       // TileJSON discovery
     else                   source.tiles = tiles
-    if ( opt.minzoom != null ) source.minzoom = opt.minzoom
-    if ( opt.maxzoom != null ) source.maxzoom = opt.maxzoom
+    const vMin = zoomOpt( opt, 'min' ), vMax = zoomOpt( opt, 'max' )
+    if ( vMin != null ) source.minzoom = vMin
+    if ( vMax != null ) source.maxzoom = vMax
     if ( cfg.scheme )          source.scheme  = cfg.scheme    // 'tms' for y-flipped
 
     // Auto-bind each style layer to our source id unless caller specified one.
@@ -383,8 +465,9 @@ function loadStyleSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                 sourceMap[ sid ] = newId
             } )
 
+            // Keep the background layer: it is the only thing that paints the
+            // ocean and the void outside the tiles' coverage.
             let layers = ( style.layers || [] )
-                .filter( ( ly: any ) => ly.type !== 'background' )
                 .map( ( ly: any ) => {
                     const out = Object.assign( {}, ly, { id: prefix + ly.id } )
                     if ( ly.source && sourceMap[ ly.source ] ) out.source = sourceMap[ ly.source ]
@@ -418,7 +501,22 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
             if ( !r.ok ) throw new Error( 'esri vector style fetch ' + r.status + ' ' + styleUrl )
             return r.json()
         } )
-        .then( ( style: any ) => {
+        .then( ( fetched: any ) => {
+            // esri-leaflet-vector lets the host restyle the service through
+            // option.style( style ). Honour the same hook, or a host's custom
+            // basemap silently renders the raw service style instead — whose
+            // layers start at zoom 16, so the map looks empty.
+            let style = fetched
+            const restyle = cfg.option?.style
+            if ( typeof restyle === 'function' ) {
+                try {
+                    const out = restyle( fetched )
+                    if ( out ) style = ( out as any ).default || out
+                } catch ( e ) {
+                    console.warn( 'maplibre viewer: basemap style() failed for "' + cfg.id + '"', e )
+                }
+            }
+
             const prefix    = 'smk-bm-' + cfg.id + '__'
             const sources: Record<string, any> = {}
             const sourceMap: Record<string, string> = {}
@@ -426,8 +524,15 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                 const newId = prefix + sid
                 const src   = Object.assign( {}, style.sources[ sid ] )
                 if ( src.type === 'vector' ) {
-                    // Force explicit tile URL — bypasses ESRI's non-TileJSON root.
-                    src.tiles = [ root + '/tile/{z}/{y}/{x}.pbf' ]
+                    // A host style names the service its source-layer names belong
+                    // to, which need not be cfg.url. Overriding it hands MapLibre
+                    // tiles from another service whose layer names match nothing,
+                    // and the basemap comes out empty.
+                    const hasOwnTiles = Array.isArray( src.tiles ) && src.tiles.length > 0
+                        && /^https?:\/\//.test( src.tiles[ 0 ] )
+
+                    // Otherwise force an explicit tile URL — ESRI's root is not TileJSON.
+                    if ( !hasOwnTiles ) src.tiles = [ root + '/tile/{z}/{y}/{x}.pbf' ]
                     delete src.url
                     if ( cfg.attribution && !src.attribution ) src.attribution = cfg.attribution
                     if ( src.minzoom == null ) src.minzoom = 0
@@ -440,8 +545,9 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                 sourceMap[ sid ] = newId
             } )
 
+            // Keep the background layer: it is the only thing that paints the
+            // ocean and the void outside the tiles' coverage.
             let layers = ( style.layers || [] )
-                .filter( ( ly: any ) => ly.type !== 'background' )
                 .map( ( ly: any ) => {
                     const out = Object.assign( {}, ly, { id: prefix + ly.id } )
                     if ( ly.source && sourceMap[ ly.source ] ) out.source = sourceMap[ ly.source ]
@@ -462,7 +568,16 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
 }
 
 function resolveStyleUrl( u: string, baseUrl: string ): string {
-    try { return new URL( u, baseUrl ).toString() } catch { return u }
+    try {
+        // new URL percent-encodes braces, which destroys the {fontstack},
+        // {range} and {z}/{x}/{y} placeholders MapLibre has to substitute. It
+        // then cannot use the value at all: the glyphs stayed on the empty
+        // style's font server and every label layer rendered nothing, silently.
+        // Sprite URLs carry no braces, which is why only the labels went.
+        return new URL( u, baseUrl ).toString()
+            .replace( /%7B/g, '{' )
+            .replace( /%7D/g, '}' )
+    } catch { return u }
 }
 
 function resolveStyleUrls( source: any, baseUrl: string ): any {
@@ -522,7 +637,9 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
     // layers (registered for the baseMaps tool's thumbnail mini-maps).  We
     // build MapLibre style fragments from the stored config instead.
     const cfg     = this.getBasemapConfig( basemapId )
-    const builder = specForConfig( cfg, self.map )
+    const builder = specForConfig( cfg, self.map, function ( id: string ) {
+        return self.getBasemapConfig( id )
+    } )
 
     Promise.resolve( builder ).then( ( specs: MapLibreBasemapSpec[] ) => {
         if ( token !== self.basemapTracker ) return         // superseded
