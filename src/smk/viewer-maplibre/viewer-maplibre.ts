@@ -503,10 +503,16 @@ function loadStyleSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
 // ESRI vector sources have `url: "../../"` (the VectorTileServer root); we
 // rewrite each vector source to explicit `tiles` because MapLibre's TileJSON
 // discovery doesn't understand ESRI's VectorTileServer JSON response shape.
+/** esri-leaflet-vector reads an item style from the CDN, so ask the same host. */
+const ITEM_STYLE_URL = 'https://cdn.arcgis.com/sharing/rest/content/items/{id}/resources/styles/root.json'
+
 function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
-    if ( !cfg.url ) return Promise.resolve( [] )
-    const root     = cfg.url.replace( /\/+$/, '' )
-    const styleUrl = cfg.styleUrl || ( root + '/resources/styles/root.json' )
+    if ( !cfg.url && !cfg.itemId ) return Promise.resolve( [] )
+    const root     = String( cfg.url || '' ).replace( /\/+$/, '' )
+    // An item carries the style its publisher designed, which is not the
+    // service's own: it can add sources and rename every layer.
+    const styleUrl = cfg.styleUrl
+        || ( cfg.itemId ? ITEM_STYLE_URL.replace( '{id}', cfg.itemId ) : root + '/resources/styles/root.json' )
     return fetch( styleUrl, { credentials: 'omit' } )
         .then( ( r ) => {
             if ( !r.ok ) throw new Error( 'esri vector style fetch ' + r.status + ' ' + styleUrl )
@@ -543,7 +549,9 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                         && /^https?:\/\//.test( src.tiles[ 0 ] )
 
                     // Otherwise force an explicit tile URL — ESRI's root is not TileJSON.
-                    if ( !hasOwnTiles ) src.tiles = [ root + '/tile/{z}/{y}/{x}.pbf' ]
+                    // An absolute source url names its own service, as tiles do.
+                    const service = /^https?:\/\//.test( src.url || '' ) ? src.url.replace( /\/+$/, '' ) : root
+                    if ( !hasOwnTiles ) src.tiles = [ service + '/tile/{z}/{y}/{x}.pbf' ]
                     delete src.url
                     if ( cfg.attribution && !src.attribution ) src.attribution = cfg.attribution
                     if ( src.minzoom == null ) src.minzoom = 0

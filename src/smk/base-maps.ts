@@ -105,8 +105,11 @@ export function defineBaseMaps(
     // Current basemaps
     // -----------------------------------------------------------------------
 
+    // GeoBC's standard BC Basemap, with hillshade, as published on the item.
+    // The service's own style is another one, with no hillshade.
     defineBaseMap( 'bc-roads', {
         type: 'esri-vector-tile', order: 20, title: 'BC BaseMap Vector',
+        itemId: 'bbe05270d3a642f5b62203d6c454f457',
         url: 'https://tiles.arcgis.com/tiles/ubm4tcTYICKBpist/arcgis/rest/services/BC_BASEMAP_20240307/VectorTileServer',
         option: { maxNativeZoom: 17, maxZoom: 30 },
     } )

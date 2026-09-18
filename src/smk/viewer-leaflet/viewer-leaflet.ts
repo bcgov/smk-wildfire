@@ -136,7 +136,9 @@ ViewerLeaflet.prototype.initializeBasemaps = function (
     } )
 
     defineBaseMapType( 'esri-vector-tile', function ( cfg: any ) {
-        return [ L.esri.Vector.vectorTileLayer( cfg.url, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
+        // esri-leaflet-vector takes an item id or a service url, and an item
+        // brings its publisher's style.
+        return [ L.esri.Vector.vectorTileLayer( cfg.itemId || cfg.url, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
     } )
 
     defineBaseMapType( 'esri-vector-basemap', function ( cfg: any ) {

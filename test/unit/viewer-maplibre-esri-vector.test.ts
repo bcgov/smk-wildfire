@@ -133,6 +133,48 @@ describe( 'esri-vector-tile basemap', () => {
         expect( v.map.sources[ 'smk-bm-navigation__esri' ].tiles[ 0 ] ).toContain( 'World_Basemap_v2' )
     } )
 
+    it( 'reads the style of an ArcGIS item when the config names one', async () => {
+        stubFetch( ESRI_ROOT_STYLE )
+        const v = viewerWith( {
+            id: 'bc', type: 'esri-vector-tile', itemId: 'abc123',
+            url: 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/BC/VectorTileServer',
+        } )
+
+        v.setBasemap( 'bc' )
+        await settle()
+
+        expect( ( globalThis as any ).fetch.mock.calls[ 0 ][ 0 ] )
+            .toBe( 'https://cdn.arcgis.com/sharing/rest/content/items/abc123/resources/styles/root.json' )
+    } )
+
+    it( 'draws every source of an item style from its own service', async () => {
+        stubFetch( {
+            version: 8,
+            sources: {
+                esri: {
+                    type: 'vector',
+                    url: 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/BC/VectorTileServer',
+                    tiles: [ 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/BC/VectorTileServer/tile/{z}/{y}/{x}.pbf' ],
+                },
+                // No tiles: the absolute url is the only thing that names it.
+                hillshade: { type: 'vector', url: 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/Hillshade/VectorTileServer' },
+            },
+            layers: [
+                { id: 'Land',  type: 'fill', source: 'esri',      'source-layer': 'Land' },
+                { id: 'Shade', type: 'fill', source: 'hillshade', 'source-layer': 'Shade' },
+            ],
+        } )
+        const v = viewerWith( { id: 'bc', type: 'esri-vector-tile', itemId: 'abc123' } )
+
+        v.setBasemap( 'bc' )
+        await settle()
+
+        expect( v.map.sources[ 'smk-bm-bc__esri' ].tiles[ 0 ] ).toContain( '/BC/VectorTileServer/tile/' )
+        expect( v.map.sources[ 'smk-bm-bc__hillshade' ].tiles[ 0 ] )
+            .toBe( 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/Hillshade/VectorTileServer/tile/{z}/{y}/{x}.pbf' )
+        expect( v.map.layers[ 'smk-bm-bc__Shade' ].source ).toBe( 'smk-bm-bc__hillshade' )
+    } )
+
     it( 'falls back to the service style when style() throws', async () => {
         stubFetch( ESRI_ROOT_STYLE )
         const v = viewerWith( {
