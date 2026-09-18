@@ -76,9 +76,12 @@ export class Viewer {
     layerIdPromise:   Record<string, any> = {}
     deadViewerLayer:  Record<string, any> = {}
 
-    // Base map registries
-    basemap:     Record<string, any> = {}
-    basemapType: Record<string, any> = {}
+    // Base map registries. Held on the prototype (set after the class body) so a
+    // host can register basemaps before any viewer exists; the constructor gives
+    // each instance its own copy. A class-field initialiser here would shadow
+    // the prototype and lose those registrations — same trap as zoomScale.
+    basemap!:     Record<string, any>
+    basemapType!: Record<string, any>
 
     // Display context
     displayContext: Record<string, any> = { layers: null }
@@ -118,6 +121,11 @@ export class Viewer {
 
         // Initialise the event dispatcher from ViewerEvent mixin
         ViewerEvent.prototype.constructor.call( this )
+
+        // Copy the shared registries so host registrations are visible, while
+        // anything this viewer defines later stays its own.
+        this.basemap     = Object.assign( {}, Viewer.prototype.basemap )
+        this.basemapType = Object.assign( {}, Viewer.prototype.basemapType )
 
         let loading = false
         Object.defineProperty( this, 'loading', {
@@ -325,12 +333,25 @@ export class Viewer {
 
     createBasemapLayer( basemapId: string ): any {
         const config = this.getBasemapConfig( basemapId )
+
+        if ( config.deprecated )
+            console.warn( `base map ${ config.id } is deprecated` )
+
+        // A host may define a basemap as { title, order, create() }, which is how
+        // SMK 1.0 did it — createBasemapLayer called config.create( id ) and there
+        // was no type registry. Honour that first so host basemaps keep working.
+        if ( typeof config.create === 'function' ) {
+            try {
+                return config.create( basemapId )
+            } catch ( e ) {
+                throw new Error( `creating base map ${ config.id } failed: ${ e }` )
+            }
+        }
+
         const create = this.basemapType[ config.type ]
         if ( !create ) throw new Error( `base map ${ config.id } has unknown type ${ config.type }` )
 
         try {
-            if ( config.deprecated )
-                console.warn( `base map ${ config.id } is deprecated` )
             return create( config )
         } catch ( e ) {
             throw new Error( `creating base map ${ config.id } failed: ${ e }` )
@@ -846,6 +867,22 @@ export class Viewer {
 // Wire up the prototype chain so Viewer instances inherit the event methods
 Object.setPrototypeOf( Viewer.prototype, ViewerEvent.prototype )
 Viewer.prototype.constructor = Viewer as any
+
+// Shared basemap registries. A host registers into these before any viewer is
+// built; see the field declarations in the class body.
+Viewer.prototype.basemap     = {}
+Viewer.prototype.basemapType = {}
+
+// SMK.TYPE.Viewer is the base class itself, with the concrete viewers hung off
+// it as properties. A host reaches both SMK.TYPE.Viewer.prototype and
+// SMK.TYPE.Viewer.leaflet.prototype through it, so a plain registry object is
+// not enough. This runs before the concrete viewers, which add their own keys.
+if ( SMK ) {
+    if ( !SMK.TYPE ) ( SMK as any ).TYPE = {}
+    const registered = ( SMK.TYPE as any ).Viewer
+    ;( SMK.TYPE as any ).Viewer = Viewer
+    if ( registered ) Object.assign( Viewer, registered )
+}
 
 // Populate zoom scale table (post class body — same values as original).
 // Class field `zoomScale: number[] = []` is an own-property per instance, so
