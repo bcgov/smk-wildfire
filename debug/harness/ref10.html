@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SMK 1.0 reference pane</title>
+<style>
+    html, body { margin: 0; height: 100%; font: 13px/1.4 system-ui, sans-serif }
+    /* Height comes from ?h=, so this pane is the same box as a v2 pane. Two
+       panes of different sizes fit one extent to two different zooms. */
+    #frame { position: absolute; top: 0; left: 0; right: 0; height: var( --frame-h, 100% ) }
+    #missing {
+        position: absolute; inset: 0; display: none; place-content: center;
+        padding: 24px; background: #fff7e6; color: #6b4a00
+    }
+    #missing.on { display: grid }
+    code { background: #0001; padding: 1px 4px; border-radius: 3px }
+</style>
+</head>
+<body>
+
+<div id="frame"></div>
+
+<div id="missing">
+    <div>
+        <strong>The SMK 1.0 reference build is not here.</strong>
+        <p>Copy it from the WFNEWS Angular tree, then reload:</p>
+        <p><code>cp -r &lt;wfnews&gt;/client/wfnews-war/src/main/angular/node_modules/@qqnluaq/smk/dist ref/smk-1.0</code></p>
+        <p>It is excluded from git, so every clone does this once.</p>
+    </div>
+</div>
+
+<script>
+/**
+ * The axis A reference: SMK 1.0, in its own document.
+ *
+ * It must be its own document. 1.0 defines its own `include`, claims
+ * `window.SMK`, and derives SMK.BASE_URL from this script's own src, so it and
+ * v2 cannot share a page. The harness holds it in an iframe.
+ *
+ * Query: src (path to smk.js), config (comma-separated fragment urls), theme.
+ */
+( function () {
+'use strict'
+
+var q      = new URLSearchParams( location.search )
+var src    = q.get( 'src' ) || '../../ref/smk-1.0/smk.js'
+var config = ( q.get( 'config' ) || '' ).split( ',' ).filter( Boolean )
+var theme  = q.get( 'theme' ) || 'wf'
+
+// Match the harness pane box. Its Map height slider starts at 480.
+if ( q.get( 'h' ) )
+    document.documentElement.style.setProperty( '--frame-h', Number( q.get( 'h' ) ) + 'px' )
+
+window.REF = { build: '1.0', state: 'starting', events: [] }
+
+function fail( why ) {
+    window.REF.state = 'failed: ' + why
+    document.body.dataset.harness = 'failed'
+    document.title = 'SMK 1.0 - ' + why
+}
+
+var tag = document.createElement( 'script' )
+tag.src = src
+tag.onerror = function () {
+    document.getElementById( 'missing' ).classList.add( 'on' )
+    fail( 'no build at ' + src )
+}
+tag.onload = function () {
+    if ( !window.SMK || !window.SMK.INIT ) return fail( 'the build loaded but set no SMK.INIT' )
+
+    // Same shape as the harness Catalogue: a type becomes an enabled entry in
+    // the toolbar. tool-base skips the adopt step when position is empty, so a
+    // tool with none builds and never renders a widget.
+    var tools = ( q.get( 'tools' ) || '' ).split( ',' ).filter( Boolean )
+    var extra = tools.length ? [ { tools: tools.map( function ( t ) {
+        return { type: t, enabled: true, position: 'toolbar' }
+    } ) } ] : []
+
+    window.SMK.INIT( {
+        id:           'ref',
+        containerSel: '#frame',
+        config:       [ { viewer: { type: 'leaflet', themes: [ theme ] } } ]
+                          .concat( config, extra )
+    } )
+    .then( function ( map ) {
+        window.REF.map   = map || window.SMK.MAP.ref
+        window.REF.state = 'ready'
+        document.body.dataset.harness = 'ready'
+        parent.postMessage( { harness: 'ref10', state: 'ready' }, '*' )
+    } )
+    .catch( function ( e ) {
+        fail( e.message )
+        parent.postMessage( { harness: 'ref10', state: 'failed', error: e.message }, '*' )
+        console.error( e )
+    } )
+}
+document.head.appendChild( tag )
+
+} )()
+</script>
+</body>
+</html>

@@ -28,7 +28,10 @@
     "test:watch": "vitest",
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser",
-    "coverage": "vitest run --project unit --coverage"
+    "test:harness": "npm run build:lite && node build/run-harness.js",
+    "coverage": "vitest run --project unit --coverage",
+    "coverage:harness": "npm run build:lite && node build/run-harness.js --coverage && node build/coverage-report.js",
+    "coverage:all": "npm run coverage && npm run coverage:harness"
   },
   "devDependencies": {
     "@terraformer/arcgis": "2.1.2",

@@ -1,0 +1,15 @@
+{
+    "layers": [
+        {
+            "type": "wms",
+            "id": "scenario-wms",
+            "title": "Scenario WMS",
+            "isVisible": true,
+            "opacity": 1,
+            "serviceUrl": "https://openmaps.gov.bc.ca/geo/pub/ows",
+            "layerName": "pub:WHSE_LAND_AND_NATURAL_RESOURCE.PROT_DANGER_RATING_SP",
+            "styleName": "7734",
+            "version": "1.1.1"
+        }
+    ]
+}

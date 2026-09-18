@@ -1,0 +1,12 @@
+{
+    "layers": [
+        {
+            "type": "esri-feature",
+            "id": "scenario-esri-feature",
+            "title": "Scenario ESRI Feature",
+            "isVisible": true,
+            "opacity": 1,
+            "serviceUrl": "https://services6.arcgis.com/ubm4tcTYICKBpist/ArcGIS/rest/services/Trailhead_RSTBC/FeatureServer/0"
+        }
+    ]
+}

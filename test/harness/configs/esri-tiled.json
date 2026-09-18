@@ -1,0 +1,12 @@
+{
+    "layers": [
+        {
+            "type": "esri-tiled",
+            "id": "scenario-esri-tiled",
+            "title": "Scenario ESRI Tiled",
+            "isVisible": true,
+            "opacity": 1,
+            "serviceUrl": "https://tiles.arcgis.com/tiles/ubm4tcTYICKBpist/arcgis/rest/services/BCWS_FireCenterBdys2/MapServer"
+        }
+    ]
+}

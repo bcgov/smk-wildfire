@@ -1,0 +1,336 @@
+[
+    {
+        "axis": "A",
+        "field": "hasInclude",
+        "reason": "2.0 removes the include loader. SMK does not use it, and a Host loads its plugin scripts itself and registers them on SMK.TYPE. host-contract.test.ts holds this.",
+        "date": "2026-10-05"
+    },
+    {
+        "axis": "A",
+        "field": "globals",
+        "reason": "v2 publishes SMK.SUPPORT, the support manifest the build reads off the file tree. 1.0 had no equivalent. Added, not lost.",
+        "date": "2026-09-07",
+        "onlyAdded": true
+    },
+    {
+        "axis": "A",
+        "field": "viewerKeys",
+        "reason": "v2 registers maplibre, and registers esri3d at load where 1.0 resolved it lazily through AMD. onlyAdded means a viewer that leaves the 1.0 side is never covered.",
+        "date": "2026-09-07",
+        "onlyAdded": true
+    },
+    {
+        "axis": "A",
+        "field": "typeKeys",
+        "reason": "v2 registers each tool class on SMK.TYPE; 1.0 kept them inside its AMD modules. onlyAdded means a name that leaves the 1.0 side is never covered by this ruling.",
+        "date": "2026-09-07",
+        "onlyAdded": true
+    },
+    {
+        "axis": "B",
+        "field": "viewerType",
+        "reason": "The whole point of axis B: the candidate is a different viewer, so this field must differ.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "A",
+        "field": "view",
+        "reason": "Measured again 2026-09-07 with both panes the same box: the zoom is EQUAL. The earlier 'zoom 5 against zoom 4' was the harness, not SMK - the 1.0 page gave the map the whole window and the v2 pane frame is 480px tall. What is left is a centre about 2 pixels apart at the opening scale, which is rounding in the fit. axis-a.test.ts asserts the zoom on its own, so a real change still fails.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "view",
+        "open": true,
+        "reason": "MapLibre counts zoom for 512px tiles and Leaflet for 256, and Leaflet's zoomSnap rounds a fit to a whole level. One viewer.location.zoom in a Config means two scales. Normalising it moves every Host config and every saved bookmark, so it needs a ruling, not a patch - CONTEXT.md 8.1.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-minimap-",
+        "onlyAdded": false,
+        "reason": "A viewer modifier beside the neutral class. Both viewers now render smk-minimap, which is what a Theme selects on; smk-minimap-leaflet and smk-minimap-maplibre are extras for anything that must tell them apart. D9: converge on viewer-neutral, keep the modifier.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "toolState",
+        "match": "ModeTool",
+        "reason": "mode is a MapLibre-only tool - the support manifest says so. In Leaflet the shared half still builds, so the tool exists and is disabled and not visible. That is the documented no-viewer-half case, not a fault. See CONTEXT.md 8.2.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-visible",
+        "reason": "The class component.ts puts on a tool whose visible flag is true. It is here because mode is visible in MapLibre and does not exist in Leaflet - see the ModeTool toolState ruling. Not a chrome difference of its own.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "BC_BASEMAP_20240307",
+        "reason": "The default Basemap - decision D11, 2026-09-08. SMK 1.0 opens on the Esri Topographic basemap, whose id is deprecated in v2 and hidden by the picker. v2 opens on bc-roads, the GeoBC BC Basemap service. Since D17 it draws with the style GeoBC published on its ArcGIS item, which adds a hillshade - see the item and hillshade rulings. The candidate fetches the service description, the glyphs and the tiles - all of it this one decision.",
+        "date": "2026-09-17"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "bbe05270d3a642f5b62203d6c454f457",
+        "reason": "Decision D17, 2026-09-17. bc-roads draws BC Basemap as GeoBC designed and published it: the style, sprite and item description of the ArcGIS item for the standard version, with hillshade. SMK 1.0 opened on Esri Topographic and asked none of it.",
+        "date": "2026-09-17"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "BC_Basemap_Vector_Hillshade",
+        "reason": "Decision D17, 2026-09-17. The second source of GeoBC's published BC Basemap style. Its layers draw from zoom 4 to 12. SMK 1.0 had no hillshade.",
+        "date": "2026-09-17"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "World_Topo_Map",
+        "reason": "The 1.0 side of the default basemap decision. See the BC_BASEMAP_20240307 ruling and D11.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "BC_BASEMAP_20240307",
+        "reason": "The default BC basemap through two client libraries. esri-leaflet-vector reads the VectorTileServer description first; MapLibre goes straight to resources/styles/root.json and takes the tile template from there. Both draw the same map. D9 wire behaviour: each Viewer uses its own native call.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "bbe05270d3a642f5b62203d6c454f457",
+        "reason": "The D17 item through two client libraries. esri-leaflet-vector reads the item description and moves the sprite to cdn.arcgis.com; MapLibre reads the item style from the CDN and takes the sprite from www.arcgis.com, where the style points. Same files, same map. D9 wire behaviour.",
+        "date": "2026-09-17"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "BC_Basemap_Vector_Hillshade",
+        "reason": "The D17 hillshade source. esri-leaflet-vector keeps the source url, so MapLibre inside it reads the service description as TileJSON; the MapLibre viewer uses the tile template the style gives. Both fetch the same hillshade tiles - 8 each at zoom 6 over the Coast Mountains, measured 2026-09-17. D9 wire behaviour.",
+        "date": "2026-09-17"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "_ags_map",
+        "reason": "esri-dynamic. Both viewers now call /export - that was the 2026-09-07 fix. esri-leaflet asks for JSON and then fetches the image the service produced under arcgisoutput/; MapLibre uses the export url straight as a raster tile template. Same endpoint, two client strategies. Leaflet also sends dpi=96, which is the service default.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "dpi=96",
+        "reason": "The Leaflet side of the same esri-dynamic export. See the _ags_map ruling.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "bcgw/MapServer",
+        "reason": "esri-leaflet reads the service description before it exports. See the _ags_map ruling.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "QueryTool not defined",
+        "reason": "v2 registers tool-query-place before the QueryTool it extends, and says so. Informational, and v2-only because 1.0 loaded its tools through the AMD graph. Worth tidying, but it changes nothing a Host can see.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "mature support",
+        "reason": "esri-leaflet's own notice that L.esri.BasemapLayer is in mature support. SMK 1.0 opens on that basemap; v2 opens on the Canada Topography composite and never builds one.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "warnings",
+        "match": "QueryTool not defined",
+        "reason": "Registration order, the same notice as on axis A. It reaches both viewers, so it only shows here when one pane starts a tool the other does not.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "Trailhead_RSTBC",
+        "reason": "esri-feature. Both viewers fetch the features now - that was the 2026-09-07 fix; before it, the Leaflet layer threw at creation and never drew. esri-leaflet tiles its feature queries, so it sends eight /query calls with resultType=tile; MapLibre fetches once with where=1=1. Same service, two client strategies. D9 wire behaviour.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "bcgw_MapServer",
+        "reason": "esri-dynamic. v2 exports the map; SMK 1.0 asked the service for nothing at all, because it built a featureLayer against the MapServer root and that request never produced a drawing. Fixed on 2026-09-07 - v2 does more than 1.0 here, not less. D9 wire behaviour.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "bcgw/MapServer/export",
+        "reason": "The export call itself. See the bcgw_MapServer ruling.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "console",
+        "match": "Calling `require` for",
+        "reason": "dist/smk.es.js calls require() for the ESRI 3D viewer modules at load, whichever viewer runs. A host page that does not load the ArcGIS API - as one that never wanted the 3D viewer would not - gets this once. Measured 2026-09-07 and recorded in CONTEXT.md 8.1; the host-contract test guards it so it cannot grow.",
+        "date": "2026-09-07"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-spacer",
+        "reason": "The Leaflet minimap keeps smk-spacer beside the neutral smk-minimap, because SMK 1.0 rendered it and a class a Host can see is a contract (D9). MapLibre never had one. The neutral class is what a Theme selects on.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "domClasses",
+        "match": "smk-tool-status-basemap",
+        "reason": "The basemap status class carries the basemap id, and the default changed by decision - Topographic in 1.0, bc-roads in v2. See D11.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "domClasses",
+        "match": "smk-minimap",
+        "reason": "Added. Both viewer halves now render a neutral smk-minimap so a Theme need not know which Viewer is running; 1.0 had only the spacer, which v2 still renders too.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "built",
+        "match": "DropdownTool",
+        "reason": "v2 builds a dropdown tool that SMK 1.0 did not have. Added, nothing lost.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "builtTypes",
+        "match": "dropdown",
+        "reason": "The type behind DropdownTool. Added.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "console",
+        "match": "isItemVisible",
+        "reason": "SMK 1.0 itself throws this when the whole catalogue is built - it is the REFERENCE side, so it says nothing about the rewrite. Recorded so it cannot be mistaken for a v2 fault.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "domClasses",
+        "match": "smk-legend",
+        "reason": "SETTLED 2026-09-08 by driving the panel's real commands. v2 renders the layers panel and fetches its legends when the panel OPENS; SMK 1.0 did both at start. Both end with four getlegendgraphic requests and four legend rows, in both 2D Viewers - legend.test.ts holds it. Lazier, not lost. The one visible consequence: a Host that reads the DOM for legend rows before anything is opened finds none.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "domClasses",
+        "match": "smk-obscured",
+        "reason": "SETTLED 2026-09-08. smk-obscured sits on a layer display row, which renders with the rest of the layers panel - at start in SMK 1.0, on open in v2. Same cause as the smk-legend ruling, and the class still renders when a layer is not actually visible.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "domClasses",
+        "match": "smk-inline-legend",
+        "reason": "The v2 side of the same layers-panel difference. The class exists in 1.0 too.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "getlegendgraphic",
+        "reason": "SETTLED 2026-09-08 by driving the panel's real commands. v2 renders the layers panel and fetches its legends when the panel OPENS; SMK 1.0 did both at start. Both end with four getlegendgraphic requests and four legend rows, in both 2D Viewers - legend.test.ts holds it. Lazier, not lost. The one visible consequence: a Host that reads the DOM for legend rows before anything is opened finds none.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "layerIds",
+        "match": "SelectListTool--highlight",
+        "reason": "v2 makes internal highlight layers for the select list that SMK 1.0 did not. Internal layers are not in the Display Context, so they carry no visibility toggle and a Host does not see them. Added.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "built",
+        "match": "SelectListTool--highlight",
+        "reason": "v2 makes internal highlight layers for the select list that SMK 1.0 did not. Internal layers are not in the Display Context, so they carry no visibility toggle and a Host does not see them. Added.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "domClasses",
+        "match": "smk-tool-MarkupTool",
+        "reason": "v2 puts the tool's own class on the markup tool element. Added; nothing of 1.0's is missing.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "L.Mixin.Events",
+        "reason": "Leaflet's own deprecation notice, raised by code inside SMK 1.0 - the REFERENCE side. It says nothing about the rewrite.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "tool-dropdown",
+        "reason": "SMK 1.0 has no dropdown tool, so asking it to build one fails on its own side. The REFERENCE, not the rewrite.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "navMode",
+        "reason": "A 1.0 warning about props declared in its pan widget that its own tool does not have. The REFERENCE side.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "MarkupTool.initialized",
+        "reason": "v2 says when a handler runs. Informational, and additive.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "customLabel",
+        "reason": "v2 declares a customLabel prop in the tool-panel-feature component that one tool does not have. Its own notice, on the candidate side, and harmless - but worth tidying.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "toolState",
+        "match": "BaseMapsTool",
+        "reason": "The tool reports the basemap it is on, and the default changed by decision - Topographic in 1.0, bc-roads in v2. See D11.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "toolState",
+        "match": "DropdownTool",
+        "reason": "v2 builds a dropdown tool SMK 1.0 did not have, so 1.0 has no state for it. Added.",
+        "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "toolState",
+        "match": "MarkupTool",
+        "reason": "v2 gives the markup tool a showWidget prop that 1.0 did not declare. Added; every flag 1.0 had is still there with the same value.",
+        "date": "2026-09-08"
+    }
+]

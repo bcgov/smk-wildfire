@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>SMK host contract</title>
+<style>
+    html, body { margin: 0; height: 100%; font: 13px/1.4 system-ui, sans-serif }
+    #frame { position: absolute; top: 0; left: 0; right: 0; height: var( --frame-h, 100% ) }
+</style>
+
+<!-- The libraries a Host gives SMK, the same list as the harness. -->
+<script src="../../src/lib/vue-2.7.16.min.js"></script>
+<link rel="stylesheet" href="../../src/lib/leaflet/leaflet-1.7.1.css"/>
+<script src="../../src/lib/leaflet/leaflet-1.7.1.js"></script>
+<script src="../../src/lib/leaflet/esri-leaflet-3.0.19.min.js"></script>
+<link rel="stylesheet" href="../../src/lib/leaflet/maplibre-gl-5.24.0.css"/>
+<script src="../../src/lib/leaflet/maplibre-gl-5.24.0.min.js"></script>
+<script src="../../src/lib/leaflet/esri-leaflet-vector-4.3.1.min.js"></script>
+<script src="../../src/lib/leaflet/esri-leaflet-static-basemap-tile-1.0.0.min.js"></script>
+<script src="../../src/lib/proj4-2.4.4.min.js"></script>
+<script src="../../src/lib/turf-5.1.6.min.js"></script>
+<script src="../../src/lib/terraformer/terraformer-1.0.7.js"></script>
+<script src="../../src/lib/terraformer/terraformer-arcgis-parser-1.0.5.js"></script>
+
+<script type="module" src="../../dist/smk.es.js"></script>
+<link rel="stylesheet" href="../../dist/smk.css"/>
+</head>
+<body class="smk-theme-wf">
+
+<div id="frame"></div>
+
+<script>
+/**
+ * A Host, doing what WFNEWS does.
+ *
+ * Not a map viewer page: this exists so the harness project can hold the Host
+ * extension points, which no test covered. It exercises, in order:
+ *
+ *   <script>             load a plugin script, with no loader
+ *   SMK.TYPE.Layer       the plugin registers a new Layer type
+ *   SMK.TYPE.Tool.define the plugin registers a Tool
+ *   SMK.HANDLER.set      fill a bespoke tool's panel
+ *   SMK.INIT             with containerSel as an ELEMENT, not a selector
+ *
+ * Query: viewer, theme, h (frame height, to match a harness pane).
+ */
+( function () {
+'use strict'
+
+var q      = new URLSearchParams( location.search )
+var viewer = q.get( 'viewer' ) || 'leaflet'
+var theme  = q.get( 'theme' )  || 'wf'
+
+if ( q.get( 'h' ) )
+    document.documentElement.style.setProperty( '--frame-h', Number( q.get( 'h' ) ) + 'px' )
+
+window.HOST = { state: 'starting', steps: [] }
+function step( name, ok, detail ) { window.HOST.steps.push( { name: name, ok: !!ok, detail: detail } ) }
+
+function fail( why ) {
+    window.HOST.state = 'failed: ' + why
+    document.body.dataset.harness = 'failed'
+    console.error( 'host contract:', why )
+}
+
+function loadScript( src ) {
+    return new Promise( function ( resolve, reject ) {
+        var s = document.createElement( 'script' )
+        s.src     = src
+        s.onload  = resolve
+        s.onerror = function () { reject( new Error( 'cannot load ' + src ) ) }
+        document.head.appendChild( s )
+    } )
+}
+
+// Module scripts run before DOMContentLoaded, so SMK.TYPE is complete here.
+document.addEventListener( 'DOMContentLoaded', function () {
+    loadScript( './host-plugin.js' )
+        .then( function () {
+            step( 'plugin loaded', !!window.HOST_PLUGIN, window.HOST_PLUGIN )
+            step( 'layer type registered', typeof SMK.TYPE.Layer[ 'host-demo' ] === 'function' )
+            step( 'tool defined', typeof SMK.TYPE.HostDemoTool === 'function' )
+
+            // bespoke gives the panel and the sidepanel behaviour; the host
+            // writes the content. The id is the FACTORY name and the instance.
+            ;[ 'initialized', 'deactivated' ].forEach( function ( m ) {
+                SMK.HANDLER.set( 'BespokeTool--hostdemo', m, function () {} )
+            } )
+            SMK.HANDLER.set( 'BespokeTool--hostdemo', 'activated', function ( smk, tool, el ) {
+                if ( !el ) return
+                el.innerHTML = '<p class="host-demo-panel">written by the host</p>'
+                window.HOST.handlerRan = true
+            } )
+            step( 'handlers set', true )
+
+            // containerSel as an element. It was a string-only querySelectorAll
+            // in v2 for a while, and WFNEWS passes an element.
+            return SMK.INIT( {
+                id:           'host',
+                containerSel: document.getElementById( 'frame' ),
+                config: [
+                    { viewer: { type: viewer, themes: [ theme ] } },
+                    { layers: [ {
+                        type: 'host-demo', id: 'host-demo-layer', title: 'Host Demo',
+                        isVisible: true, opacity: 0.9,
+                        dataUrl: '/debug/data/4-points.json',
+                        style: { strokeColor: '#003366', strokeWidth: 2,
+                                 fillColor: '#003366', fillOpacity: 0.5, markerSize: [ 8, 8 ] },
+                    } ] },
+                    { tools: [ {
+                        type: 'bespoke', instance: 'hostdemo', enabled: true,
+                        position: 'toolbar', title: 'Host Demo', icon: 'help', order: 90,
+                    }, { type: 'toolbar', enabled: true } ] },
+                ],
+            } )
+        } )
+        .then( function ( map ) {
+            window.HOST.map   = map || SMK.MAP.host
+            window.HOST.state = 'ready'
+            step( 'map built', !!window.HOST.map )
+            document.body.dataset.harness = 'ready'
+        } )
+        .catch( function ( e ) {
+            fail( e && e.message ? e.message : String( e ) )
+            console.error( e )
+        } )
+} )
+
+} )()
+</script>
+</body>
+</html>

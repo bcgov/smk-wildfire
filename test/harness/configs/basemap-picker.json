@@ -1,0 +1,14 @@
+{
+    "viewer": {
+        "baseMapConfig": [
+            {
+                "id": "openstreetmap",
+                "optionImageUrl": "/dist/assets/src/smk/tool/directions/config/marker-icon-green.png"
+            }
+        ]
+    },
+    "tools": [
+        { "type": "baseMaps", "enabled": true, "position": "toolbar" },
+        { "type": "toolbar",  "enabled": true }
+    ]
+}

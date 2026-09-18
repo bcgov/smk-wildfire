@@ -1,0 +1,12 @@
+{
+    "layers": [
+        {
+            "type": "esri-dynamic",
+            "id": 43,
+            "title": "Scenario ESRI Dynamic",
+            "isVisible": true,
+            "opacity": 1,
+            "serviceUrl": "https://maps.gov.bc.ca/arcgis/rest/services/mpcm/bcgw/MapServer"
+        }
+    ]
+}
