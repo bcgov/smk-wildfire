@@ -8,6 +8,8 @@ import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import panelLocationHtml from './panel-location.html?raw'
 import { SMK } from '../../smk-ref'
+import markerIconBlue from './config/marker-icon-blue.png'
+import markerShadow   from './config/marker-shadow.png'
 
 declare const Vue: any
 
@@ -29,7 +31,7 @@ const factory = Tool.define( 'LocationTool',
         smkRef.TYPE.ToolInternalLayers.call( this )
 
         this.internalLayers.push(
-            { id: 'location', style: { markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowSize: [ 41, 41 ] }, legend: { point: true } },
+            { id: 'location', style: { markerUrl: markerIconBlue, markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowUrl: markerShadow, shadowSize: [ 41, 41 ] }, legend: { point: true } },
         )
 
         this.defineProp( 'feature' )

@@ -6,6 +6,8 @@
 import Tool from '../../tool'
 import panelIdentifyHtml from './panel-identify.html?raw'
 import { SMK } from '../../smk-ref'
+import { highlightLayers } from '../../mixin/tool-feature-list/highlight-layers'
+import crosshairPng from './config/crosshair.png'
 
 declare const Vue: any
 declare const turf: any
@@ -54,13 +56,11 @@ const factory = Tool.define( 'IdentifyListTool',
 
         // Internal layers required by ToolFeatureList (highlight) and identify (search area etc.)
         this.internalLayers.push(
-            { id: 'highlight-polygon', style: { fill: true, stroke: true, fillColor: 'white', fillOpacity: 0.5, strokeColor: 'black', strokeWidth: 3, strokeOpacity: 0.8 } },
-            { id: 'highlight-line',    style: { stroke: true, strokeColor: 'black', strokeWidth: 3, strokeOpacity: 0.8 } },
-            { id: 'highlight-point',   style: { markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowSize: [ 41, 41 ] } },
+            ...highlightLayers(),
             { id: 'search-area',       style: { stroke: false, fill: true, fillColor: 'white', fillOpacity: 0.5 } },
             { id: 'search-border-1',   style: { strokeWidth: 6, strokeColor: 'black', strokeOpacity: 1, strokeCap: 'butt' } },
             { id: 'search-border-2',   style: { strokeWidth: 6, strokeColor: 'white', strokeOpacity: 1, strokeCap: 'butt' } },
-            { id: 'location',          title: 'Identify Location', style: { markerSize: [ 40, 40 ], markerOffset: [ 20, 20 ] }, legend: { point: true } },
+            { id: 'location',          title: 'Identify Location', style: { markerUrl: crosshairPng, markerSize: [ 40, 40 ], markerOffset: [ 20, 20 ] }, legend: { point: true } },
             { id: 'edit-search-area',  style: { strokeWidth: 3, strokeColor: 'red', strokeOpacity: 1 } },
         )
     },
