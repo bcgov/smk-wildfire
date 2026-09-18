@@ -10,7 +10,8 @@
      - Density:    Slightly more breathing room than the legacy themes.
 
    Activate per-map by setting:
-       { "viewer": { "themes": [ "modern" ] } }
+       { "viewer": { "themes": [ "modern" ] ;
+} }
 
    Or apply globally by adding `smk-theme-modern` to the map container.
    ========================================================================== */
@@ -47,11 +48,6 @@
     --smk-font-size-sm: 12px;
     --smk-font-size-lg: 15px;
     --smk-line-height:  1.5;
-
-    /* Override SMK base layout vars for a slightly roomier feel */
-    --overlay-padding: 10px;
-    --toolbar-height:  36px;
-    --panel-width:     320px;
 }
 
 /* --- Typography --------------------------------------------------------- */
@@ -61,8 +57,6 @@
 .smk-theme-modern .smk-sidepanel,
 .smk-theme-modern .smk-toolbar {
     font-family: var(--smk-font-sans);
-    font-size: var(--smk-font-size);
-    line-height: var(--smk-line-height);
     color: var(--smk-color-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -79,16 +73,15 @@
 .smk-theme-modern .smk-toolbar {
     background-color: transparent;
     box-shadow: none;
-    gap: 6px;
 }
 
 .smk-theme-modern .smk-tool {
     background-color: var(--smk-color-bg);
     color: var(--smk-color-text);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     box-shadow: var(--smk-shadow-sm);
     transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
-    height: 30px;
     border-radius: 20px;
 }
 
@@ -103,60 +96,39 @@
     border-color: var(--smk-color-accent);
     color: var(--smk-color-accent);
     box-shadow: var(--smk-shadow);
-    height: 30px;
     border-radius: 20px;
 }
 
-.smk-tool i {
-    margin: 3px;
+.smk-theme-modern .smk-tool i {
     background-color: #0000;
-    border: 0;
     outline: 0;
-    width: 26px;
-    height: 26px;
-    margin: 3px;
-    padding: 0;
 }
 
 /* --- Side panel + cards ------------------------------------------------ */
 
-.smk-theme-modern .smk-sidepanel {
-    top: 40px;
-}
-
 .smk-theme-modern .smk-elastic-panel {
-    display: flex;
-    flex-direction: column;
-    background-color: transparent;
-    box-shadow: none;
-    gap: 6px;
+    background-color: var(--smk-color-bg);
+    box-shadow: var(--smk-shadow);
 }
 
 .smk-theme-modern .smk-sidepanel .smk-panel .smk-header,
 .smk-theme-modern .smk-sidepanel .smk-panel .smk-body {
     background-color: var(--smk-color-bg);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     border-radius: 0px; /*var(--smk-radius);*/
-    /*box-shadow: var(--smk-shadow);*/
-    margin-left: 1px;
-    margin-right: 1px;
 }
 
 .smk-theme-modern .smk-sidepanel .smk-panel .smk-header {
     z-index: 1;
-    margin-bottom: 0;
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--smk-color-border);
+    border-bottom-style: solid;
+    border-bottom-color: var(--smk-color-border);
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
 }
 
 .smk-theme-modern .smk-sidepanel .smk-panel .smk-body {
     z-index: 2;
-    margin-left: 1px;
-    margin-right: 1px;
-    padding: 10px 12px;
-    border-top: 0;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
 }
@@ -164,15 +136,12 @@
 /* --- Commands / buttons / inputs -------------------------------------- */
 
 .smk-theme-modern .smk-command {
-    display: inline-block;
     color: var(--smk-color-text);
     background-color: var(--smk-color-bg);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     border-radius: var(--smk-radius-sm);
-    padding: 4px 10px;
-    font-size: var(--smk-font-size-sm);
     font-weight: 500;
-    line-height: 1.4;
     box-shadow: var(--smk-shadow-sm);
     cursor: pointer;
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
@@ -181,10 +150,9 @@
 .smk-theme-modern select.smk-command {
     background-color: var(--smk-color-bg);
     color: var(--smk-color-text);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     border-radius: var(--smk-radius-sm);
-    padding: 4px 8px;
-    font-size: var(--smk-font-size-sm);
     font-weight: 500;
     box-shadow: var(--smk-shadow-sm);
 }
@@ -198,12 +166,9 @@
 .smk-theme-modern .smk-command.smk-icon {
     color: var(--smk-color-text);
     background-color: transparent;
-    border: 1px solid transparent;
+    border-style: solid;
+    border-color: transparent;
     box-shadow: none;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    font-size: 22px;
     font-weight: normal;
     border-radius: var(--smk-radius-sm);
 }
@@ -235,8 +200,6 @@
 
 .smk-theme-modern .smk-item {
     border-radius: var(--smk-radius-sm);
-    padding: 4px 6px;
-    margin-bottom: 2px;
 }
 
 .smk-theme-modern .smk-item:hover {
@@ -252,11 +215,9 @@
 .smk-theme-modern textarea {
     background-color: var(--smk-color-bg);
     color: var(--smk-color-text);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     border-radius: var(--smk-radius-lg);
-    padding: 5px 8px;
-    font: inherit;
-    font-size: var(--smk-font-size-sm);
     transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
@@ -282,9 +243,9 @@
     background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     border-radius: var(--smk-radius);
-    padding: 6px 10px;
     box-shadow: var(--smk-shadow-sm);
     color: var(--smk-color-text-mute);
 }
@@ -303,11 +264,12 @@
 
 .smk-theme-modern .smk-status-message {
     background-color: var(--smk-color-bg);
-    border: 1px solid var(--smk-color-border);
-    border-left: 3px solid var(--smk-color-accent);
+    border-style: solid;
+    border-color: var(--smk-color-border);
+    border-left-style: solid;
+    border-left-color: var(--smk-color-accent);
     border-radius: var(--smk-radius);
     box-shadow: var(--smk-shadow);
-    padding: 8px 12px;
 }
 
 /* --- Leaflet / MapLibre overrides ------------------------------------- */
@@ -316,7 +278,8 @@
 .smk-theme-modern .maplibregl-popup-content {
     border-radius: var(--smk-radius);
     box-shadow: var(--smk-shadow-lg);
-    border: 1px solid var(--smk-color-border);
+    border-style: solid;
+    border-color: var(--smk-color-border);
     font-family: var(--smk-font-sans);
     color: var(--smk-color-text);
 }
@@ -324,7 +287,6 @@
 .smk-theme-modern .leaflet-popup-content,
 .smk-theme-modern .maplibregl-popup-content {
     font-family: var(--smk-font-sans);
-    font-size: var(--smk-font-size);
 }
 
 .smk-theme-modern .leaflet-control-zoom a,
@@ -345,13 +307,6 @@
     box-shadow: var(--smk-shadow) !important;
 }
 
-/* --- Scrollbar polish (WebKit) ---------------------------------------- */
-
-.smk-theme-modern ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
 .smk-theme-modern ::-webkit-scrollbar-track {
     background: transparent;
 }
@@ -359,7 +314,8 @@
 .smk-theme-modern ::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;          /* slate-300 */
     border-radius: 999px;
-    border: 2px solid var(--smk-color-bg);
+    border-style: solid;
+    border-color: var(--smk-color-bg);
 }
 
 .smk-theme-modern ::-webkit-scrollbar-thumb:hover {
@@ -368,7 +324,8 @@
 
 /* --- Dark-mode opt-in -------------------------------------------------- */
 /* Activate by adding `smk-theme-modern-dark` alongside `smk-theme-modern`,
-   e.g. set { "viewer": { "themes": [ "modern", "modern-dark" ] } } and add a
+   e.g. set { "viewer": { "themes": [ "modern", "modern-dark" ] ;
+} } and add a
    second tiny CSS file, OR just set `data-color-scheme="dark"` on the map
    container yourself. Tokens below kick in either way. */
 .smk-theme-modern[data-color-scheme="dark"],
@@ -384,39 +341,13 @@
     --smk-color-active:    #312e81;     /* indigo-900 */
 }
 
-/* overrides for search tool's clear button to position it inside the input on the right */
-.smk-tool.smk-search-tool .smk-clear-search {
-    position: absolute;
-    top: 1px;
-    right: 34px;
-}
-
-.smk-panel .smk-commands {
-    flex-wrap: wrap;
-    place-content: flex-start space-between;
-    align-items: center;
-    display: flex;
-    margin-left: 1px;
+.smk-theme-modern .smk-panel .smk-commands {
     background: white;
-    margin-right: 1px;
-    margin-bottom: 0px;
 }
 
-.smk-enter-input .smk-input {
+.smk-theme-modern .smk-enter-input .smk-input {
     background-color: white;
     border-radius: 8px;
-    justify-content: space-around;
-    align-items: center;
-    padding: 2px;
-    display: flex;
-}
-
-.smk-enter-input .smk-reset.smk-command.smk-icon {
-    height: 28px;
-}
-
-.smk-feature-list .smk-layer h2 {
-    top: -15px;
 }
 
 .smk-theme-modern .smk-coordinate {

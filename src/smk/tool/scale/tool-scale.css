@@ -7,7 +7,7 @@
     background-color: transparent;
     cursor: default;
 
-    margin-top: 5px;
+    margin-top: var( --space-2 );
 }
 
 .smk-scale .smk-denom {
@@ -47,18 +47,23 @@
     justify-content: space-between;
 }
 
+/* flex-basis 50% + 50% overflows, so both ends shrank to their text and the
+   three labels ran together. Equal flex puts the middle one on the mid tick. */
 .smk-scale .smk-ruler .smk-labels .smk-first {
-    flex-basis: 50%;
+    flex: 1 1 0;
     text-align: left;
 }
 
 .smk-scale .smk-ruler .smk-labels .smk-middle {
+    flex: 0 0 auto;
     text-align: center;
+    padding: 0 var( --space-2 );
 }
 
 .smk-scale .smk-ruler .smk-labels .smk-last {
-    flex-basis: 50%;
+    flex: 1 1 0;
     text-align: right;
+    white-space: nowrap;
 }
 
 

@@ -3,13 +3,13 @@
 }
 
 .smk-version-panel dd {
-    margin-left: 20px;
-    margin-bottom: 10px;
+    margin-left: var( --space-4 );
+    margin-bottom: var( --space-3 );
     overflow-wrap: break-word;
 }
 
 .smk-version-panel dd ul {
     margin: 0;
-    padding-left: 15px;
+    padding-left: var( --space-4 );
 }
 

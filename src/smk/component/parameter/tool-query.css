@@ -12,9 +12,21 @@
     width: 100%;
     border: 0;
     font-size: 16px;
-    padding: 3px;
+    padding: var( --space-1 );
     border-bottom: 1px solid lightgrey;
     background-color: white;
+}
+
+/* The reset sits on the right of the field, as enter-input places its own.
+   The label is position:relative, so the anchor was already there. */
+.smk-parameter .smk-parameter-reset {
+    position: absolute;
+    right: 0;
+    bottom: var( --space-1 );
+}
+
+.smk-parameter input {
+    padding-right: calc( var( --control-size ) + var( --space-1 ) );
 }
 
 .smk-parameter input:focus, 

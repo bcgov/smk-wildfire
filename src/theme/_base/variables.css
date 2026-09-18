@@ -1,10 +1,36 @@
 @import './material-icons.css';
 
 .smk-map-frame {
-    --overlay-padding: 7px;
+    /* The spacing scale. Every padding, margin and gap is one of these.
+       A theme sets colour and border, never a value from here. */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+
+    /* Text. These drive every box height, so a theme may not move them. */
+    --font-sm: 12px;
+    --font-md: 14px;
+    --font-lg: 16px;
+    --line-height: 1.4;
+
+    /* The square a command fills, and the glyph inside it. */
+    --control-size: 28px;
+    /* The corner a Command wears. A theme may set its own. */
+    --radius: 5px;
+    --icon-size: 20px;
+    --bar-icon-size: 24px;
+
+    --overlay-padding: var( --space-2 );
     --panel-width: 300px;
     --panel-bottom: 0;
-    --toolbar-height: 30px;
+    /* How far the status column clears the viewer's attribution. */
+    --status-bottom: var( --space-3 );
+    /* The actionbar tool overwrites this with its own height. */
+    --status-top: 0px;
+    --toolbar-height: 32px;
+    /* The gutter a panel keeps between its edge and its content. */
+    --panel-gutter: var( --space-2 );
 }
 
 @media screen and (orientation: landscape) {

@@ -1,11 +1,12 @@
 .smk-map-frame .smk-command {
+    display: inline-block;
     cursor: pointer;
-    color: blue;
-    padding: 2px;
+    color: inherit;
+    padding: var( --space-1 ) var( --space-2 );
     border: 1px solid transparent;
-    border-radius: 5px;
-    /* margin-left: -2px; */
-    font-size: 12px;
+    border-radius: var( --radius );
+    font-size: var( --font-sm );
+    line-height: var( --line-height );
     user-select: none;
     -ms-user-select: none;
     -moz-user-select: none;
@@ -14,10 +15,26 @@
 
 .smk-map-frame .smk-command.smk-icon {
     color: black;
+    /* Centre the glyph in the button. An inherited line-height is taller than
+       the button, so the icon sat low beside the title. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     padding: 0;
-    width: 26px;
-    height: 26px;
-    font-size: 24px;
+    width: var( --control-size );
+    height: var( --control-size );
+    font-size: var( --bar-icon-size );
+}
+
+/* A panel icon sits beside 12px labels, so it is smaller than a bar icon. */
+.smk-map-frame .smk-panel .smk-command.smk-icon,
+.smk-map-frame .smk-panel .smk-command.material-icons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: var( --icon-size );
 }
 
 .smk-map-frame .smk-command.smk-disabled {
@@ -50,7 +67,11 @@
 }
 
 .smk-map-frame .smk-commands {
-    margin-bottom: 1px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var( --space-1 );
+    margin-bottom: var( --space-2 );
 }
 
 .smk-map-frame .smk-active, .smk-tool-active {
@@ -58,8 +79,8 @@
 }
 
 .smk-map-frame .smk-item {
-    border-radius: 5px;
-    margin-bottom: 1px;
+    border-radius: var( --radius );
+    margin-bottom: var( --space-1 );
     cursor: default;
 }
 
@@ -75,8 +96,9 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
-    align-items: flex-start;
+    align-items: center;
     align-content: flex-end;
+    gap: var( --space-1 );
 }
 
 .smk-map-frame .smk-command-row .smk-command-spacer {

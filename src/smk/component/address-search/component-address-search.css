@@ -1,6 +1,8 @@
 .smk-address-search {
     position: relative;
-    display: inline-block;
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .smk-popup-list {
@@ -13,7 +15,7 @@
     background-color: white;
     font-size: 12px;
     max-width: 200px;
-    padding: 1px;
+    padding: var( --space-1 );
 }
 
 .smk-popup-item {

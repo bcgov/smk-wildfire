@@ -5,11 +5,11 @@
     background-color: transparent;
     cursor: default;
 
-    margin-top: 5px;
+    margin-top: var( --space-2 );
 }
 
 .smk-status .smk-coordinate .smk-ordinate label {
-    margin-left: 10px;
+    margin-left: var( --space-3 );
     margin-right: 0;
 }
 

@@ -130,6 +130,7 @@ export const ToolBase: any = {
                 'smk-tool-enabled':  this.enabled,
             }
             c[ 'smk-tool-' + this.id ] = true
+            if ( this.type ) c[ 'smk-' + this.type + '-tool' ] = true
             if ( this.status )
                 c[ 'smk-tool-status-' + this.status ] = true
             return c

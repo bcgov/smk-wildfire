@@ -5,7 +5,7 @@
 .smk-search-panel .smk-search-result {
     font-size: 12px;
     cursor: pointer;
-    padding: 5px;
+    padding: var( --space-2 );
 
     display: flex;
     flex-direction: row;
@@ -19,7 +19,7 @@
 
 .smk-search-panel .smk-search-result .smk-highlight {
     opacity: 0.0;
-    margin: -5px;
+    margin: -8px;
 }
 
 .smk-search-panel .smk-search-result:hover .smk-highlight {
@@ -40,7 +40,8 @@
 
     display: flex;
     justify-content: flex-start;
-    align-items: stretch;
+    align-items: center;
+    gap: var( --space-1 );
 }
 
 /* .smk-tool.smk-search-tool.smk-tool-visible {
@@ -49,9 +50,7 @@
 
 .smk-tool.smk-search-tool input {
     border: 0;
-    align-self: stretch;
-    padding-left: 4px;
-    margin: 2px;
+    padding-left: var( --space-2 );
     border-radius: 2px;
     width: 100%;
     font-size: 16px;
@@ -63,9 +62,11 @@
 
 .smk-tool.smk-search-tool .smk-clear-search {
     position: absolute;
-    right: 28px;
-    top: 2px;
-    /* opacity: 0.2; */
+    right: var( --control-size );
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
 }
 
 .smk-sidepanel .smk-search-location-panel .smk-body .smk-address {
@@ -73,7 +74,7 @@
 }
 
 .smk-sidepanel .smk-search-location-panel .smk-body .smk-coordinate {
-    margin-top: 5px;
+    margin-top: var( --space-2 );
 }
 
 .smk-tool.smk-search-tool .smk-search-dropdown {
@@ -88,7 +89,7 @@
 .smk-tool.smk-search-tool .smk-search-dropdown .smk-item {
     border-radius: 0;
     /* border-bottom: 1px solid gray; */
-    padding: 7px 5px;
+    padding: var( --space-2 ) var( --space-2 );
 }
 
 .smk-tool.smk-search-tool .smk-search-dropdown .smk-item:last-child {

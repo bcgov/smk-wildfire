@@ -1,6 +1,6 @@
 .smk-feature-list .smk-layer {
     position: relative;
-    margin-bottom: 5px;
+    margin-bottom: var( --space-2 );
     border-radius: 5px;
 }
 
@@ -15,7 +15,7 @@
     position: sticky;
     top: 0;
     background-color: white;
-    padding: 5px;
+    padding: var( --space-2 );
     border-bottom: 1px solid darkgrey;
     margin: 0;
 }
@@ -27,7 +27,7 @@
 
 .smk-feature-list .smk-layer .smk-feature {
     font-size: 12px;
-    margin-left: 10px;
+    margin-left: var( --space-3 );
     cursor: pointer;
 
     display: flex;
@@ -38,10 +38,10 @@
 
 .smk-feature-list .smk-layer .smk-feature span {
     flex-basis: 100%;
-    margin-left: 5px;
+    margin-left: var( --space-2 );
     font-size: 14px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: var( --space-2 );
+    margin-bottom: var( --space-2 );
 }
 
 .smk-feature-list .smk-layer .smk-feature.smk-highlighted {

@@ -2,6 +2,14 @@
 
 /* https://gist.github.com/retyui/b71c6cfca2d265c8c3c108fa39c7c88a */
 
+/* A field is at least a command tall, so an input and a select in the same
+   row line up. A taller field, such as the 16px query input, keeps its size. */
+.smk-map-frame input,
+.smk-map-frame select {
+    box-sizing: border-box;
+    min-height: var( --control-size );
+}
+
 .smk-map-frame select {
     background: #fff;
     border: 1px solid #eee;
@@ -16,4 +24,13 @@
 }
 .smk-map-frame select::-ms-expand {
     display: none;
+}
+
+/* A form control does not inherit the frame font, so it renders in the
+ * browser default beside its own label. All themes, all viewers. */
+.smk-map-frame input,
+.smk-map-frame select,
+.smk-map-frame textarea,
+.smk-map-frame button {
+    font: inherit;
 }

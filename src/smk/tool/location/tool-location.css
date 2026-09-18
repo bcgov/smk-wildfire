@@ -1,6 +1,6 @@
 /* .smk-sidepanel.smk-location-panel .smk-title {
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: var( --space-2 );
+    margin-right: var( --space-2 );
 }
 
 .smk-sidepanel.smk-location-panel .smk-title i {
@@ -22,6 +22,6 @@
 }
 
 .smk-sidepanel.smk-location-panel .smk-body .smk-coordinate {
-    margin-top: 5px;
+    margin-top: var( --space-2 );
 }
 

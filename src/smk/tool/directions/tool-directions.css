@@ -18,9 +18,9 @@
 .smk-directions-panel .smk-description {
     align-self: center;
     flex-basis: 100%;
-    margin: 2px 0;
+    margin: var( --space-1 ) 0;
     background-color: transparent;
-    margin-right: 5px;
+    margin-right: var( --space-2 );
     font-size: 11px;
 }
 
@@ -41,6 +41,6 @@
 }
 
 .smk-directions-panel .smk-address-search {
-    margin: 4px;
+    margin: var( --space-2 );
     width: calc( 100% - 46px );
 }

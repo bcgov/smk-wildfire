@@ -4,7 +4,7 @@
 
 .smk-select-option .smk-options {
     border-radius: 8px;
-    padding: 2px;
+    padding: var( --space-1 );
     display: flex;
     justify-content: space-around;
     background-color: #bbb;
@@ -16,6 +16,13 @@
     flex-basis: 100%;
     text-align: center;
     color: black;
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+    .smk-select-option .smk-options .smk-command {
+        transition: none;
+    }
 }
 
 .smk-select-option .smk-options .smk-selected-option {
