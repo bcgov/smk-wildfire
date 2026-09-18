@@ -64,6 +64,9 @@ import './smk/viewer-leaflet/tool/directions/tool-directions-leaflet.css'
 import './smk/viewer-leaflet/tool/measure/tool-measure-leaflet.css'
 import './smk/viewer-leaflet/tool/query/tool-query-leaflet.css'
 
+// MapLibre viewer
+import './smk/viewer-maplibre/viewer-maplibre.css'
+
 // ESRI 3D viewer
 import './smk/viewer-esri3d/viewer-esri3d.css'
 

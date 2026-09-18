@@ -84,7 +84,9 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
     self.map = new maplibregl.Map( {
         container:           el,
         style:               EMPTY_STYLE,
-        attributionControl:  false,
+        // Leaflet showed attribution by default. Compact keeps the credit in
+        // an 'i' button, which the crowded bottom-right corner can hold.
+        attributionControl:  { compact: true },
         interactive:         true,
         dragRotate:          false,
         pitchWithRotate:     false,
@@ -108,6 +110,11 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
 
     return new Promise<void>( ( resolve ) => {
         self.map.once( 'load', function () {
+
+            // The credit must stay readable, so it is not collapsed. It wraps
+            // to two or three lines on a narrow frame, so tell the status
+            // column how much room to leave instead.
+            publishAttributionHeight( smk, el )
 
             // Demote tile-decode/network errors so a single bad raster tile
             // (e.g. an Esri MapServer / WMS returning an HTML error page that
@@ -181,6 +188,26 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
             resolve()
         } )
     } )
+}
+
+/**
+ * Keep the status column clear of the attribution.
+ *
+ * The credit sits bottom-right, the same corner as the scale and the minimap,
+ * and it wraps to two or three lines on a narrow frame. Its height is the only
+ * honest source for --status-bottom.
+ */
+function publishAttributionHeight( smk: any, el: HTMLElement ) {
+    const corner = el.querySelector( '.maplibregl-ctrl-bottom-right' ) as HTMLElement | null
+    if ( !corner ) return
+
+    const set = () => {
+        const h = Math.round( corner.getBoundingClientRect().height )
+        smk.$container.style.setProperty( '--status-bottom', ( h + 6 ) + 'px' )
+    }
+
+    set()
+    if ( typeof ResizeObserver === 'function' ) new ResizeObserver( set ).observe( corner )
 }
 
 ViewerMapLibre.prototype.destroy = function () {
