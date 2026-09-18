@@ -374,10 +374,6 @@ import './smk/viewer-leaflet/tool/query/tool-query-leaflet.css'
 import './smk/viewer-esri3d/viewer-esri3d.css'
 
 // Themes (all shipped; host picks one via <body class="smk-theme-*">)
-import './theme/alpha/alpha.css'
-import './theme/beta/beta.css'
-import './theme/delta/delta.css'
-import './theme/gamma/gamma.css'
 import './theme/modern/modern.css'
 import './theme/wf/wf.css'
 

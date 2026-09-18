@@ -34,7 +34,6 @@
 			"showCoverageOnHover": false
 		},
 		"device": "auto",
-		"#themes":["alpha"],
 		"deviceAutoBreakpoint": 500,
 		"panelWidth": 300
 	},
