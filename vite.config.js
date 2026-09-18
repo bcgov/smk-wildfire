@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
 import { execSync } from 'child_process'
+import { playwright } from '@vitest/browser-playwright'
 
 /// <reference types="vitest/config" />
 
@@ -83,9 +84,60 @@ export default defineConfig( {
     },
 
     test: {
-        // jsdom gives us window/document so browser-targeted code runs in Node
-        environment: 'jsdom',
-        include: [ 'test/unit/**/*.test.ts' ],
         globals: true,
+
+        coverage: {
+            provider: 'v8',
+            // json-summary so build/coverage-report.js can print the unit
+            // number beside the harness one.
+            reporter: [ 'text-summary', 'html', 'json-summary' ],
+            reportsDirectory: 'coverage',
+            include: [ 'src/**/*.ts' ],
+            // Vendored libraries and the entry barrel are not ours to test.
+            exclude: [ 'src/lib/**', 'src/main.ts', 'src/styles.ts' ],
+        },
+
+        projects: [
+            {
+                extends: true,
+                test: {
+                    name: 'unit',
+                    // jsdom gives us window/document so browser code runs in Node
+                    environment: 'jsdom',
+                    include: [ 'test/unit/**/*.test.ts' ],
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: 'harness',
+                    // It drives a real browser itself, so it runs in node.
+                    // It needs dist/ built - `npm run test:harness` does that.
+                    environment: 'node',
+                    // Nothing here in CI. The harness drives real maps against
+                    // live BC services and the ArcGIS API, and a suite that
+                    // fails on a good day gets switched off. Run it locally.
+                    include: process.env.CI ? [] : [ 'test/harness/**/*.test.ts' ],
+                    testTimeout: 120000,
+                    hookTimeout: 300000,
+                    // One browser and one server per file, so files cannot share.
+                    fileParallelism: false,
+                },
+            },
+            {
+                extends: true,
+                test: {
+                    name: 'browser',
+                    include: [ 'test/browser/**/*.test.ts' ],
+                    // Layout and the CSS cascade have no answer in jsdom.
+                    browser: {
+                        enabled: true,
+                        provider: playwright(),
+                        headless: true,
+                        instances: [ { browser: 'chromium' } ],
+                    },
+                },
+            },
+        ],
     },
 } )
