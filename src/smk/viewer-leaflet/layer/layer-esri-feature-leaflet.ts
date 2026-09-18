@@ -38,11 +38,28 @@ export class EsriFeatureLeafletLayer extends EsriFeatureLayer {}
 
     const layer = L.esri.featureLayer( cfg )
 
+    // esri-leaflet 2.x had featureLayer.legend(), and SMK 1.0 used it. 3.x
+    // removed it, so this threw `a.legend is not a function` for EVERY
+    // esri-feature layer: createViewerLayer caught it, disabled the display
+    // item and warned, and the layer never drew. Found by the harness project
+    // on axis B, 2026-09-07; axis A then showed 1.0 fetching the legend that v2
+    // had stopped asking for. Ask the service directly and keep the legend.
     if ( layers[ 0 ].legendCacheResolve ) {
-        layer.legend( function ( err: any, leg: any ) {
-            layers[ 0 ].legendCacheResolve( err ? null : leg.layers[ 0 ].legend )
+        const done = ( leg: any ) => {
+            if ( !layers[ 0 ].legendCacheResolve ) return
+            layers[ 0 ].legendCacheResolve( leg )
             layers[ 0 ].legendCacheResolve = null
-        } )
+        }
+
+        if ( typeof layer.legend === 'function' ) {
+            layer.legend( ( err: any, leg: any ) => done( err ? null : leg.layers[ 0 ].legend ) )
+        } else {
+            fetch( String( cfg.url ).replace( /\/$/, '' ) + '/legend?f=json' )
+                .then( r => r.ok ? r.json() : null )
+                .then( d => done( d && d.layers && d.layers[ 0 ] ? d.layers[ 0 ].legend : null ) )
+                // Nothing must wait for a legend that cannot come.
+                .catch( () => done( null ) )
+        }
     }
 
     layer.on( 'load', () => {
