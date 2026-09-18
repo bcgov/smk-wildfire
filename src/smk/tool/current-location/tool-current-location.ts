@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import widgetCurrentLocationHtml from './widget-current-location.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -50,5 +52,7 @@ const factory = Tool.define( 'CurrentLocationTool',
     }
 )
 
-smkRef.TYPE[ 'tool-current-location' ] = factory
+Tool.register( 'current-location', factory, widgetDefaults( internalLayersDefaults( {
+    position: 'actionbar', order: 11, icon: 'my_location', title: 'Current Location', zoom: 17,
+} ) ) )
 export default factory

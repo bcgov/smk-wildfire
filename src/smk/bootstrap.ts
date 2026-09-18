@@ -20,13 +20,7 @@
  */
 
 import { resolveContainer } from './util'
-
-// Build-time constants injected by vite.config.js via `define`
-declare const __SMK_COMMIT__:      string
-declare const __SMK_BRANCH__:      string
-declare const __SMK_LAST_COMMIT__: string
-declare const __SMK_ORIGIN__:      string
-declare const __SMK_VERSION__:     string
+import { BUILD } from './build-info'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -128,33 +122,20 @@ function setupGlobalSMK(): void {
                 displayContext: [],
                 baseMapConfig:  [],
             },
+            // The Tools a map builds when its Config names none. Each Tool
+            // type registers its own defaults with Tool.register.
             tools: [
-                { type: 'pan' },
                 { type: 'actionbar', enabled: true },
-                { type: 'zoom',      mouseWheel: true, doubleClick: true, box: true, control: true, position: 'actionbar', order: 1,  icon: { zoomIn: 'add', zoomOut: 'remove' }, title: { zoomIn: 'Zoom In', zoomOut: 'Zoom Out' } },
-                { type: 'reset-view', position: 'actionbar', order: 10, icon: 'zoom_out_map', title: 'Reset View' },
-                { type: 'scale', showFactor: true, showBar: true },
-                { type: 'coordinate' },
-                { type: 'toolbar',  enabled: true },
-                { type: 'about',    enabled: true, position: 'toolbar', icon: 'help' },
-                { type: 'baseMaps', enabled: true, position: 'toolbar', icon: 'map', mapStyle: { width: '110px', height: '110px' } },
-                { type: 'search',   enabled: true, position: 'toolbar', icon: 'search' },
-                { type: 'identify', enabled: true, position: 'toolbar', icon: 'info_outline' },
-                { type: 'layers',   enabled: true, position: 'toolbar', icon: 'layers' },
-                { type: 'menu',     enabled: true, position: 'toolbar', icon: 'menu' },
+                { type: 'toolbar',   enabled: true },
+                { type: 'search',    enabled: true },
+                { type: 'location',  enabled: true },
             ],
         }
 
     if ( !smk.BOOT ) smk.BOOT = Promise.resolve()
     smk.TAGS_DEFINED = false
 
-    smk.BUILD = {
-        commit:     __SMK_COMMIT__,
-        branch:     __SMK_BRANCH__,
-        lastCommit: __SMK_LAST_COMMIT__,
-        origin:     __SMK_ORIGIN__,
-        version:    __SMK_VERSION__,
-    }
+    smk.BUILD = BUILD
 
     // Always install the full HANDLER (main.ts only stubs it with has/get)
     smk.HANDLER = {

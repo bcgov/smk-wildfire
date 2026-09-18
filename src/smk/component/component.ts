@@ -111,14 +111,16 @@ export const ToolBase: any = {
     props: {
         id:        String,
         type:      String,
-        title:     String,
+        // The zoom and pan tools name one icon and one title per button, so
+        // both take an object as well as a string.
+        title:     [ String, Object ],
         status:    String,
         active:    Boolean,
         enabled:   Boolean,
         visible:   Boolean,
         group:     Boolean,
         showTitle: Boolean,
-        icon:      String,
+        icon:      [ String, Object ],
     },
     computed: {
         baseClasses( this: any ) {

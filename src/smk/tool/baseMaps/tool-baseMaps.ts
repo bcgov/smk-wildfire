@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import panelBaseMapsHtml from './panel-base-maps.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -131,5 +133,8 @@ const factory = Tool.define( 'BaseMapsTool',
     }
 )
 
-smkRef.TYPE[ 'tool-baseMaps' ] = factory
+Tool.register( 'baseMaps', factory, widgetDefaults( panelDefaults( {
+    order: 3, position: [ 'shortcut-menu', 'list-menu' ], icon: 'map', title: 'Base Maps',
+    mapStyle: { width: '110px', height: '110px' },
+} ) ) )
 export default factory

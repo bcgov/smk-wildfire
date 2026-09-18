@@ -41,5 +41,5 @@ const factory = Tool.define( 'MarkupTool',
     }
 )
 
-smkRef.TYPE[ 'tool-markup' ] = factory
+Tool.register( 'markup', factory, { order: 3 } )
 export default factory

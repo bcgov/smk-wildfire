@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
+import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import panelLocationHtml from './panel-location.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -64,5 +66,5 @@ const factory = Tool.define( 'LocationTool',
     }
 )
 
-smkRef.TYPE[ 'tool-location' ] = factory
+Tool.register( 'location', factory, panelDefaults( internalLayersDefaults( { showHeader: false } ) ) )
 export default factory

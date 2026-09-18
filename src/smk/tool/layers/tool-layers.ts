@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import panelLayersHtml from './panel-layers.html?raw'
 import layerDisplayHtml from './layer-display.html?raw'
 import { SMK } from '../../smk-ref'
@@ -155,5 +157,9 @@ const factory = Tool.define( 'LayersTool',
     }
 )
 
-smkRef.TYPE[ 'tool-layers' ] = factory
+Tool.register( 'layers', factory, widgetDefaults( panelDefaults( {
+    order: 3, position: [ 'shortcut-menu', 'list-menu' ], icon: 'layers', title: 'Layers',
+    command: { allVisibility: true, filter: true, legend: true },
+    glyph:   { visible: 'visibility', hidden: 'visibility_off' },
+} ) ) )
 export default factory

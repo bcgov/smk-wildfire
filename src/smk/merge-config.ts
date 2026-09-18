@@ -347,8 +347,20 @@ export function toolMerge( base: ObjectIndex, source: ObjectIndex, path: string 
 // Main export
 // ---------------------------------------------------------------------------
 
+// Each registered Tool type's defaults, with SMK.CONFIG's default tool set over them.
+function withToolDefaults( tools: any[] = [] ): any[] {
+    const all = { tools: SMK?.TYPE?.Tool?.defaults?.() || [] }
+
+    console.groupCollapsed( 'config "tool defaults"' )
+    merge( [ { $: all }, '$' ], [ { $: { tools } }, '$' ], '' )
+    console.groupEnd()
+
+    return all.tools
+}
+
 export function mergeConfigs( configs: any[] ): any {
     const base = JSON.parse( JSON.stringify( SMK?.CONFIG || {} ) )
+    base.tools = withToolDefaults( base.tools )
     let inline = 0
 
     while ( configs.length > 0 ) {

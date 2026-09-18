@@ -10,5 +10,5 @@ const smkRef = SMK
 
 const factory = Tool.define( 'MinimapTool' )
 
-smkRef.TYPE[ 'tool-minimap' ] = factory
+Tool.register( 'minimap', factory, { order: 1 } )
 export default factory

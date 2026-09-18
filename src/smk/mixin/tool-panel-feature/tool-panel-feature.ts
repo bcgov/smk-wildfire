@@ -94,4 +94,15 @@ if ( typeof window !== 'undefined' ) {
     if ( smk && smk.TYPE ) smk.TYPE.ToolPanelFeature = ToolPanelFeature
 }
 
+/** The Config defaults of a Tool with a feature panel. */
+export function panelFeatureDefaults( option: Record<string, any> ): Record<string, any> {
+    option.command = Object.assign( {
+        navigator:     true,
+        zoom:          true,
+        select:        true,
+        attributeMode: false,
+    }, option.command )
+    return Object.assign( { attributeMode: 'default' }, option )
+}
+
 export default ToolPanelFeature
