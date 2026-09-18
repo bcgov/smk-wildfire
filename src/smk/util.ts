@@ -115,6 +115,23 @@ export function type( val: unknown ): string {
 }
 
 // ---------------------------------------------------------------------------
+// Container resolution
+// ---------------------------------------------------------------------------
+
+/**
+ * containerSel may be a CSS selector or an element. SMK took jQuery's `$()`
+ * before, which accepted both; querySelector accepts only the string, and a
+ * caller that passes an element got a SyntaxError instead of a map.
+ */
+export function resolveContainer( sel: any ): HTMLElement | null {
+    if ( !sel ) return null
+    if ( sel instanceof Element ) return sel as HTMLElement
+
+    const matches = document.querySelectorAll( sel )
+    return matches.length === 1 ? matches[ 0 ] as HTMLElement : null
+}
+
+// ---------------------------------------------------------------------------
 // Template substitution  (  <%= key %>  syntax )
 // ---------------------------------------------------------------------------
 

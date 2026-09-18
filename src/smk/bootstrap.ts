@@ -19,6 +19,8 @@
  * `window.SMK.TYPE.*` before the async init chain begins.
  */
 
+import { resolveContainer } from './util'
+
 // Build-time constants injected by vite.config.js via `define`
 declare const __SMK_COMMIT__:      string
 declare const __SMK_BRANCH__:      string
@@ -225,7 +227,7 @@ if ( navigator.userAgent.indexOf( 'MSIE ' ) > -1 || navigator.userAgent.indexOf(
     ;( window.SMK as any ).INIT = function ( option: Record<string, any> ) {
         const containerSelector = option.containerSel || option[ 'smk-container-sel' ]
         setTimeout( () => {
-            onFailure( ie11Err, document.querySelector( containerSelector ) )
+            onFailure( ie11Err, resolveContainer( containerSelector ) )
         }, 2000 )
     }
 
@@ -278,7 +280,7 @@ try {
             ;( window.SMK as any ).BOOT = ( ( window.SMK as any ).BOOT || Promise.resolve() )
                 .then( () => {
                     const e = new Error( 'Cannot call SMK.INIT if map initialized from <script> element' )
-                    onFailure( e, document.querySelector( sel ) )
+                    onFailure( e, resolveContainer( sel ) )
                     throw e
                 } )
             return ( window.SMK as any ).BOOT
@@ -360,7 +362,7 @@ function SmkInit(
         } )
         .catch( ( e: Error ) => {
             try {
-                onFailure( e, document.querySelector( ( attr as any ).containerSel ) )
+                onFailure( e, resolveContainer( ( attr as any ).containerSel ) )
             } catch ( ee ) {
                 console.error( 'failure showing failure:', ee )
             }

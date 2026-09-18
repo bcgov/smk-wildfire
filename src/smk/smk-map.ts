@@ -8,7 +8,7 @@
  */
 
 import spinnerGifUrl from './spinner.gif'
-import { waitAll, resolved } from './util'
+import { waitAll, resolved, resolveContainer } from './util'
 import { SMK } from './smk-ref'
 
 declare const Vue: any
@@ -77,11 +77,10 @@ SmkMap.prototype.resolveAssetUrl = function ( url: string ) {
 SmkMap.prototype.initialize = function () {
     const self = this
 
-    const matches = document.querySelectorAll( this.$option.containerSel )
-    if ( matches.length !== 1 )
+    const container = resolveContainer( this.$option.containerSel )
+    if ( !container )
         throw new Error( 'smk-container-sel "' + this.$option.containerSel + '" doesn\'t match a unique element' )
 
-    const container = matches[ 0 ] as HTMLElement
     container.innerHTML = ''
     container.classList.add( 'smk-map-frame', 'smk-hidden' )
 
