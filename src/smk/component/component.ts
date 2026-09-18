@@ -5,7 +5,7 @@
 
 import formatLinkHtml from './format-link.html?raw'
 import toolWidgetHtml from './tool-widget.html?raw'
-import { templateReplace } from '../util'
+import { templateReplace, projection } from '../util'
 import { SMK } from '../smk-ref'
 
 declare const Vue: any
@@ -158,7 +158,6 @@ export const ToolPanelBase: any = {
     methods: {
         $$projectProps( this: any, componentName: string ) {
             if ( !componentProps[ componentName ] ) {
-                const { projection } = require( '../util' )
                 componentProps[ componentName ] = projection.apply(
                     null,
                     Object.keys( ( new ( Vue.component( componentName ) )() )._props )
