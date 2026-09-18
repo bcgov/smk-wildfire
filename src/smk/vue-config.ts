@@ -47,40 +47,55 @@ function formatTime( value: any ): string {
     return isNaN( d.getTime() ) ? String( value ) : d.toLocaleTimeString()
 }
 
-function dimensionalNumber( value: any, dim: number, unit: string, decimalPlaces: number ): string {
+/** A fixed decimal count leaves ".00000" on a whole number. Drop it. */
+function trimZeros( s: string ): string {
+    return s.indexOf( '.' ) < 0 ? s : s.replace( /0+$/, '' ).replace( /\.$/, '' )
+}
+
+export function dimensionalNumber( value: any, dim: number, unit: string, decimalPlaces: number ): string {
+    const n  = ( x: number ) => trimZeros( formatNumber( x, decimalPlaces ) )
+    const v  = Number( value )
+    const mi = getMetersPerUnit( 'mi' )
+    const ft = getMetersPerUnit( 'ft' )
+
     if ( dim === 1 )
         switch ( unit ) {
-            case 'imperial':
-            case 'miles':          return formatNumber( value / getMetersPerUnit( 'mi' ), decimalPlaces ) + ' mi'
-            case 'inches':         return formatNumber( value / getMetersPerUnit( 'inches' ), decimalPlaces ) + ' in'
-            case 'feet':           return formatNumber( value / getMetersPerUnit( 'ft' ), decimalPlaces ) + ' ft'
-            case 'yards':          return formatNumber( value / getMetersPerUnit( 'yd' ), decimalPlaces ) + ' yd'
-            case 'nautical-miles': return formatNumber( value / getMetersPerUnit( 'nmi' ), decimalPlaces ) + ' nm'
-            case 'kilometers':     return formatNumber( value / 1000, decimalPlaces ) + ' km'
-            case 'acres':          return formatNumber( value / getMetersPerUnit( 'mi' ), decimalPlaces ) + ' mi'
-            case 'hectares':       return formatNumber( value, decimalPlaces ) + ' m'
-            case 'metric':
+            // metric and imperial pick the unit from the size. Both used to
+            // fall through, so "Metric" read the same as "Meters".
+            case 'metric':         return v >= 1000 ? n( v / 1000 ) + ' km' : n( v ) + ' m'
+            case 'imperial':       return v >= mi   ? n( v / mi )   + ' mi' : n( v / ft ) + ' ft'
+            case 'miles':          return n( v / mi ) + ' mi'
+            case 'inches':         return n( v / getMetersPerUnit( 'inches' ) ) + ' in'
+            case 'feet':           return n( v / ft ) + ' ft'
+            case 'yards':          return n( v / getMetersPerUnit( 'yd' ) ) + ' yd'
+            case 'nautical-miles': return n( v / getMetersPerUnit( 'nmi' ) ) + ' nm'
+            case 'kilometers':     return n( v / 1000 ) + ' km'
+            case 'acres':          return n( v / mi ) + ' mi'
+            case 'hectares':       return n( v ) + ' m'
             case 'meters':
-            default:               return formatNumber( value, decimalPlaces ) + ' m'
+            default:               return n( v ) + ' m'
         }
 
-    if ( dim === 2 )
+    if ( dim === 2 ) {
+        const mi2 = mi * mi, ft2 = ft * ft
         switch ( unit ) {
-            case 'imperial':
-            case 'miles':          return formatNumber( value / getMetersPerUnit( 'mi' ) / getMetersPerUnit( 'mi' ), decimalPlaces ) + ' mi²'
-            case 'inches':         return formatNumber( value / getMetersPerUnit( 'inches' ) / getMetersPerUnit( 'inches' ), decimalPlaces ) + ' in²'
-            case 'feet':           return formatNumber( value / getMetersPerUnit( 'ft' ) / getMetersPerUnit( 'ft' ), decimalPlaces ) + ' ft²'
-            case 'yards':          return formatNumber( value / getMetersPerUnit( 'yd' ) / getMetersPerUnit( 'yd' ), decimalPlaces ) + ' yd²'
-            case 'nautical-miles': return formatNumber( value / getMetersPerUnit( 'nmi' ) / getMetersPerUnit( 'nmi' ), decimalPlaces ) + ' nmi²'
-            case 'kilometers':     return formatNumber( value / 1000 / 1000, decimalPlaces ) + ' km²'
-            case 'acres':          return formatNumber( value / getMetersPerUnit( 'GunterChain' ) / getMetersPerUnit( 'Furlong' ), decimalPlaces ) + ' acres'
-            case 'hectares':       return formatNumber( value / 100 / 100, decimalPlaces ) + ' ha'
-            case 'metric':
+            case 'metric':         return v >= 1e6 ? n( v / 1e6 ) + ' km²' : n( v ) + ' m²'
+            case 'imperial':       return v >= mi2 ? n( v / mi2 ) + ' mi²' : n( v / ft2 ) + ' ft²'
+            case 'miles':          return n( v / mi2 ) + ' mi²'
+            case 'inches':         return n( v / Math.pow( getMetersPerUnit( 'inches' ), 2 ) ) + ' in²'
+            case 'feet':           return n( v / ft2 ) + ' ft²'
+            case 'yards':          return n( v / Math.pow( getMetersPerUnit( 'yd' ), 2 ) ) + ' yd²'
+            case 'nautical-miles': return n( v / Math.pow( getMetersPerUnit( 'nmi' ), 2 ) ) + ' nmi²'
+            case 'kilometers':     return n( v / 1e6 ) + ' km²'
+            case 'acres':          return n( v / getMetersPerUnit( 'GunterChain' ) / getMetersPerUnit( 'Furlong' ) ) + ' acres'
+            case 'hectares':       return n( v / 100 / 100 ) + ' ha'
             case 'meters':
-            default:               return formatNumber( value, decimalPlaces ) + ' m²'
+            default:               return n( v ) + ' m²'
         }
+    }
 
-    return formatNumber( value, decimalPlaces )
+    // No dimension means a count, like "Number of edges". It is not 2.00000.
+    return n( v )
 }
 
 // ---------------------------------------------------------------------------
