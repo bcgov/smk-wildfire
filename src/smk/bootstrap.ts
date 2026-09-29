@@ -150,8 +150,8 @@ function setupGlobalSMK(): void {
                     extent: [ -139.1782, 47.6039, -110.3533, 60.5939 ],
                 },
                 // SMK 1.0 opened on 'Topographic', an id the picker now hides.
-                // Ruled 2026-09-08: open on the BC basemap.
-                baseMap:        'bc-roads',
+                // Ruled 2026-09-23 (D22): open on topographic-v2; bc-roads took ~5 s to draw.
+                baseMap:        'topographic-v2',
                 clusterOption:  { showCoverageOnHover: false },
                 zoomSnap:       1,
                 displayContext: defaultDisplayContext(),
