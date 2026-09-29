@@ -4,8 +4,7 @@
  * Did the TypeScript rewrite lose anything? The oracle is the 1.0 bundle, not
  * an expectation somebody wrote down. See CONTEXT.md D8.
  *
- * The 1.0 build is not in git. Copy it once:
- *   cp -r <wfnews>/client/wfnews-war/src/main/angular/node_modules/@qqnluaq/smk/dist ref/smk-1.0
+ * The 1.0 build is not in git. Fetch it once: npm run ref:v1
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { open, up, down, type Run } from './harness'
