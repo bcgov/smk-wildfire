@@ -954,11 +954,28 @@ ViewerMapLibre.prototype.positionViewerLayer = function ( viewerLayer: any, zOrd
         }
     } )
 
+    // With no Host layer above, stay under what SMK did not place: the acetate and the tool layers.
+    if ( beforeId === undefined ) beforeId = lowestUnplacedLayerId( self )
+
     // moveLayer is a no-op if the layer is already in the right position
     ids.forEach( ( id: string ) => {
         if ( !self_hasLayer( self, id ) ) return
         try { self.map.moveLayer( id, beforeId ) } catch ( e ) { /* ignore */ }
     } )
+}
+
+/** The lowest style layer that is neither a basemap layer nor part of a viewer layer. */
+function lowestUnplacedLayerId( self: any ): string | undefined {
+    const placed = new Set<string>( self.basemapLayerIds )
+    Object.keys( self.viewerLayers ).forEach( ( key: string ) => {
+        const vl = self.viewerLayers[ key ]
+        specLayers( vl ).forEach( ( l: any ) => placed.add( l.id ) )
+        if ( vl.id ) placed.add( vl.id )
+    } )
+    const order: string[] = typeof self.map.getLayersOrder === 'function'
+        ? self.map.getLayersOrder()
+        : ( self.map.getStyle()?.layers || [] ).map( ( l: any ) => l.id )
+    return order.find( ( id: string ) => !placed.has( id ) )
 }
 
 function self_hasLayer( self: any, id: string ): boolean {
