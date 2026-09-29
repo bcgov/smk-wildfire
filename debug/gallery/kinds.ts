@@ -13,7 +13,12 @@ export interface Chrome {
     status( template: string, data: any, opt: FrameOptions ): any
     // A status entry's template is the build's own, not the one in stories.ts.
     statusTemplate?( story: Extract<Story, { kind: 'status' }> ): string
+    // Stories are written in Vue 2.5 syntax, which the 1.0 stage runs; v2 rewrites them.
+    template?( html: string ): string
+    destroy?( vm: any ): void
 }
+
+const inBuild = ( chrome: Chrome, html: string ) => chrome.template ? chrome.template( html ) : html
 
 export const clone = ( v: any ) => JSON.parse( JSON.stringify( v ) )
 
@@ -49,7 +54,8 @@ export function needs( story: Story, template = story.kind === 'status' ? story.
 }
 
 // A building block goes into a real tool-panel, in the slot a tool would use.
-function blockComponent( Vue: any, story: Extract<Story, { kind: 'block' }> ) {
+function blockComponent( chrome: Chrome, story: Extract<Story, { kind: 'block' }> ) {
+    const { Vue } = chrome
     const name = 'gallery-' + story.name
     if ( Vue.component( name ) ) return name
 
@@ -58,12 +64,12 @@ function blockComponent( Vue: any, story: Extract<Story, { kind: 'block' }> ) {
     Vue.component( name, {
         extends: ( window as any ).SMK.COMPONENT.ToolPanelBase,
         props: [ 'sample' ],
-        template: `
+        template: inBuild( chrome, `
             <tool-panel class="smk-gallery-panel" v-bind="$$projectProps( 'tool-panel' )">
                 <template slot="header"><slot></slot></template>
                 ${ commands }
                 ${ body }
-            </tool-panel>`,
+            </tool-panel>` ),
     } )
     return name
 }
@@ -71,12 +77,14 @@ function blockComponent( Vue: any, story: Extract<Story, { kind: 'block' }> ) {
 // Some props hold functions, which JSON cannot carry: an inline component's
 // data(), and v-content's createContent( el ). The sample keeps the plain form
 // (a data object, an HTML string) and here it becomes the function.
-function inlineComponents( prop: any ) {
+function inlineComponents( chrome: Chrome, prop: any ) {
     for ( const k of Object.keys( prop ) ) {
         const v = prop[ k ]
         if ( v && typeof v.template === 'string' && v.data && typeof v.data === 'object' ) {
             const data = v.data
-            prop[ k ] = { ...v, data: () => clone( data ) }
+            prop[ k ] = { ...v, template: inBuild( chrome, v.template ), data: () => clone( data ) }
+            // Vue 3 must not make a component reactive; Vue 2 ignores the flag.
+            Object.defineProperty( prop[ k ], '__v_skip', { value: true } )
         }
         else if ( v && typeof v.createContent === 'string' ) {
             const html = v.createContent
@@ -93,15 +101,15 @@ export function mountWith( chrome: Chrome, story: Story, model: any, opt: FrameO
     const m = clone( model )
     switch ( story.kind ) {
         case 'panel':
-            return chrome.sidepanel( { component: story.panel.component, prop: inlineComponents( m ) }, opt )
+            return chrome.sidepanel( { component: story.panel.component, prop: inlineComponents( chrome, m ) }, opt )
         case 'block':
-            return chrome.sidepanel( { component: blockComponent( chrome.Vue, story ), prop: {
+            return chrome.sidepanel( { component: blockComponent( chrome, story ), prop: {
                 id: story.name, type: story.name, title: story.name,
                 active: true, enabled: true, showPanel: true, showHeader: true, sample: m,
             } }, opt )
         case 'bar':
             return chrome.bar( story.bar, m, opt )
         case 'status':
-            return chrome.status( chrome.statusTemplate?.( story ) ?? story.template, m, { ...opt, methods: story.methods } )
+            return chrome.status( chrome.statusTemplate?.( story ) ?? inBuild( chrome, story.template ), m, { ...opt, methods: story.methods } )
     }
 }

@@ -1,18 +1,15 @@
 /**
  * component-select-dropdown — dropdown selector with v-model support.
  */
-import template from './component-select-dropdown.html?raw'
-declare const Vue: any
+import render from './component-select-dropdown.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'select-dropdown', {
-    template,
+component( 'select-dropdown', {
+    emits: [ 'change' ],
+    render,
     props: {
         options: { type: Array, default: () => [] },
         value:   {},
-    },
-    model: {
-        prop:  'value',
-        event: 'change',
     },
     methods: {
         clickOption( this: any, value: any ) {

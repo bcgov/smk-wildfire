@@ -1,11 +1,11 @@
 <tool-panel class="smk-selected-panel"
     v-bind="$$projectProps( 'tool-panel' )"
 >
-    <template slot="header">
+    <template #header>
         <slot></slot>
     </template>
 
-    <template slot="commands">
+    <template #commands>
         <command-button class="smk-clear"
             v-if="command.clear"
             v-bind:disabled="layers.length == 0"
@@ -19,7 +19,7 @@
         v-on:active="$$emit( 'active', $event )"
         v-on:hover="$$emit( 'hover', $event )"
     >
-        <template slot="item" slot-scope="item">
+        <template #item="item">
             <command-button class="smk-remove"
                 v-bind:key="item.feature.id"
                 title="Remove item"

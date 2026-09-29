@@ -4,10 +4,10 @@
  */
 
 import Tool from '../../tool'
-import scaleHtml from './scale.html?raw'
+import scaleRender from './scale.html?vue'
 import { SMK } from '../../smk-ref'
+import { mountRoot, reactive } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
@@ -20,16 +20,16 @@ const factory = Tool.define( 'ScaleTool',
     function ( this: any, smk: any ) {
         const self = this
 
-        this.model = {
+        this.model = reactive( {
             scaleDenom:        null,
             rulerSectionWidth: null,
             rulerLength:       null,
             rulerUnit:         null,
             zoomLevel:         null,
-        }
+        } )
 
-        this.vm = new Vue( {
-            el:   smk.addToStatus( scaleHtml ),
+        this.vm = mountRoot( smk.addToStatus( '<div>' ), {
+            render: scaleRender,
             data: this.model,
         } )
 

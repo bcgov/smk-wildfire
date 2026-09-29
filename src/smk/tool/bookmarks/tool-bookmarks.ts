@@ -6,20 +6,20 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelBookmarksHtml from './panel-bookmarks.html?raw'
+import panelBookmarksRender from './panel-bookmarks.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'bookmarks-widget', {
+component( 'bookmarks-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'bookmarks-panel', {
+component( 'bookmarks-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelBookmarksHtml,
+    render: panelBookmarksRender,
     props: [ 'bookmarks' ],
 } )
 

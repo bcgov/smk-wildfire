@@ -4,20 +4,20 @@
  */
 
 import Tool from '../../tool'
-import panelIdentifyHtml from './panel-identify.html?raw'
+import panelIdentifyRender from './panel-identify.html?vue'
 import { SMK } from '../../smk-ref'
 import * as turf from '@turf/turf'
+import { component } from '../../vue'
 
-declare const Vue: any
 const smkRef = SMK
 
-Vue.component( 'identify-widget', {
+component( 'identify-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'identify-panel', {
+component( 'identify-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelIdentifyHtml,
+    render: panelIdentifyRender,
     props: [ 'tool', 'layers', 'highlightId', 'command', 'radius', 'radiusUnit' ],
     methods: {
         formatNumber( value: number, fractionPlaces: number ) {

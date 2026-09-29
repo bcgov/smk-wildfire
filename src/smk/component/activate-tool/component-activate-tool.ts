@@ -1,13 +1,13 @@
 /**
  * component-activate-tool — Vue component for triggering another tool.
  */
-import template from './component-activate-tool.html?raw'
+import render from './component-activate-tool.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'activate-tool', {
+component( 'activate-tool', {
     extends: SMK?.COMPONENT?.ToolEmit,
-    template,
+    render,
     props: {
         id:    { type: String },
         title: { type: String },

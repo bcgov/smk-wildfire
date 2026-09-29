@@ -1,6 +1,6 @@
  <div class="smk-feature-list">
+    <template v-for="layer in layers">
     <div class="smk-layer"
-        v-for="layer in layers"
         v-if="layer && layer.features.length > 0"
     >
         <h2>{{ layer.title }}<span class="smk-count" v-if="layer.features.length > 1">({{ layer.features.length }})</span></h2>
@@ -33,4 +33,5 @@
             >delete</i> -->
         </div>
     </div>
+    </template>
 </div>

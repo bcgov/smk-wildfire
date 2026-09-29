@@ -4,17 +4,17 @@
  */
 
 import Tool from '../../tool'
-import panelQueryResultsHtml from './panel-query-results.html?raw'
+import panelQueryResultsRender from './panel-query-results.html?vue'
 import { SMK } from '../../smk-ref'
 import { highlightLayers } from '../../mixin/tool-feature-list/highlight-layers'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'query-results-panel', {
+component( 'query-results-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelQueryResultsHtml,
+    render: panelQueryResultsRender,
     props: [ 'tool', 'layers', 'highlightId', 'command' ],
 } )
 

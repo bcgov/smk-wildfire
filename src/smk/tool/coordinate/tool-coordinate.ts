@@ -4,10 +4,10 @@
  */
 
 import Tool from '../../tool'
-import coordinateHtml from './coordinate.html?raw'
+import coordinateRender from './coordinate.html?vue'
 import { SMK } from '../../smk-ref'
+import { mountRoot, reactive } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
@@ -18,10 +18,10 @@ const factory = Tool.define( 'CoordinateTool',
 
         if ( smk.$device === 'mobile' ) return
 
-        this.model = { latitude: null, longitude: null }
+        this.model = reactive( { latitude: null, longitude: null } )
 
-        this.vm = new Vue( {
-            el: smk.addToStatus( coordinateHtml ),
+        this.vm = mountRoot( smk.addToStatus( '<div>' ), {
+            render: coordinateRender,
             data: this.model,
             methods: {
                 formatValue( this: any, v: number ) {

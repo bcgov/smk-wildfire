@@ -6,17 +6,17 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelLayersHtml from './panel-layers.html?raw'
-import layerDisplayHtml from './layer-display.html?raw'
+import panelLayersRender from './panel-layers.html?vue'
+import layerDisplayRender from './layer-display.html?vue'
 import { SMK } from '../../smk-ref'
+import { component, nextTick } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'layer-display', {
+component( 'layer-display', {
     mixins: [ smkRef.COMPONENT.ToolEmit ],
-    template: layerDisplayHtml,
+    render: layerDisplayRender,
     props: {
         id:      { type: String },
         display: { type: Object },
@@ -25,13 +25,13 @@ Vue.component( 'layer-display', {
     },
 } )
 
-Vue.component( 'layers-widget', {
+component( 'layers-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'layers-panel', {
+component( 'layers-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelLayersHtml,
+    render: panelLayersRender,
     props: [ 'contexts', 'allVisible', 'glyph', 'command', 'filter', 'legend' ],
 } )
 
@@ -81,7 +81,7 @@ const factory = Tool.define( 'LayersTool',
 
                 smk.$viewer.setDisplayContextLegendsVisible( true )
 
-                if ( !self.legend ) Vue.nextTick( function () {
+                if ( !self.legend ) nextTick( function () {
                     smk.$viewer.setDisplayContextLegendsVisible( false )
                 } )
             },

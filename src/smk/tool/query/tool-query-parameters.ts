@@ -4,20 +4,21 @@
  */
 
 import Tool from '../../tool'
-import panelQueryHtml from './panel-query.html?raw'
+import panelQueryRender from './panel-query.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'query-widget', {
+component( 'query-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'query-panel', {
+component( 'query-panel', {
+    emits: [ 'pickDown', 'pickUp' ],
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelQueryHtml,
+    render: panelQueryRender,
     props: [ 'description', 'parameters', 'within', 'command' ],
 } )
 

@@ -4,16 +4,16 @@
  */
 
 import Tool from '../../tool'
-import widgetZoomHtml from './widget-zoom.html?raw'
+import widgetZoomRender from './widget-zoom.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'zoom-widget', {
+component( 'zoom-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
-    template: widgetZoomHtml,
+    render: widgetZoomRender,
     props: [ 'control' ],
 } )
 

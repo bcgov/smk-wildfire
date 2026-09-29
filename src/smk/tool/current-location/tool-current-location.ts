@@ -7,16 +7,16 @@ import Tool from '../../tool'
 import myLocationPng from './config/my-location.png'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
-import widgetCurrentLocationHtml from './widget-current-location.html?raw'
+import widgetCurrentLocationRender from './widget-current-location.html?vue'
 import { SMK } from '../../smk-ref'
 import * as turf from '@turf/turf'
+import { component } from '../../vue'
 
-declare const Vue: any
 const smkRef = SMK
 
-Vue.component( 'current-location-widget', {
+component( 'current-location-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
-    template: widgetCurrentLocationHtml,
+    render: widgetCurrentLocationRender,
 } )
 
 const factory = Tool.define( 'CurrentLocationTool',

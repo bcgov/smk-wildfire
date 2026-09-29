@@ -4,26 +4,25 @@
  */
 
 import { SMKEvent } from '../event'
-import statusMessageHtml from './status-message.html?raw'
+import statusMessageRender from './status-message.html?vue'
 import { resolved, makePromise, makeDelayedCall } from '../util'
 import { SMK } from '../smk-ref'
-
-declare const Vue: any
+import { mountRoot, reactive } from '../vue'
 
 const StatusMessageEvent: any = SMKEvent.define( [] )
 
 export function StatusMessage( this: any, smk: any ): void {
     StatusMessageEvent.prototype.constructor.call( this )
 
-    this.model = {
+    this.model = reactive( {
         status:  null as string | null,
         message: null as string | null,
         busy:    false,
-    }
+    } )
 
-    this.vm = new Vue( {
-        el:   smk.addToOverlay( statusMessageHtml ),
-        data: this.model,
+    this.vm = mountRoot( smk.addToOverlay( '<div>' ), {
+        render: statusMessageRender,
+        data:   this.model,
     } )
 
     this._promise = resolved()

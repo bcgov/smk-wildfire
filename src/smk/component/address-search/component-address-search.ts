@@ -1,12 +1,13 @@
 /**
  * component-address-search — Vue component for geocoder address search.
  */
-import template from './component-address-search.html?raw'
+import render from './component-address-search.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'address-search', {
-    template,
+component( 'address-search', {
+    emits: [ 'update' ],
+    render,
     props: {
         placeholder:     { type: String },
         geocoderService: { type: Object, default: () => ( {} ) },
@@ -61,7 +62,7 @@ Vue.component( 'address-search', {
     mounted( this: any ) {
         document.addEventListener( 'click', this.handleClickOutside )
     },
-    destroyed( this: any ) {
+    unmounted( this: any ) {
         document.removeEventListener( 'click', this.handleClickOutside )
     },
 } )

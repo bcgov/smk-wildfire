@@ -4,24 +4,24 @@
  */
 
 import Tool from '../../tool'
-import toolbarHtml from './toolbar.html?raw'
+import toolbarRender from './toolbar.html?vue'
 import { SMK } from '../../smk-ref'
+import { mountRoot, reactive } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
 const factory = Tool.define( 'ToolBarTool',
     function ( this: any ) {
-        this.model = {
+        this.model = reactive( {
             widgets: [] as any[],
-        }
+        } )
     },
     function ( this: any, smk: any ) {
-        const container = smk.addToOverlay( toolbarHtml )
+        const container = smk.addToOverlay( '<div>' )
 
-        this.vm = new Vue( {
-            el:   container,
+        this.vm = mountRoot( container, {
+            render: toolbarRender,
             data: this.model,
             methods: {
                 trigger( toolId: string, event: string, arg: any, comp: any ) {

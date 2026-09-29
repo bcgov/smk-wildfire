@@ -1,11 +1,11 @@
 <tool-panel class="smk-directions-route-panel" 
     v-bind="$$projectProps( 'tool-panel' )"
 >
-    <template slot="header">
+    <template #header>
         <slot></slot>
     </template>
 
-    <template slot="commands">
+    <template #commands>
         <command-button class="smk-print-route"
             v-bind:disabled="busy"
             v-on:click="$$emit( 'print', { debug: $event.shiftKey } )"
@@ -13,8 +13,8 @@
     </template>
 
     <div class="smk-directions">
+        <template v-for="( direction, i ) in directions">
         <div class="smk-direction"
-            v-for="( direction, i ) in directions"
             v-if="direction.name"
             v-on:mouseenter="$$emit( 'hover-direction', { highlight: i } )"
             v-on:mouseleave="$$emit( 'hover-direction', { highlight: null } )"
@@ -29,12 +29,13 @@
             <!-- <span class="smk-instruction" v-else>{{ direction.instruction }}</span> TODO remove -->
             <span class="smk-metric"
                 v-if="direction.distance"
-            >for {{ direction.distanceUnit.value | dimensionalNumber( 1, direction.distanceUnit.unit, 3 ) }} ({{ direction.time | formatTime }})</span>
+            >for {{ $filters.dimensionalNumber( direction.distanceUnit.value, 1, direction.distanceUnit.unit, 3 ) }} ({{ $filters.formatTime( direction.time ) }})</span>
             <i class="material-icons smk-instruction-notification"
                 v-if="direction.notifications && direction.notifications.length > 0"
                 v-bind:title="direction.notifications[0].message"
             >warning</i>
         </div>
+        </template>
     </div>
 
 </tool-panel>

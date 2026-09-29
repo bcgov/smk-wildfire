@@ -6,20 +6,21 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelMeasureHtml from './panel-measure.html?raw'
+import panelMeasureRender from './panel-measure.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
+import { dimensionalNumber } from '../../vue-config'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'measure-widget', {
+component( 'measure-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'measure-panel', {
+component( 'measure-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelMeasureHtml,
+    render: panelMeasureRender,
     props: [ 'results', 'viewer', 'content', 'unit' ],
     data() {
         return {
@@ -28,7 +29,7 @@ Vue.component( 'measure-panel', {
     },
     computed: {
         dimensionalNumber() {
-            return Vue.filter( 'dimensionalNumber' )
+            return dimensionalNumber
         },
     },
 } )

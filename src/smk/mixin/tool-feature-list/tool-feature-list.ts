@@ -5,7 +5,6 @@ import * as turf from '@turf/turf'
  * Converted from mixin/tool-feature-list/tool-feature-list.js.
  */
 
-declare const Vue: any
 export function ToolFeatureList( this: any, featureSetCallback: ( this: any, smk: any ) => any ): void {
     this.defineProp( 'layers' )
     this.defineProp( 'highlightId' )
@@ -46,18 +45,18 @@ export function ToolFeatureList( this: any, featureSetCallback: ( this: any, smk
 
             self.modifyComponentProp( 'layers', function ( prop: any ) {
                 if ( !prop[ index ] )
-                    Vue.set( prop, index, {
+                    prop[ index ] = {
                         id:       ly.id,
                         title:    ly.config.title,
                         features: [],
-                    } )
+                    }
 
-                Vue.set( prop[ index ], 'features', prop[ index ].features.concat(
+                prop[ index ].features = prop[ index ].features.concat(
                     ev.features.map( ( ft: any ) => {
                         if ( !self.firstId ) self.firstId = ft.id
                         return { id: ft.id, title: ft.title }
                     } )
-                ) )
+                )
             } )
         } )
 

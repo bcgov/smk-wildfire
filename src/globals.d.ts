@@ -16,9 +16,6 @@ import type * as LType   from 'leaflet'
 import type * as MlgType from 'maplibre-gl'
 
 declare global {
-    // Vue 2.7 — kept loose because tools use ad-hoc Vue.component( … ) etc.
-    const Vue: any
-
     // Leaflet
     const L: typeof LType & {
         esri?:    any

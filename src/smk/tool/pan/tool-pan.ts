@@ -4,16 +4,16 @@
  */
 
 import Tool from '../../tool'
-import widgetPanHtml from './widget-pan.html?raw'
+import widgetPanRender from './widget-pan.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'pan-widget', {
+component( 'pan-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
-    template: widgetPanHtml,
+    render: widgetPanRender,
     props: [ 'control', 'navMode', 'compassStyle' ],
     computed: {
         navModePanClasses( this: any ) {

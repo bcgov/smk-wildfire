@@ -6,11 +6,11 @@
         <div class="smk-input">
             <slot name="before-input"></slot>
             <input
+                v-bind="option"
                 v-bind:type="type"
                 v-bind:value="value"
                 v-bind:placeholder="placeholder"
                 v-bind:disabled="disabled"
-                v-bind="option"
                 v-on:input="onChange( $event.target.value, $event.target.selectionStart )"
                 v-on:keyup.down="$emit( 'key-down-arrow' )"
                 v-on:keyup.up="$emit( 'key-up-arrow' )"

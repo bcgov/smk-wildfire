@@ -1,13 +1,13 @@
 /**
  * component-tool-panel — swipeable side panel with scroll indicators.
  */
-import template from './component-tool-panel.html?raw'
+import render from './component-tool-panel.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'tool-panel', {
+component( 'tool-panel', {
     extends: SMK?.COMPONENT?.ToolPanelBase,
-    template,
+    render,
     data() {
         return {
             canScrollUp:   false,

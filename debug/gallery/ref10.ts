@@ -60,16 +60,18 @@ export async function loadRef10(): Promise<Ref10> {
         'tool-shortcut-menu.shortcut-menu-html' )
 
     const Vue = w.Vue
+    // Vue 2 replaces the host with the root, as the v2 mount does.
+    const mount = ( options: any, host: HTMLElement ) => new Vue( options ).$mount( host )
     return {
         Vue, vueBuild,
         sidepanel: ( panel: Mounted, opt: FrameOptions ) => {
             panel.prop = Object.assign( { active: true }, panel.prop )
-            return frameWith( Vue, t[ 'sidepanel.sidepanel-html' ], { visible: true, expand: 1, panels: [ panel ] }, opt )
+            return frameWith( mount, t[ 'sidepanel.sidepanel-html' ], { visible: true, expand: 1, panels: [ panel ] }, opt )
         },
         bar: ( bar, widgets, opt ) =>
-            frameWith( Vue, t[ `tool-${ bar }.${ bar }-html` ], { widgets }, opt ),
+            frameWith( mount, t[ `tool-${ bar }.${ bar }-html` ], { widgets }, opt ),
         status: ( template, data, opt ) =>
-            frameWith( Vue, `<div class="smk-status smk-elastic-container">${ template }</div>`, data, opt ),
+            frameWith( mount, `<div class="smk-status smk-elastic-container">${ template }</div>`, data, opt ),
         statusTemplate: story => {
             const html = t[ `tool-${ story.name }.${ story.name }-html` ]
             if ( !html ) throw new Error( `SMK 1.0 has no ${ story.name }.html` )

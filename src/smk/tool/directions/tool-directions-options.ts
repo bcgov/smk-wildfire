@@ -4,16 +4,16 @@
  */
 
 import Tool from '../../tool'
-import panelDirectionsOptionsHtml from './panel-directions-options.html?raw'
+import panelDirectionsOptionsRender from './panel-directions-options.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'directions-options-panel', {
+component( 'directions-options-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelDirectionsOptionsHtml,
+    render: panelDirectionsOptionsRender,
     props: {
         truck:          Boolean,
         optimal:        Boolean,

@@ -4,18 +4,18 @@
  */
 
 import Tool from '../../tool'
-import panelSearchLocationHtml from './panel-search-location.html?raw'
-import locationTitleHtml from './location-title.html?raw'
-import locationAddressHtml from './location-address.html?raw'
+import panelSearchLocationRender from './panel-search-location.html?vue'
+import locationTitleRender from './location-title.html?vue'
+import locationAddressRender from './location-address.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'search-location-panel', {
+component( 'search-location-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelSearchLocationHtml,
+    render: panelSearchLocationRender,
     props: [ 'feature', 'tool', 'command', 'locationComponent' ],
 } )
 
@@ -73,13 +73,13 @@ const factory = Tool.define( 'SearchLocationTool',
         smk.$viewer.searched.pickedFeature( function ( ev: any ) {
             self.locationComponent = {
                 name:     'location',
-                template: locationAddressHtml,
+                render: locationAddressRender,
                 data() { return { feature: ev.feature } },
             }
 
             self.titleComp = {
                 name:     'location-title',
-                template: locationTitleHtml,
+                render: locationTitleRender,
                 data() { return Object.assign( { intersectionName: null }, ev.feature && ev.feature.properties ) },
             }
 

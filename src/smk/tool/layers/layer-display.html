@@ -48,13 +48,13 @@
         >open_in_new</i>
     </div>
 
+    <template v-for="item in display.items" v-bind:key="item.id">
     <layer-display
-        v-for="item in display.items"
         v-if="item.inFilter && display.isExpanded"
-        v-bind:key="item.id"
         v-bind:id="id"
         v-bind:display="item"
         v-bind:glyph="glyph"
         v-bind:inGroup="inGroup || display.type == 'group'"
     ></layer-display>
+    </template>
 </div>

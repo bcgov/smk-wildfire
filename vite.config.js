@@ -3,6 +3,7 @@ import { resolve } from 'path'
 import { scanSupport } from './build/scan-support.js'
 import { execSync } from 'child_process'
 import { playwright } from '@vitest/browser-playwright'
+import { vueTemplates, templateCompilerAsset, VUE_DEFINES } from './build/vue-templates.js'
 
 /// <reference types="vitest/config" />
 
@@ -18,9 +19,12 @@ function git( cmd ) {
     }
 }
 
-export default defineConfig( {
+export default defineConfig( ( { command } ) => ( {
+    plugins: [ vueTemplates(), templateCompilerAsset() ],
+
     // Build-time constants substituted into src/smk/bootstrap.ts
     define: {
+        ...VUE_DEFINES,
         // Which viewer implements which tool and layer type. Read from the
         // file tree at build time, because nothing registers it at run time.
         __SMK_SUPPORT__:     JSON.stringify( scanSupport( import.meta.dirname ) ),
@@ -80,11 +84,14 @@ export default defineConfig( {
         // Prefer .ts over .js so that converted modules shadow their .js originals
         // during the incremental migration. Remove once all .js sources are gone.
         extensions: [ '.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs' ],
-        alias: {
-            '@': resolve( import.meta.dirname, 'src' ),
+        alias: [
+            { find: '@', replacement: resolve( import.meta.dirname, 'src' ) },
             // turf's `browser` field is a UMD bundle that cannot be tree-shaken.
-            '@turf/turf': '@turf/turf/turf.es.js',
-        },
+            { find: /^@turf\/turf$/, replacement: '@turf/turf/turf.es.js' },
+            // The Fixture and the Gallery build templates at run time, so the dev
+            // server and the tests take Vue with its compiler. A build does not.
+            ...( command === 'serve' ? [ { find: /^vue$/, replacement: 'vue/dist/vue.esm-browser.js' } ] : [] ),
+        ],
     },
 
     test: {
@@ -144,4 +151,4 @@ export default defineConfig( {
             },
         ],
     },
-} )
+} ) )

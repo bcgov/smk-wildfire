@@ -1,11 +1,11 @@
 /**
  * component-feature-attribute — displays a single attribute row.
  */
-import template from './component-feature-attribute.html?raw'
-declare const Vue: any
+import render from './component-feature-attribute.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'feature-attribute', {
-    template,
+component( 'feature-attribute', {
+    render,
     props: {
         title: { type: String },
         value: { type: String },

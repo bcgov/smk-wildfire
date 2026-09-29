@@ -1,11 +1,11 @@
 <tool-panel class="smk-identify-panel"
     v-bind="$$projectProps( 'tool-panel' )"
 >
-    <template slot="header">
+    <template #header>
         <slot></slot>
     </template>
 
-    <template slot="commands">
+    <template #commands>
         <command-button class="smk-select"
             v-bind:disabled="busy"
             v-if="tool.select && layers.length > 1 && command.select"
@@ -18,7 +18,7 @@
             v-bind:value="formatNumber( radius, 3 )"
             v-on:change="!busy && $$emit( 'change', { radius: $event } )"
         >Maximum distance
-            <template slot="after-input">
+            <template #after-input>
                 <select
                     v-bind:value="radiusUnit"
                     v-on:change="$$emit( 'changeUnit', { radiusUnit: $event.target.value } )"

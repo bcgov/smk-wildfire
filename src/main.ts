@@ -5,9 +5,8 @@
  * Core modules are being converted from include.module()
  * to ES imports. Converted modules are imported here and also assigned to
  * window.SMK.* for backward compatibility with unconverted modules.
- * 
- * Note: some modules (e.g. viewer-leaflet) still have unconverted deps (e.g. turf, jQuery) that are imported via global vars. These will be converted in a future pass.
- * Additionally esri3d viewer is not functional yet, but considering dropping support
+ *
+ * The esri3d viewer is not functional yet, but considering dropping support
  * and replacing with MapLibre, which also has 3D support via Mapbox GL JS.
  *
  * After all modules are converted, the global namespace (window.SMK) can be removed and modules can import from each other directly.
@@ -164,6 +163,7 @@ export { Viewer, default as viewer } from './smk/viewer'
 // ---------------------------------------------------------------------------
 import './smk/merge-config'
 import './smk/vue-config'
+import './smk/vue-host'
 import './smk/document-ready'
 import './smk/projections'
 

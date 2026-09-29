@@ -6,20 +6,20 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelAboutHtml from './panel-about.html?raw'
+import panelAboutRender from './panel-about.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'about-widget', {
+component( 'about-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'about-panel', {
+component( 'about-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelAboutHtml,
+    render: panelAboutRender,
     props: [ 'content' ],
 } )
 

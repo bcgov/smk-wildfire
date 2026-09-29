@@ -4,10 +4,10 @@
  */
 
 import Tool from '../../tool'
-import panelDirectionsRouteHtml from './panel-directions-route.html?raw'
+import panelDirectionsRouteRender from './panel-directions-route.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
@@ -29,9 +29,9 @@ const instructionType: Record<string, [ string, boolean | null, string ]> = {
     FINISH:            [ 'stop',            null,  '' ],
 }
 
-Vue.component( 'route-panel', {
+component( 'route-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelDirectionsRouteHtml,
+    render: panelDirectionsRouteRender,
     props: [ 'directions', 'directionHighlight', 'directionPick' ],
     methods: {
         instructionTypeIcon( type: string ) {

@@ -3,11 +3,11 @@
     xv-bind:message="busy ? 'Loading data' : ( !contexts[ 0 ].items || contexts[ 0 ].items.length == 0 ) ? 'No layers are configured' : ''"
     xv-bind:status="busy ? 'progress' : ( !contexts[ 0 ].items || contexts[ 0 ].items.length == 0 ) ? 'warning' : ''"
 >
-    <template slot="header">
+    <template #header>
         <slot></slot>
     </template>
 
-    <template slot="commands">
+    <template #commands>
         <i class="smk-all-visibility material-icons smk-command smk-icon"
             v-if="command.allVisibility"
             v-bind:title="'Toggle visibility of all layers.\nSHIFT-click to toggle visibility on each layer.'"

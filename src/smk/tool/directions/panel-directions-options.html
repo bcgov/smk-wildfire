@@ -1,11 +1,11 @@
 <tool-panel class="smk-directions-options-panel" 
     v-bind="$$projectProps( 'tool-panel' )"
 >
-    <template slot="header">
+    <template #header>
         <slot></slot>
     </template>
 
-    <template slot="commands">
+    <template #commands>
     </template>
 
     <select-option class="smk-directions-optimal"
@@ -73,7 +73,7 @@
             v-bind:option="{ min: 0, step: 1 }"
             v-on:change="!busy && $$emit( 'change', { truckHeight: fromUnit( $event, truckHeightUnit ) } )"
         >Height OAH
-            <template slot="after-input">
+            <template #after-input>
                 <div class="smk-input">
                     <select
                         v-bind:value="truckHeightUnit"
@@ -92,7 +92,7 @@
             v-bind:option="{ min: 0, step: 0.01 }"
             v-on:change="!busy && $$emit( 'change', { truckWidth: fromUnit( $event, truckWidthUnit ) } )"
         >Width OAW
-            <template slot="after-input">
+            <template #after-input>
                 <div class="smk-input">
                     <select
                         v-bind:value="truckWidthUnit"
@@ -111,7 +111,7 @@
             v-bind:option="{ min: 0, step: 0.01 }"
             v-on:change="!busy && $$emit( 'change', { truckLength: fromUnit( $event, truckLengthUnit ) } )"
         >Length OAL
-            <template slot="after-input">
+            <template #after-input>
                 <div class="smk-input">
                     <select
                         v-bind:value="truckLengthUnit"
@@ -130,7 +130,7 @@
             v-bind:option="{ min: 0, step: 1 }"
             v-on:change="!busy && $$emit( 'change', { truckWeight: fromUnit( $event, truckWeightUnit ) } )"
         >Weight GVW
-            <template slot="after-input">
+            <template #after-input>
                 <div class="smk-input">
                     <select
                         v-bind:value="truckWeightUnit"

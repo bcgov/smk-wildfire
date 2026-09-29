@@ -5,16 +5,16 @@
 
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
-import widgetResetViewHtml from './widget-reset-view.html?raw'
+import widgetResetViewRender from './widget-reset-view.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'reset-view-widget', {
+component( 'reset-view-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
-    template: widgetResetViewHtml,
+    render: widgetResetViewRender,
 } )
 
 const factory = Tool.define( 'ResetViewTool',

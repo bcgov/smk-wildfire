@@ -4,16 +4,15 @@
  */
 
 import Tool from '../../tool'
-import legendHtml from './legend.html?raw'
-import legendDisplayHtml from './legend-display.html?raw'
+import legendRender from './legend.html?vue'
+import legendDisplayRender from './legend-display.html?vue'
 import { SMK } from '../../smk-ref'
-
-declare const Vue: any
+import { component, mountRoot, nextTick, reactive } from '../../vue'
 
 const smkRef = SMK
 
-Vue.component( 'legend-display', {
-    template: legendDisplayHtml,
+component( 'legend-display', {
+    render: legendDisplayRender,
     props: {
         display: { type: Object },
         inGroup: { type: Boolean, default: false },
@@ -29,7 +28,7 @@ Vue.component( 'legend-display', {
  */
 export function showOwnLegends( smk: any ): void {
     smk.$viewer.setDisplayContextLegendsVisible( true )
-    Vue.nextTick( function () {
+    nextTick( function () {
         smk.$viewer.setDisplayContextLegendsVisible( false )
     } )
 }
@@ -41,13 +40,13 @@ const factory = Tool.define( 'LegendTool',
 
         // The pane floats over the map with nothing to say what it is. A host
         // that wants no header sets title to null in its config.
-        const model = {
-            contexts: [],
+        const model = reactive( {
+            contexts: [] as any[],
             title:    self.title == null ? 'Legend' : self.title,
-        }
+        } )
 
-        this.vm = new Vue( {
-            el:   smk.addToStatus( legendHtml ),
+        this.vm = mountRoot( smk.addToStatus( '<div>' ), {
+            render: legendRender,
             data: model,
         } )
 

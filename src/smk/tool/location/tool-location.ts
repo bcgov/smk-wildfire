@@ -8,20 +8,20 @@ import locationIconBlue from './config/marker-icon-blue.png'
 import locationShadow   from './config/marker-shadow.png'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
-import panelLocationHtml from './panel-location.html?raw'
+import panelLocationRender from './panel-location.html?vue'
 import { SMK } from '../../smk-ref'
 import * as turf from '@turf/turf'
+import { component } from '../../vue'
 
-declare const Vue: any
 const smkRef = SMK
 
-Vue.component( 'location-widget', {
+component( 'location-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'location-panel', {
+component( 'location-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelLocationHtml,
+    render: panelLocationRender,
     props: [ 'site', 'tool' ],
 } )
 

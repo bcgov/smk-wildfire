@@ -4,7 +4,9 @@
         <title>Esri 3D</title>
 
         <!-- Runtime dependencies expected as window globals by smk.es.js -->
-        <script src="../../../src/lib/vue-2.7.16.min.js"></script>
+        <!-- smk.es.js imports vue; the map points it at the runtime build. -->
+
+        <script type="importmap">{ "imports": { "vue": "../../../src/lib/vue-3.5.43.runtime.esm-browser.prod.js" } }</script>
         <link rel="stylesheet" href="../../../src/lib/leaflet/leaflet-1.7.1.css"/>
         <script src="../../../src/lib/leaflet/leaflet-1.7.1.js"></script>
         <script src="../../../src/lib/leaflet/esri-leaflet-3.0.19.min.js"></script>

@@ -4,20 +4,20 @@
  */
 
 import Tool from '../../tool'
-import shortcutMenuHtml from './shortcut-menu.html?raw'
+import shortcutMenuRender from './shortcut-menu.html?vue'
 import { SMK } from '../../smk-ref'
+import { mountRoot, reactive } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
 const factory = Tool.define( 'ShortcutMenuTool',
     function ( this: any ) {
-        this.model = { widgets: [] as any[] }
+        this.model = reactive( { widgets: [] as any[] } )
     },
     function ( this: any, smk: any ) {
-        this.vm = new Vue( {
-            el:   smk.addToStatus( shortcutMenuHtml ),
+        this.vm = mountRoot( smk.addToStatus( '<div>' ), {
+            render: shortcutMenuRender,
             data: this.model,
             methods: {
                 trigger( toolId: string, event: string, arg: any, comp: any ) {

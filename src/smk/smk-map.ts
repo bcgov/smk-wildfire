@@ -2,16 +2,16 @@
  * SmkMap — main map controller.
  * Converted from smk-map.js (include.module -> ES module).
  *
- * Vue is expected to be provided by the host page (as with L, turf, proj4
- * etc).  The viewer types and tool factories are pre-registered on
+ * The viewer types and tool factories are pre-registered on
  * window.SMK.TYPE.* by the ES-module side-effects of their own files.
  */
 
 import spinnerGifUrl from './spinner.gif'
 import { waitAll, resolved, resolveContainer, projection } from './util'
 import { SMK } from './smk-ref'
-
-declare const Vue: any
+import { EventDispatcher } from './event'
+import { h, mountRoot, reactive } from './vue'
+import { toDisplayString } from 'vue'
 
 // ---------------------------------------------------------------------------
 // Small DOM helpers (replace jQuery)
@@ -58,7 +58,7 @@ export function fadeIn( el: HTMLElement, duration: number ): Promise<void> {
 export function SmkMap( this: any, option: any ): void {
     this.$option = option
 
-    this.$dispatcher = new Vue()
+    this.$dispatcher = new EventDispatcher()
 
     this.$group = {}
 }
@@ -389,11 +389,11 @@ SmkMap.prototype.setEditFocus = function ( focus: boolean ) {
 
 SmkMap.prototype.debugMessage = function ( opt: Record<string, any> ) {
     if ( !this.debugVm ) {
-        this.debugVm = new Vue( {
-            el: this.addToOverlay( '<div class="smk-debug"><div v-for="k in keys">{{ k }} : {{ status[ k ] }}</div></div>' ),
-            data: { status: {} },
-            computed: {
-                keys( this: any ) { return Object.keys( this.status ) },
+        this.debugVm = mountRoot( this.addToOverlay( '<div>' ), {
+            data: reactive( { status: {} as Record<string, any> } ),
+            render( this: any ) {
+                return h( 'div', { class: 'smk-debug' }, Object.keys( this.status ).map( k =>
+                    h( 'div', k + ' : ' + toDisplayString( this.status[ k ] ) ) ) )
             },
         } )
     }
@@ -401,7 +401,7 @@ SmkMap.prototype.debugMessage = function ( opt: Record<string, any> ) {
     opt.ts = ( new Date() ).toLocaleTimeString()
     const d = this.debugVm.$data
     Object.keys( opt || {} ).forEach( function ( k: string ) {
-        Vue.set( d.status, k, opt[ k ] )
+        d.status[ k ] = opt[ k ]
     } )
 }
 
@@ -415,7 +415,7 @@ SmkMap.prototype.setVar = function ( cssVar: string, value: string ) {
 }
 
 SmkMap.prototype.emit = function ( toolId: string, event: string, arg: any, comp: any ) {
-    this.$dispatcher.$emit( toolId + '.' + event, arg, comp )
+    this.$dispatcher.$emitLogged( toolId + '.' + event, arg, comp )
     return this
 }
 

@@ -4,12 +4,12 @@
  */
 
 import Tool from '../../tool'
-import widgetSearchHtml from './widget-search.html?raw'
-import panelSearchHtml from './panel-search.html?raw'
+import widgetSearchRender from './widget-search.html?vue'
+import panelSearchRender from './panel-search.html?vue'
 import { SMK } from '../../smk-ref'
 import * as turf from '@turf/turf'
+import { component, nextTick } from '../../vue'
 
-declare const Vue: any
 const smkRef = SMK
 
 const precisionZoom: Record<string, number> = {
@@ -72,9 +72,9 @@ function doAddressSearch( text: string ) {
         } )
 }
 
-Vue.component( 'search-widget', {
+component( 'search-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
-    template: widgetSearchHtml,
+    render: widgetSearchRender,
     props: [ 'initialSearch', 'results', 'highlightId', 'showPanel' ],
     data() { return { search: null } },
     watch: {
@@ -92,9 +92,9 @@ Vue.component( 'search-widget', {
     },
 } )
 
-Vue.component( 'search-panel', {
+component( 'search-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelSearchHtml,
+    render: panelSearchRender,
     props: [ 'results', 'highlightId' ],
     methods: {
         isEmpty( this: any ) { return !this.results || this.results.length === 0 },
@@ -169,7 +169,7 @@ const factory = Tool.define( 'SearchListTool',
             'clear': function () {
                 smk.$viewer.searched.clear()
                 self.initialSearch = ' '
-                Vue.nextTick( function () { self.initialSearch = '' } )
+                nextTick( function () { self.initialSearch = '' } )
             },
         } )
 

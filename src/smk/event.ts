@@ -18,7 +18,7 @@
 // EventDispatcher — replaces the Vue 2 instance used as an event bus
 // ---------------------------------------------------------------------------
 
-class EventDispatcher {
+export class EventDispatcher {
     private listeners: Record<string, Function[]> = {}
 
     $on( event: string, handler: Function ): void {
@@ -34,6 +34,14 @@ class EventDispatcher {
     $emit( event: string, ...args: any[] ): void {
         const handlers = this.listeners[ event ]
         if ( handlers ) handlers.slice().forEach( h => h( ...args ) )
+    }
+
+    /** Logs a handler's throw and goes on to the next, as Vue 2's $emit did. */
+    $emitLogged( event: string, ...args: any[] ): void {
+        const handlers = this.listeners[ event ]
+        if ( handlers ) handlers.slice().forEach( h => {
+            try { h( ...args ) } catch ( e ) { console.error( e ) }
+        } )
     }
 }
 

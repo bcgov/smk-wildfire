@@ -4,10 +4,10 @@
  */
 
 import { SMKEvent } from '../event'
-import sidepanelHtml from './sidepanel.html?raw'
+import sidepanelRender from './sidepanel.html?vue'
 import { SMK } from '../smk-ref'
+import { mountRoot, reactive } from '../vue'
 
-declare const Vue: any
 
 const SidepanelEvent: any = SMKEvent.define( [
     'changedVisible',
@@ -20,18 +20,18 @@ export function Sidepanel( this: any, smk: any ): void {
 
     SidepanelEvent.prototype.constructor.call( this )
 
-    this.model = {
+    this.model = reactive( {
         visible: false,
         expand:  0,
         panels:  [] as any[],
-    }
+    } )
 
     function getTool( id: string ) {
         return self.model.panels.find( ( p: any ) => p.prop.id === id )
     }
 
-    this.vm = new Vue( {
-        el: smk.addToOverlay( sidepanelHtml ),
+    this.vm = mountRoot( smk.addToOverlay( '<div>' ), {
+        render: sidepanelRender,
         data: this.model,
         methods: {
             trigger( toolId: string, event: string, arg: any, comp: any ) {

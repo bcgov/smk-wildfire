@@ -5,8 +5,8 @@
 
 import Tool from '../../tool'
 import { SMK } from '../../smk-ref'
+import { nextTick } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
@@ -27,7 +27,7 @@ const factory = Tool.define( 'QueryFeatureTool',
         self.changedActive( function () {
             if ( self.active ) {
                 self.featureSet.highlight()
-                Vue.nextTick( function () {
+                nextTick( function () {
                     smk.getToolById( self.parentId ).visible = true
                     if ( self.command.zoom === false )
                         self.featureSet.zoomTo( featureIds[ self.resultPosition ] )

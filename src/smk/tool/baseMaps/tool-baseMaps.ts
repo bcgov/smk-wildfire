@@ -6,21 +6,21 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelBaseMapsHtml from './panel-base-maps.html?raw'
+import panelBaseMapsRender from './panel-base-maps.html?vue'
 import { SMK } from '../../smk-ref'
+import { component, nextTick } from '../../vue'
 
-declare const Vue: any
 declare const L: any
 
 const smkRef = SMK
 
-Vue.component( 'baseMaps-widget', {
+component( 'baseMaps-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'baseMaps-panel', {
+component( 'baseMaps-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelBaseMapsHtml,
+    render: panelBaseMapsRender,
     props: [ 'current', 'basemaps', 'mapStyle' ],
 } )
 
@@ -98,7 +98,7 @@ const factory = Tool.define( 'BaseMapsTool',
                     smkRef.HANDLER.get( self.id, 'triggered' )( smk, self )
                 } else {
                     smkRef.HANDLER.get( self.id, 'activated' )( smk, self )
-                    Vue.nextTick( function () {
+                    nextTick( function () {
                         self.basemaps.forEach( ( bm: any ) => bm.update() )
                     } )
                 }

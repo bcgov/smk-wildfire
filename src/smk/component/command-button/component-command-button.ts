@@ -1,11 +1,12 @@
 /**
  * component-command-button — clickable action button component.
  */
-import template from './component-command-button.html?raw'
-declare const Vue: any
+import render from './component-command-button.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'command-button', {
-    template,
+component( 'command-button', {
+    emits: [ 'click' ],
+    render,
     props: {
         title:    { type: String },
         disabled: { type: Boolean, default: false },

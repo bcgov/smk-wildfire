@@ -1,11 +1,11 @@
 /**
  * component-feature-description — displays feature description HTML.
  */
-import template from './component-feature-description.html?raw'
+import render from './component-feature-description.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'feature-description', {
+component( 'feature-description', {
     extends: SMK?.COMPONENT?.FeatureBase,
-    template,
+    render,
 } )

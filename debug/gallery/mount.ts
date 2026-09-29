@@ -2,7 +2,7 @@
  * Mounts one Gallery entry in v2. The v2 stage and test/browser/gallery.test.ts
  * both use this, so an entry that stops rendering fails a test.
  */
-import { Vue, mountSidepanel, mountBar, mountStatus, type FrameOptions } from '../../test/browser/fixture'
+import { Vue, mountSidepanel, mountBar, mountStatus, unmount, type FrameOptions } from '../../test/browser/fixture'
 import { mountWith, type Chrome } from './kinds'
 import type { Story } from './stories'
 
@@ -33,7 +33,12 @@ await import( '../../src/smk/viewer-maplibre/tool/mode/tool-mode-maplibre' )
 
 export { clone, initialModel, liveModel } from './kinds'
 
-export const V2: Chrome = { Vue, sidepanel: mountSidepanel, bar: mountBar, status: mountStatus }
+export const V2: Chrome = {
+    Vue, sidepanel: mountSidepanel, bar: mountBar, status: mountStatus, destroy: unmount,
+    template: html => html
+        .replace( /<template slot="([\w-]+)" slot-scope="([\w$]+)">/g, '<template #$1="$2">' )
+        .replace( /<template slot="([\w-]+)">/g, '<template #$1>' ),
+}
 
 export function mountStory( story: Story, model: any, opt: FrameOptions ) {
     return mountWith( V2, story, model, opt )
