@@ -63,5 +63,7 @@ const factory = Tool.define( 'CoordinateTool',
     }
 )
 
-Tool.register( 'coordinate', factory, { format: 'DD' } )
+// The status column is column-reverse, so a higher order sits higher:
+// legend 4, minimap 3, coordinate 2, scale 1.
+Tool.register( 'coordinate', factory, { order: 2, format: 'DD' } )
 export default factory

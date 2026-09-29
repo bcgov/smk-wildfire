@@ -9,8 +9,10 @@
         'smk-obscured': !display.isActuallyVisible,
     } 
 ]">
+    <!-- Same test as the legend below: a group header, and a tool layer that
+         has not run yet, have nothing to draw and left 8px of padding. -->
     <div class="smk-item"
-        v-if="display.id != 'root'"
+        v-if="display.id != 'root' && display.legends && display.legends.length && display.isActuallyVisible"
     >
         <span class="smk-legend-title"
             v-if="!inGroup && display.class && display.legends && display.legends.length && display.isActuallyVisible"

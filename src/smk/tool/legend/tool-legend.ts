@@ -58,5 +58,7 @@ const factory = Tool.define( 'LegendTool',
     }
 )
 
-Tool.register( 'legend', factory )
+// The status column is column-reverse, so a higher order sits higher:
+// legend 4, minimap 3, coordinate 2, scale 1.
+Tool.register( 'legend', factory, { order: 4 } )
 export default factory

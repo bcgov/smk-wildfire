@@ -55,8 +55,9 @@
     padding: var( --space-1 ) 0;
 }
 
-/* One layer's block needs to read as one block, with air before the next. */
-.smk-legend-status .smk-display-layer {
+/* One layer's block needs to read as one block, with air before the next. On
+   the item, not the wrapper: a row that drew nothing must take no space. */
+.smk-legend-status .smk-display.smk-display-layer > .smk-item {
     margin-bottom: var( --space-2 );
 }
 
@@ -102,6 +103,13 @@
 }
 
 .smk-legend-status .smk-display.smk-inline-legend .smk-legend .smk-legend-title {
+    display: none;
+}
+
+/* A glyph inside one of these groups can carry no text at all: the caption is
+   hidden above, and the row title needs `!inGroup`. A swatch that cannot say
+   what it is does not earn a row. A Theme that wants them back overrides this. */
+.smk-legend-status .smk-display.smk-inline-legend .smk-display-layer > .smk-item {
     display: none;
 }
 
