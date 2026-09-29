@@ -1,5 +1,5 @@
-/* The Gallery's own chrome. Nothing here may select an smk- class except the
-   stage backdrop, or the page would change what it is there to show. */
+/* The Gallery's own chrome. Each build renders in a stage document, so nothing
+   here reaches SMK. Keep smk- selectors out of this file all the same. */
 
 :root {
     --g-bg: #f6f7f9;
@@ -13,8 +13,6 @@
     --g-warn-soft: #fff4dc;
     --g-error: #b3261e;
     --g-error-soft: #fdeceb;
-    --g-map: #dfe6e2;
-    --g-map-line: #cfd8d3;
     color-scheme: light;
 }
 
@@ -103,18 +101,51 @@ body {
 .g-view p { margin: 4px 0 16px; }
 .g-view p + p { margin-top: -12px; }
 
-/* Stands in for the map under the overlay. The colour and the scheme are the
-   Host page defaults: without them the dark chrome inherits into the panel. */
-.g-stage > .smk-map-frame {
-    color: black;
-    color-scheme: light;
-    background-color: var( --g-map );
-    background-image:
-        linear-gradient( var( --g-map-line ) 1px, transparent 1px ),
-        linear-gradient( 90deg, var( --g-map-line ) 1px, transparent 1px );
-    background-size: 32px 32px;
+/* Controls that mean something in one mode only. */
+body:not( [data-mode="both"] ) [data-when="both"],
+body:not( [data-layout="overlay"] ) [data-when="overlay"] { display: none; }
+
+/* Each pane is a stage document (stage.css styles the map frame in it). */
+.g-panes { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.g-pane { margin: 0; }
+.g-pane figcaption { margin-bottom: 6px; font-size: 12px; }
+.g-pane iframe { display: block; border: 0; }
+
+/* Overlay: both panes in one cell, SMK 1.0 on top. */
+body[data-layout="overlay"] .g-panes { display: grid; justify-content: start; }
+body[data-layout="overlay"] .g-pane { grid-area: 1 / 1; }
+body[data-layout="overlay"] .g-pane[data-build="1.0"] figcaption { text-align: right; }
+body[data-layout="overlay"] .g-pane[data-build="1.0"] iframe { opacity: var( --g-fade, .5 ); }
+
+body:not( [data-mode="v2"] ) #g-nav a[data-absent="all"] { color: var( --g-muted ); }
+body:not( [data-mode="v2"] ) #g-nav a[data-absent]::after {
+    content: "v2 only";
+    margin-left: 6px;
+    padding: 0 4px;
+    border: 1px solid var( --g-line );
+    border-radius: 3px;
+    font: 10px/1.4 system-ui, sans-serif;
+}
+body:not( [data-mode="v2"] ) #g-nav a[data-absent="some"]::after { content: "partial"; }
+
+.g-diff {
+    max-width: 900px;
+    margin-top: 20px;
+    padding: 12px 16px;
+    background: var( --g-panel );
     border: 1px solid var( --g-line );
     border-radius: 4px;
+}
+.g-diff h2 { margin: 0 0 8px; font-size: 13px; }
+.g-diff dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0; }
+.g-diff dt { color: var( --g-muted ); }
+.g-diff dd { margin: 0; }
+.g-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.g-chips code {
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: var( --g-accent-soft );
+    font: 12px ui-monospace, Consolas, monospace;
 }
 
 .g-inspector {

@@ -7,6 +7,7 @@ import legendHtml from '../../src/smk/tool/legend/legend.html?raw'
 import scaleHtml from '../../src/smk/tool/scale/scale.html?raw'
 import shortcutMenuHtml from '../../src/smk/tool/shortcut-menu/shortcut-menu.html?raw'
 import coordinateHtml from '../../src/smk/tool/coordinate/coordinate.html?raw'
+import locationAddressHtml from '../../src/smk/tool/search/location-address.html?raw'
 
 interface Base {
     name:   string
@@ -128,6 +129,8 @@ const ADDRESS = {
     civicNumber: '1011', streetName: '4th', streetType: 'Ave',
     localityName: 'Prince George', localityType: 'City',
 }
+
+const SEARCHED = { geometry: { type: 'Point', coordinates: [ -122.749672, 53.917065 ] }, properties: ADDRESS }
 
 const basemapImage = ( title: string, a: string, b: string ) => svg(
     `<defs><linearGradient id="g" x2="1" y2="1"><stop offset="0" stop-color="${ a }"/><stop offset="1" stop-color="${ b }"/></linearGradient></defs>` +
@@ -401,11 +404,12 @@ export const STORIES: Story[] = [
       } ) },
 
     { name: 'directions-options-panel', group: 'Panels', source: T + 'directions/', kind: 'panel',
-      known: 'The template reads command.optimal and command is not a declared prop. SMK 1.0 has the same template.',
       panel: panel( 'directions-options-panel', 'DirectionsTool', 'Route Options', 'tune', {
+        // No host content, and 1.0's v-content throws on an empty bespoke.
+        command: { bespoke: false },
         truck: true, optimal: false, roundTrip: false, criteria: 'shortest',
         truckRoute: 1, truckHeight: 4.15, truckWidth: 2.6, truckLength: 23, truckWeight: 63500,
-        truckHeightUnit: 0, truckWidthUnit: 0, truckLengthUnit: 0, truckWeightUnit: 0,
+        truckHeightUnit: 1, truckWidthUnit: 1, truckLengthUnit: 1, truckWeightUnit: 1,
       } ) },
 
     { name: 'route-panel', group: 'Panels', source: T + 'directions/', kind: 'panel',
@@ -413,11 +417,11 @@ export const STORIES: Story[] = [
         directionHighlight: 1, directionPick: null,
         directions: [
             { name: 'Highway 97', type: 'START', text: 'Start out north on Highway 97',
-              distanceUnit: { value: 0, unit: 'km' }, time: 0 },
+              distanceUnit: { value: 0, unit: 'meters' }, time: 0 },
             { name: 'Highway 16', type: 'TURN_LEFT', text: 'Turn left onto Highway 16',
-              distanceUnit: { value: 12.4, unit: 'km' }, time: 540 },
+              distance: 12.4, distanceUnit: { value: 12400, unit: 'kilometers' }, time: 540 },
             { name: 'Blackwater Road', type: 'TURN_RIGHT', text: 'Turn right onto Blackwater Road',
-              distanceUnit: { value: 3.1, unit: 'km' }, time: 180 },
+              distance: 3.1, distanceUnit: { value: 3100, unit: 'kilometers' }, time: 180 },
         ],
       } ) },
 
@@ -429,19 +433,27 @@ export const STORIES: Story[] = [
 
     { name: 'search-location-panel', group: 'Panels', source: T + 'search/', kind: 'panel',
       panel: panel( 'search-location-panel', 'SearchLocationTool', 'Location', 'place', {
-        tool: { identify: true, measure: true, directions: true }, command: {},
-        locationComponent: null,
-        feature: { geometry: { type: 'Point', coordinates: [ -122.749, 53.917 ] }, properties: ADDRESS },
+        tool: { identify: true, measure: true, directions: true },
+        command: { identify: true, measure: true, directions: true },
+        // As the tool builds it on a picked search result; mount turns data into the function.
+        locationComponent: { name: 'location', template: locationAddressHtml, data: { feature: SEARCHED } },
+        feature: SEARCHED,
       } ) },
 
     { name: 'menu-panel', group: 'Panels', source: T + 'menu/', kind: 'panel',
-      note: 'The sub widgets are real widgets, the way MenuTool passes them.',
+      note: 'The sub widgets and panels are real ones, the way MenuTool.addTool pushes a pair for each tool.',
       panel: panel( 'menu-panel', 'MenuTool', 'Menu', 'menu', {
         subWidgets: [
             widget( 'layers-widget', 'LayersTool', 'Layers', 'layers' ),
             widget( 'measure-widget', 'MeasureTool', 'Measurement', 'straighten' ),
         ],
-        subPanels: [],
+        subPanels: [
+            panel( 'layers-panel', 'LayersTool', 'Layers', 'layers', { active: false, parentId: 'MenuTool' } ),
+            panel( 'measure-panel', 'MeasureTool', 'Measurement', 'straighten', {
+                parentId: 'MenuTool', viewer: { maplibre: true }, unit: 'metric', content: null,
+                results: [ { title: 'Length', value: 12873.4, dim: 1 }, { title: 'Area', value: 4.2e7, dim: 2 } ],
+            } ),
+        ],
       } ) },
 
     { name: 'list-menu-panel', group: 'Panels', source: T + 'list-menu/', kind: 'panel',
@@ -456,7 +468,8 @@ export const STORIES: Story[] = [
     { name: 'bespoke-panel', group: 'Panels', source: T + 'bespoke/', kind: 'panel',
       note: 'A Host supplies the content; the panel is only the chrome around it.',
       panel: panel( 'bespoke-panel', 'BespokeTool', 'Bespoke', 'extension', {
-        content: '<p>Whatever the <b>Host</b> puts here.</p>', component: null,
+        // As the tool builds it: createContent( el ) runs the Host's activated handler. Mount makes the HTML that function.
+        content: { createContent: '<p>Whatever the <b>Host</b> puts here.</p>' }, component: null,
       } ) },
 
     { name: 'dropdown-panel', group: 'Panels', source: T + 'dropdown/', kind: 'panel',
@@ -490,14 +503,14 @@ export const STORIES: Story[] = [
       sample: { active: true } },
 
     { name: 'layer-display', group: 'Components', source: T + 'layers/', kind: 'block', slot: 'body',
-      note: 'One row of the layers panel tree.',
-      template: `<layer-display v-bind:id="sample.display.id" v-bind:display="sample.display" v-bind:glyph="sample.glyph"></layer-display>`,
+      note: 'One row of the layers panel tree, in the panel class its styles are scoped to.',
+      template: `<div class="smk-layers-panel"><layer-display v-bind:id="sample.display.id" v-bind:display="sample.display" v-bind:glyph="sample.glyph"></layer-display></div>`,
       sample: { glyph: { visible: 'check_box', hidden: 'check_box_outline_blank' },
         display: display( 'fire-perimeters', 'Fire Perimeters', { showLegend: true, legends: [ legend( 'Perimeter', '#e4572e' ) ] } ) } },
 
     { name: 'legend-display', group: 'Components', source: T + 'legend/', kind: 'block', slot: 'body',
-      note: 'One row of the legend pane.',
-      template: `<legend-display v-bind:display="sample.display"></legend-display>`,
+      note: 'One row of the legend pane, in the pane class its styles are scoped to.',
+      template: `<div class="smk-legend-status"><legend-display v-bind:display="sample.display"></legend-display></div>`,
       sample: { display: display( 'fire-locations', 'Active Fire Locations', { legends: [
         legend( 'Out of Control', '#d7191c' ), legend( 'Being Held', '#fdae61' ) ] } ) } },
 
