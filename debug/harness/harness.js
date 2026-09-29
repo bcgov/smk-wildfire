@@ -239,6 +239,7 @@ var smk     = null            // the map the panels drive
 var driving = null            // its viewer name
 var dropped = null            // config from a dropped file or the textarea
 var extraTools = {}           // catalogue types switched on, applied at the next start
+var argEdit = {}              // tool args edited in the Tools panel, applied at the next start
 var logView = false
 var refReady    = Promise.resolve()   // settles when the 1.0 pane has answered
 var refSettled  = null                // its resolve function, or null when there is no ref pane
@@ -296,10 +297,52 @@ function currentConfig( viewerType ) {
         return e
     } ) } ] : []
 
-    if ( dropped && !$( '#merge' ).checked )
-        return [ head ].concat( dropped, tail )
+    var args = argEditConfig()
 
-    return [ head ].concat( story.config, dropped || [], tail )
+    if ( dropped && !$( '#merge' ).checked )
+        return [ head ].concat( dropped, tail, args )
+
+    return [ head ].concat( story.config, dropped || [], tail, args )
+}
+
+/** The merge key of one built tool. Bespoke tools repeat a type per instance. */
+function argEditKey( tool ) {
+    return tool.type + ( tool.instance ? '--' + tool.instance : '' )
+}
+
+/**
+ * The args edited in the Tools panel, as config fragments.
+ *
+ * fillArgs writes to the live tool, and restart() destroys it. Config is the
+ * only thing a restart re-reads, so every edit is kept here and merged last.
+ * Tools match on type and instance - see updateToolSet in merge-config.
+ *
+ * An array or an object arg needs two fragments. merge-config concats an array
+ * and deep-merges an object, so one fragment would append to the story value
+ * instead of replacing it. A null deletes, so clear first, then set.
+ */
+function argEditConfig() {
+    var keys = Object.keys( argEdit )
+    if ( !keys.length ) return []
+
+    var clear = [], set = []
+
+    keys.forEach( function ( k ) {
+        var o = argEdit[ k ]
+        var c = { type: o.type }, s = { type: o.type }
+        if ( o.instance ) c.instance = s.instance = o.instance
+
+        Object.keys( o.args ).forEach( function ( a ) {
+            var v = o.args[ a ]
+            if ( v !== null && typeof v === 'object' ) c[ a ] = null
+            s[ a ] = v
+        } )
+
+        if ( Object.keys( c ).length > ( c.instance ? 2 : 1 ) ) clear.push( c )
+        set.push( s )
+    } )
+
+    return ( clear.length ? [ { tools: clear } ] : [] ).concat( [ { tools: set } ] )
 }
 
 function setState( s ) {
@@ -923,6 +966,8 @@ function buildCatalogue() {
 
 /** Every prop the tool declared, editable where the type allows. */
 function fillArgs( host, tool, id ) {
+    var kept = argEdit[ argEditKey( tool ) ]
+
     Object.keys( tool.$prop ).sort().forEach( function ( key ) {
         if ( key in LIVE ) return
 
@@ -938,6 +983,7 @@ function fillArgs( host, tool, id ) {
         var input = document.createElement( isObj ? 'textarea' : 'input' )
         input.value = isObj ? safeJson( val )
                     : ( val === null || val === undefined ? '' : String( val ) )
+        if ( kept && key in kept.args ) input.classList.add( 'edited' )
 
         input.onchange = function () {
             var text = input.value.trim(), next
@@ -951,6 +997,14 @@ function fillArgs( host, tool, id ) {
             } catch ( e ) { log( 'error', key + ': ' + e.message ); return }
 
             tool[ key ] = next
+
+            // Kept by type, not by tool id: the id is the factory name, and
+            // only the type matches a config entry.
+            var k = argEditKey( tool )
+            if ( !kept ) kept = argEdit[ k ] = { type: tool.type, instance: tool.instance, args: {} }
+            kept.args[ key ] = next
+            input.classList.add( 'edited' )
+
             log( 'set', id + '.' + key + ' = ' + text.slice( 0, 60 ) )
         }
         host.appendChild( input )
@@ -958,9 +1012,20 @@ function fillArgs( host, tool, id ) {
 
     if ( !host.childElementCount ) host.appendChild( el( 'div', 'ro', 'no props' ) )
     else {
-        var note = el( 'div', 'ro', 'These write to the live tool. SMK reads most of them only when it builds the tool, so press Restart to be sure a change took.' )
+        var note = el( 'div', 'ro', 'An edit writes to the live tool and is kept as config, so it survives Restart. SMK reads most args only when it builds the tool, so press Restart to be sure a change took.' )
         note.style.gridColumn = '1 / -1'
         host.appendChild( note )
+
+        var drop = el( 'button', 'more', 'drop edits' )
+        drop.title = 'Forget every arg edited on this tool, then restart on the story value'
+        drop.onclick = function () {
+            delete argEdit[ argEditKey( tool ) ]
+            log( 'args', tool.type + ' - edits dropped, restarting' )
+            restart()
+        }
+        drop.style.gridColumn = '1 / -1'
+        drop.style.justifySelf = 'start'
+        host.appendChild( drop )
     }
 }
 

@@ -150,6 +150,10 @@ dl.legend dd { margin: 0 }
 .args textarea { min-height: 46px }
 .args .ro { color: #999; font-style: italic }
 
+/* An edited arg is now config, so it comes back after a Restart. Mark it, or
+   the panel cannot be told from a fresh tool. */
+.args input.edited, .args textarea.edited { border: 1px solid #5b8def; background: #f4f8ff }
+
 /* What the WMS service says about this layer's scale range. Full width, so it
    lands on its own line under the row it belongs to. */
 .scale-range { order: 4; flex: 1 1 100%; color: #666; font-size: 12px; min-width: 0 }
