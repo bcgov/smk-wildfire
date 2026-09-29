@@ -242,11 +242,18 @@ class WmsLayer extends Layer {
             STYLE:       cfg.styleName || '',
         } ).toString()
 
-        return loadImage( url ).then( img => ( [ Object.assign( {
-            url,
+        // WMS legends carry no cache headers, so drawing the service URL again downloads it again.
+        // Draw from the bytes already fetched; a service without CORS falls back to the URL.
+        const local = fetch( url, { mode: 'cors' } )
+            .then( r => { if ( !r.ok ) throw new Error( r.status + ' ' + url ); return r.blob() } )
+            .then( blob => URL.createObjectURL( blob ) )
+            .catch( () => url )
+
+        return local.then( src => loadImage( src ).then( img => ( [ Object.assign( {
+            url:    src,
             width:  img.naturalWidth,
             height: img.naturalHeight,
-        }, cfg.legend ) ] ) )
+        }, cfg.legend ) ] ) ) )
     }
 
     getFeaturesAtPoint( location: any, view: any, option: any ): Promise<any[]> {
