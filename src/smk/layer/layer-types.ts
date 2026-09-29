@@ -220,7 +220,22 @@ class WmsLayer extends Layer {
         if ( a.type       !== b.type       ) return false
         if ( a.serviceUrl !== b.serviceUrl ) return false
         if ( a.opacity    !== b.opacity    ) return false
+        if ( JSON.stringify( a.params || {} ) !== JSON.stringify( b.params || {} ) ) return false
         return true
+    }
+
+    /** Merges extra GetMap parameters over `params` and redraws. A null value removes one. */
+    setParams( params: Record<string, unknown> ): void {
+        const cfg  = this.config as any
+        const next = Object.assign( {}, cfg.params, params )
+        Object.keys( next ).forEach( k => { if ( next[ k ] == null ) delete next[ k ] } )
+        cfg.params = next
+        this.refresh()
+    }
+
+    /** Asks the service again with the current params, with no move of the map. */
+    refresh(): void {
+        ( this as any )._smkRefresh?.()
     }
 
     initLegends(): Promise<any[]> {
@@ -239,7 +254,8 @@ class WmsLayer extends Layer {
 
         // WMS legends carry no cache headers, so drawing the service URL again downloads it again.
         // Draw from the bytes already fetched; a service without CORS falls back to the URL.
-        const local = fetch( url, { mode: 'cors' } )
+        // The map images send the Config's header, so the legend must too.
+        const local = fetch( url, { mode: 'cors', headers: cfg.header || {} } )
             .then( r => { if ( !r.ok ) throw new Error( r.status + ' ' + url ); return r.blob() } )
             .then( blob => URL.createObjectURL( blob ) )
             .catch( () => url )

@@ -151,6 +151,11 @@ const factory = Tool.define( 'LayersTool',
             self.allVisible = dc.isItemVisible( dc.root.id )
         } )
 
+        // A Host can replace the tree while the panel is open.
+        smk.$viewer.changedDisplayContext( function () {
+            if ( self.active ) self.contexts = smk.$viewer.getDisplayContexts()
+        } )
+
         smk.$viewer.startedLoading( function ( _ev: any ) {
             self.busy = true
         } )

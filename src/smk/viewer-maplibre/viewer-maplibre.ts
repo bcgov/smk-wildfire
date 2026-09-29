@@ -100,6 +100,10 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
         projection:          'mercator',
         minZoom:             smk.viewer.minZoom || 0,
         maxZoom:             smk.viewer.maxZoom || 22,
+        // A Config extent [ west, south, east, north ].
+        maxBounds:           Array.isArray( smk.viewer.maxBounds ) && smk.viewer.maxBounds.length >= 4
+            ? [ smk.viewer.maxBounds.slice( 0, 2 ), smk.viewer.maxBounds.slice( 2, 4 ) ]
+            : undefined,
         center:              [ 0, 0 ],
         zoom:                2,
     } )
@@ -227,6 +231,11 @@ ViewerMapLibre.prototype.destroy = function () {
 
     if ( self.map ) self.map.remove()
     Viewer.prototype.destroy.call( self )
+}
+
+// MapLibre follows its container itself; this is for smk.updateMapSize().
+ViewerMapLibre.prototype.mapResized = function () {
+    this.map?.resize()
 }
 
 // ---------------------------------------------------------------------------

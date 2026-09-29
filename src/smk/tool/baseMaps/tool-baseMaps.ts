@@ -37,6 +37,11 @@ const factory = Tool.define( 'BaseMapsTool',
     function ( this: any, smk: any ) {
         const self = this
 
+        // The picker still shows the current Basemap, so the user can see it is on.
+        const current = ( smk.viewer.baseMap || '' ).toLowerCase()
+        if ( self.choices?.length && current && !self.choices.some( ( c: string ) => c.toLowerCase() === current ) )
+            console.warn( `base map "${ smk.viewer.baseMap }" is not in the baseMaps tool choices, so the picker adds it` )
+
         this.basemaps = smk.$viewer.getBasemapIds()
             .map( function ( id: string ) {
                 return smk.$viewer.getBasemapConfig( id )

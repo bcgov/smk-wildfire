@@ -33,6 +33,15 @@ function lngLatToMercator( lng: number, lat: number ): [ number, number ] {
     return [ x, y ]
 }
 
+/** A Config's `params` as `&k=v` pairs, for the GetMap url. */
+export function paramString( params?: Record<string, unknown> ): string {
+    if ( !params ) return ''
+    return Object.keys( params )
+        .filter( k => params[ k ] != null )
+        .map( k => '&' + encodeURIComponent( k ) + '=' + encodeURIComponent( String( params[ k ] ) ) )
+        .join( '' )
+}
+
 export class WmsMapLibreLayer extends WmsLayer {}
 
 ;( Layer as any )[ 'wms' ][ 'maplibre' ] = WmsMapLibreLayer
@@ -143,9 +152,8 @@ export class WmsMapLibreLayer extends WmsLayer {}
                     const [ minX, minY ] = lngLatToMercator( sw.lng, sw.lat )
                     const [ maxX, maxY ] = lngLatToMercator( ne.lng, ne.lat )
 
-                    // A time-aware subclass sets this to add &time=... per frame.
-
-                    const extra = typeof cfg0._smkExtraParams === 'string' ? cfg0._smkExtraParams : ''
+                    // Read per request: setParams changes them without a move.
+                    const extra = paramString( cfg0.params )
 
                     const url = baseUrl
                         + extra
@@ -227,17 +235,16 @@ export class WmsMapLibreLayer extends WmsLayer {}
                 map.on( 'moveend', update )
                 map.on( 'resize',  update )
 
-                // The image is only re-requested on move. A time-aware subclass
-                // changes the URL without moving, so give it a way to ask.
+                // The image is only re-requested on move; WmsLayer.refresh asks without one.
                 const refresh = function () { forceNext = true; update() }
-                cfg0._smkRefresh = refresh
+                layers.forEach( ( ly: any ) => { ly._smkRefresh = refresh } )
 
                 // First request once the map is idle.
                 update()
 
                 return function cleanup() {
                     cancelled = true
-                    if ( cfg0._smkRefresh === refresh ) delete cfg0._smkRefresh
+                    layers.forEach( ( ly: any ) => { if ( ly._smkRefresh === refresh ) delete ly._smkRefresh } )
                     map.off( 'moveend', update )
                     map.off( 'resize',  update )
                     if ( raf != null ) {
