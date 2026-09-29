@@ -14,11 +14,11 @@ declare const L: any
 
 const smkRef = SMK
 
-Vue.component( 'base-maps-widget', {
+Vue.component( 'baseMaps-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'base-maps-panel', {
+Vue.component( 'baseMaps-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
     template: panelBaseMapsHtml,
     props: [ 'current', 'basemaps', 'mapStyle' ],
@@ -26,8 +26,8 @@ Vue.component( 'base-maps-panel', {
 
 const factory = Tool.define( 'BaseMapsTool',
     function ( this: any ) {
-        smkRef.TYPE.ToolWidget.call( this, 'base-maps-widget' )
-        smkRef.TYPE.ToolPanel.call( this, 'base-maps-panel' )
+        smkRef.TYPE.ToolWidget.call( this, 'baseMaps-widget' )
+        smkRef.TYPE.ToolPanel.call( this, 'baseMaps-panel' )
         this.defineProp( 'current' )
         this.defineProp( 'basemaps' )
         this.defineProp( 'mapStyle' )

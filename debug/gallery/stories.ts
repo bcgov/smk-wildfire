@@ -249,9 +249,9 @@ export const STORIES: Story[] = [
         results: [ { title: 'Length', value: 12873.4, dim: 1 }, { title: 'Area', value: 4.2e7, dim: 2 } ],
       } ) },
 
-    { name: 'base-maps-panel', group: 'Panels', source: T + 'baseMaps/', kind: 'panel',
+    { name: 'baseMaps-panel', group: 'Panels', source: T + 'baseMaps/', kind: 'panel',
       note: 'Every option has optionImageUrl, so no live map is built (D7).',
-      panel: panel( 'base-maps-panel', 'BaseMapsTool', 'Base Maps', 'map', {
+      panel: panel( 'baseMaps-panel', 'BaseMapsTool', 'Base Maps', 'map', {
         current: 'topography', mapStyle: { width: '110px', height: '110px' },
         basemaps: [
             { id: 'topography', title: 'Topography', optionImageUrl: basemapImage( 'Topography', '#8fae6b', '#d9cfa5' ) },
@@ -323,7 +323,7 @@ export const STORIES: Story[] = [
         widget( 'search-widget',    'SearchListTool', 'Search for Location', 'search', { type: 'search', showPanel: true, results: [], initialSearch: '' } ),
         widget( 'layers-widget',    'LayersTool', 'Layers', 'layers', { active: true } ),
         widget( 'measure-widget',   'MeasureTool', 'Measurement', 'straighten' ),
-        widget( 'base-maps-widget', 'BaseMapsTool', 'Base Maps', 'map', { showTitle: true } ),
+        widget( 'baseMaps-widget', 'BaseMapsTool', 'Base Maps', 'map', { showTitle: true } ),
       ] },
 
     { name: 'actionbar', group: 'Widgets', source: T + 'actionbar/', kind: 'bar', bar: 'actionbar', size: [ 160, 420 ],
@@ -341,17 +341,14 @@ export const STORIES: Story[] = [
     // --- Widgets ----------------------------------------------------------
     { name: 'about-widget', group: 'Widgets', source: T + 'about/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'about-widget', 'AboutTool', 'About', 'info' ) ] },
-    { name: 'base-maps-widget', group: 'Widgets', source: T + 'baseMaps/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
-      note: 'The Config spells this type baseMaps, not base-maps.',
-      widgets: [ widget( 'base-maps-widget', 'BaseMapsTool', 'Base Maps', 'map', { type: 'baseMaps' } ) ] },
+    { name: 'baseMaps-widget', group: 'Widgets', source: T + 'baseMaps/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
+      widgets: [ widget( 'baseMaps-widget', 'BaseMapsTool', 'Base Maps', 'map' ) ] },
     { name: 'bespoke-widget', group: 'Widgets', source: T + 'bespoke/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'bespoke-widget', 'BespokeTool', 'Bespoke', 'extension' ) ] },
     { name: 'bookmarks-widget', group: 'Widgets', source: T + 'bookmarks/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'bookmarks-widget', 'BookmarksTool', 'Bookmarks', 'bookmark' ) ] },
     { name: 'directions-widget', group: 'Widgets', source: T + 'directions/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'directions-widget', 'DirectionsTool', 'Directions', 'directions' ) ] },
-    { name: 'dropdown-widget', group: 'Widgets', source: T + 'dropdown/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
-      widgets: [ widget( 'dropdown-widget', 'DropdownTool', 'More tools', 'arrow_drop_down' ) ] },
     { name: 'identify-widget', group: 'Widgets', source: T + 'identify/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'identify-widget', 'IdentifyTool', 'Identify', 'touch_app' ) ] },
     { name: 'layers-widget', group: 'Widgets', source: T + 'layers/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
@@ -368,8 +365,6 @@ export const STORIES: Story[] = [
       widgets: [ widget( 'menu-widget', 'MenuTool', 'Menu', 'menu' ) ] },
     { name: 'query-widget', group: 'Widgets', source: T + 'query/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'query-widget', 'QueryTool', 'Query', 'help_outline' ) ] },
-    { name: 'query-place-widget', group: 'Widgets', source: T + 'query-place/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
-      widgets: [ widget( 'query-place-widget', 'QueryPlaceTool', 'Find a place', 'pin_drop' ) ] },
     { name: 'search-widget', group: 'Widgets', source: T + 'search/', kind: 'bar', bar: 'toolbar', size: [ 620, 200 ],
       widgets: [ widget( 'search-widget', 'SearchListTool', 'Search for Location', 'search',
         { showPanel: true, results: [], initialSearch: '' } ) ] },
@@ -472,16 +467,6 @@ export const STORIES: Story[] = [
         content: { createContent: '<p>Whatever the <b>Host</b> puts here.</p>' }, component: null,
       } ) },
 
-    { name: 'dropdown-panel', group: 'Panels', source: T + 'dropdown/', kind: 'panel',
-      known: 'The root tag is <side-panel>, which no version registers. Inherited, not a conversion fault.',
-      panel: panel( 'dropdown-panel', 'DropdownTool', 'More tools', 'arrow_drop_down', {
-        subWidgets: [
-            { id: 'LayersTool', widget: { title: 'Layers' } },
-            { id: 'MeasureTool', widget: { title: 'Measurement' } },
-        ],
-        subPanels: {}, activeToolId: null,
-      } ) },
-
     // --- Building blocks --------------------------------------------------
 
     { name: 'tool-panel', group: 'Components', source: C + 'tool-panel/', kind: 'block', slot: 'body',
@@ -513,11 +498,6 @@ export const STORIES: Story[] = [
       template: `<div class="smk-legend-status"><legend-display v-bind:display="sample.display"></legend-display></div>`,
       sample: { display: display( 'fire-locations', 'Active Fire Locations', { legends: [
         legend( 'Out of Control', '#d7191c' ), legend( 'Being Held', '#fdae61' ) ] } ) } },
-
-    { name: 'feature-place', group: 'Components', source: T + 'query-place/', kind: 'block', slot: 'body',
-      known: 'It extends SMK.TYPE.VueFeatureComponent, which is defined nowhere, so it has no props. Inherited.',
-      template: `<feature-place v-bind:feature="sample.feature"></feature-place>`,
-      sample: { feature: { geometry: { type: 'Point', coordinates: [ -122.749, 53.917 ] }, properties: ADDRESS } } },
 
     // --- Status -----------------------------------------------------------
 

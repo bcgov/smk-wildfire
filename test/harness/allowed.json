@@ -1,6 +1,20 @@
 [
     {
         "axis": "A",
+        "field": "configTools",
+        "match": "dropdown",
+        "reason": "dropdown has no code in 1.0 or v2. v2 keeps a Tool type's defaults with its code, so a type with no code has no defaults.",
+        "date": "2026-10-05"
+    },
+    {
+        "axis": "A",
+        "field": "configToolKeys",
+        "match": "dropdown",
+        "reason": "dropdown has no code in 1.0 or v2. v2 keeps a Tool type's defaults with its code, so a type with no code has no defaults.",
+        "date": "2026-10-05"
+    },
+    {
+        "axis": "A",
         "field": "hasInclude",
         "reason": "2.0 removes the include loader. SMK does not use it, and a Host loads its plugin scripts itself and registers them on SMK.TYPE. host-contract.test.ts holds this.",
         "date": "2026-10-05"
@@ -140,13 +154,6 @@
     {
         "axis": "A",
         "field": "warnings",
-        "match": "QueryTool not defined",
-        "reason": "v2 registers tool-query-place before the QueryTool it extends, and says so. Informational, and v2-only because 1.0 loaded its tools through the AMD graph. Worth tidying, but it changes nothing a Host can see.",
-        "date": "2026-09-07"
-    },
-    {
-        "axis": "A",
-        "field": "warnings",
         "match": "mature support",
         "reason": "esri-leaflet's own notice that L.esri.BasemapLayer is in mature support. SMK 1.0 opens on that basemap; v2 opens on the Canada Topography composite and never builds one.",
         "date": "2026-09-07"
@@ -205,20 +212,6 @@
         "field": "domClasses",
         "match": "smk-minimap",
         "reason": "Added. Both viewer halves now render a neutral smk-minimap so a Theme need not know which Viewer is running; 1.0 had only the spacer, which v2 still renders too.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "built",
-        "match": "DropdownTool",
-        "reason": "v2 builds a dropdown tool that SMK 1.0 did not have. Added, nothing lost.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "builtTypes",
-        "match": "dropdown",
-        "reason": "The type behind DropdownTool. Added.",
         "date": "2026-09-08"
     },
     {
@@ -287,13 +280,6 @@
     {
         "axis": "A",
         "field": "warnings",
-        "match": "tool-dropdown",
-        "reason": "SMK 1.0 has no dropdown tool, so asking it to build one fails on its own side. The REFERENCE, not the rewrite.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "warnings",
         "match": "navMode",
         "reason": "A 1.0 warning about props declared in its pan widget that its own tool does not have. The REFERENCE side.",
         "date": "2026-09-08"
@@ -317,13 +303,6 @@
         "field": "toolState",
         "match": "BaseMapsTool",
         "reason": "The tool reports the basemap it is on, and the default changed by decision - Topographic in 1.0, bc-roads in v2. See D11.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "toolState",
-        "match": "DropdownTool",
-        "reason": "v2 builds a dropdown tool SMK 1.0 did not have, so 1.0 has no state for it. Added.",
         "date": "2026-09-08"
     },
     {
