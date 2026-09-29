@@ -112,7 +112,8 @@ export class WmsMapLibreLayer extends WmsLayer {}
             // Attached by viewer-maplibre.addViewerLayer after the source has
             // been registered with the map.  Returns a cleanup function that
             // viewer-maplibre.removeViewerLayer will invoke.
-            _smk_onAdd: function ( map: any ) {
+            _smk_onAdd: function ( this: any, map: any ) {
+                const spec = this
                 let raf:       number | null = null
                 let fetchToken = 0
                 let objectUrl: string | null = null
@@ -207,6 +208,8 @@ export class WmsMapLibreLayer extends WmsLayer {}
 
                                 const next = URL.createObjectURL( blob )
                                 s.updateImage( { url: next, coordinates } )
+                                // The viewer fades the layer in; the blank seed image must not count.
+                                spec._smk_ready?.()
 
                                 // Revoke the one it replaces, never the new one.
                                 if ( objectUrl ) URL.revokeObjectURL( objectUrl )

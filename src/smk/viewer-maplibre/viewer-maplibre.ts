@@ -659,9 +659,93 @@ function lookupEsriBasemapUrl( key: string ): string | null {
 // setBasemap / setView / getView / screenToMap / getScale
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Load fade: a layer is added at opacity 0 and MapLibre's own paint transition
+// brings it to its styled opacity when its data is on the map, so the map fills
+// in smoothly instead of tile by tile.
+// ---------------------------------------------------------------------------
+
+const FADE_MS         = 300
+const FADE_WAIT_MS    = 1000    // after a source's first tile, stop waiting for the rest
+const FADE_GIVE_UP_MS = 4000    // a source that never reports is shown anyway
+
+const FADE_PROPS: Record<string, string[]> = {
+    'background':     [ 'background-opacity' ],
+    'fill':           [ 'fill-opacity' ],
+    'line':           [ 'line-opacity' ],
+    'circle':         [ 'circle-opacity', 'circle-stroke-opacity' ],
+    'symbol':         [ 'icon-opacity', 'text-opacity' ],
+    'raster':         [ 'raster-opacity' ],
+    'fill-extrusion': [ 'fill-extrusion-opacity' ],
+    'heatmap':        [ 'heatmap-opacity' ],
+}
+
+function fadeEnabled(): boolean {
+    try { return !window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches } catch { return true }
+}
+
+/** A copy of a layer spec at opacity 0. The spec keeps the styled values for fadeIn. */
+function atZeroOpacity( ly: any ): any {
+    const props = FADE_PROPS[ ly.type ]
+    if ( !props || !fadeEnabled() ) return ly
+    const paint = Object.assign( {}, ly.paint )
+    props.forEach( ( p: string ) => {
+        paint[ p ] = 0
+        paint[ p + '-transition' ] = { duration: FADE_MS, delay: 0 }
+    } )
+    return Object.assign( {}, ly, { paint } )
+}
+
 /** isSourceLoaded reports a missing source as a map error, so ask only about one that exists. */
 function sourceLoaded( map: any, sid: string ): boolean {
     return !map.getSource( sid ) || !!map.isSourceLoaded( sid )
+}
+
+function fadeIn( map: any, layers: any[] ) {
+    layers.forEach( ( ly: any ) => {
+        ( FADE_PROPS[ ly.type ] || [] ).forEach( ( p: string ) => {
+            // Anything but our 0 means someone set the opacity since; leave it.
+            if ( !map.getLayer( ly.id ) || map.getPaintProperty( ly.id, p ) !== 0 ) return
+            try { map.setPaintProperty( ly.id, p, ly.paint?.[ p ], { validate: false } ) } catch { /* removed */ }
+        } )
+    } )
+}
+
+/**
+ * Fade the layers in when their tiled or GeoJSON sources are loaded, or a second after the
+ * first tile. An image source cannot say (WMS starts on a blank image), so its adapter calls
+ * the returned function when the real image is on the map.
+ */
+function fadeInWhenLoaded( map: any, layers: any[], sources: Array<[ string, any ]> ): () => void {
+    let done = false
+    let waitTimer: any = null
+    const pending: Record<string, boolean> = {}
+    sources.forEach( ( [ sid, src ] ) => { if ( src?.type !== 'image' ) pending[ sid ] = true } )
+
+    const finish = function () {
+        if ( done ) return
+        done = true
+        map.off( 'sourcedata', onData )
+        clearTimeout( waitTimer )
+        clearTimeout( giveUp )
+        fadeIn( map, layers )
+    }
+    const onData = function ( e: any ) {
+        if ( !pending[ e.sourceId ] ) return
+        if ( e.tile && !waitTimer ) waitTimer = setTimeout( finish, FADE_WAIT_MS )
+        if ( !sourceLoaded( map, e.sourceId ) ) return
+        delete pending[ e.sourceId ]
+        if ( !Object.keys( pending ).length ) finish()
+    }
+    const giveUp = setTimeout( finish, FADE_GIVE_UP_MS )
+    if ( Object.keys( pending ).length ) map.on( 'sourcedata', onData )
+    // A source another layer already loaded sends no more events.
+    Promise.resolve().then( () => {
+        try {
+            if ( Object.keys( pending ).length && Object.keys( pending ).every( sid => sourceLoaded( map, sid ) ) ) finish()
+        } catch { /* removed */ }
+    } )
+    return finish
 }
 
 /**
@@ -669,7 +753,7 @@ function sourceLoaded( map: any, sid: string ): boolean {
  * 255-layer basemap cost 255 serialisations. The last goes through Map.addLayer to mark the redraw.
  */
 function addBasemapLayers( map: any, layers: any[], before: string | undefined ) {
-    const fresh = layers.filter( ( ly: any ) => !map.getLayer( ly.id ) )
+    const fresh = layers.filter( ( ly: any ) => !map.getLayer( ly.id ) ).map( atZeroOpacity )
     fresh.forEach( ( ly: any, i: number ) => {
         try {
             if ( i < fresh.length - 1 && map.style?.addLayer ) map.style.addLayer( ly, before, { validate: false } )
@@ -756,6 +840,13 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
             const layers = spec.layers || ( spec.layer ? [ spec.layer ] : [] )
             addBasemapLayers( self.map, layers, firstId )
             layers.forEach( ( ly: any ) => { self.basemapLayerIds.push( ly.id ) } )
+
+            // Each source fades in on its own data; a background with no source goes with the first.
+            if ( !sources.length ) fadeIn( self.map, layers )
+            sources.forEach( ( entry: any, i: number ) => {
+                const own = layers.filter( ( ly: any ) => ly.source === entry[ 0 ] || ( i === 0 && !ly.source ) )
+                fadeInWhenLoaded( self.map, own, [ entry ] )
+            } )
         } )
 
         self.mark?.( 'basemap-added' )
@@ -876,8 +967,10 @@ ViewerMapLibre.prototype.addViewerLayer = function ( viewerLayer: any ) {
             if ( !self.map.getSource( sid ) ) self.map.addSource( sid, src )
         } )
         layers.forEach( ( ly: any ) => {
-            if ( !self.map.getLayer( ly.id ) ) self.map.addLayer( ly )
+            if ( !self.map.getLayer( ly.id ) ) self.map.addLayer( atZeroOpacity( ly ) )
         } )
+        // Set before onAdd: an image adapter calls it when its first real image is shown.
+        viewerLayer._smk_ready = fadeInWhenLoaded( self.map, layers, sources )
         if ( typeof viewerLayer._smk_onAdd === 'function' ) {
             viewerLayer._smk_cleanup = viewerLayer._smk_onAdd( self.map )
         }
@@ -886,7 +979,9 @@ ViewerMapLibre.prototype.addViewerLayer = function ( viewerLayer: any ) {
     }
 
     if ( viewerLayer.id && viewerLayer.type && !self.map.getLayer( viewerLayer.id ) ) {
-        self.map.addLayer( viewerLayer )
+        self.map.addLayer( atZeroOpacity( viewerLayer ) )
+        const src = typeof viewerLayer.source === 'string' ? self.map.getSource( viewerLayer.source ) : null
+        fadeInWhenLoaded( self.map, [ viewerLayer ], src ? [ [ viewerLayer.source, src ] ] : [] )
         self.viewerLayers[ viewerLayer._smk_id || viewerLayer.id ] = viewerLayer
     }
 }
