@@ -130,30 +130,6 @@ function bespokePanel( id, title, html ) {
     } )
 }
 
-/** The three route markers, as SMK 1.0 shipped them. */
-function waypointMarkers() {
-    var base = '../../dist/assets/src/smk/tool/directions/config/'
-    return [
-        [ '@waypoint-start',  'Starting Route Location', 'green' ],
-        [ '@waypoint-end',    'Ending Route Location',   'red'   ],
-        [ '@waypoint-middle', 'Waypoint on Route',       'blue'  ]
-    ].map( function ( m ) {
-        return {
-            id: m[ 0 ], title: m[ 1 ],
-            style: {
-                markerUrl:    base + 'marker-icon-' + m[ 2 ] + '.png',
-                markerSize:   [ 25, 41 ],
-                markerOffset: [ 12, 41 ],
-                shadowUrl:    base + 'marker-shadow.png',
-                shadowSize:   [ 41, 41 ],
-                popupOffset:  [ 1, -34 ]
-            },
-            legend: { title: m[ 1 ], point: true },
-            isDraggable: true, isQueryable: false
-        }
-    } )
-}
-
 var EXAMPLES = {
     'bespoke': {
         note: 'Two panels in the toolbar, filled by SMK.HANDLER',
@@ -191,12 +167,12 @@ var EXAMPLES = {
     },
 
     'directions': {
-        note: 'Directions wired to the BC Route Planner, with the layers it cannot run without',
+        note: 'Directions wired to the BC Route Planner and the BC Geocoder',
         config: [ { tools: [ {
             type: 'directions', enabled: true, position: 'toolbar', order: 93,
             // See Route Details is disabled until the service answers with a
-            // route, so the tool needs a key. Same keys as
-            // debug/config/tool/directions.json.
+            // route, so the tool needs a key. The route layers are in the
+            // defaults. Same keys as debug/config/tool/directions.json.
             routePlannerService: {
                 url:    'https://router.api.gov.bc.ca/',
                 apiKey: '11dd756f680c47b5aef5093d95543738'
@@ -204,18 +180,55 @@ var EXAMPLES = {
             geocoderService: {
                 url: 'https://geocoder.api.gov.bc.ca/',
                 parameter: { maxDistance: 50, locationMode: 'input' }
-            },
-            // displayWaypoints() reads this.layer['@waypoint-start'] straight
-            // off, and this.layer is built only from these two lists. SMK 1.0
-            // shipped them in its defaults; this build does not, so the tool
-            // throws on the first waypoint without them. See CONTEXT.md 8.1.
-            segmentLayers: [
-                { id: '@segments', title: 'Segments',
-                  style: { strokeColor: 'blue', strokeWidth: 8, strokeOpacity: 0.8 },
-                  legend: { line: true } }
-            ],
-            waypointLayers: waypointMarkers()
+            }
         } ] } ]
+    },
+
+    // markup and query build only with a named instance, so neither has a
+    // Catalogue row. Their examples sit in the footnote under the list.
+    'markup': {
+        note: 'A drawing tool in the toolbar. SMK hands each shape to a handler',
+        config: [ { tools: [
+            { type: 'markup', instance: 'draw', enabled: true, position: 'toolbar', title: 'Markup', icon: 'edit', order: 96 }
+        ] } ],
+        handlers: function () {
+            var id = 'MarkupTool--draw'
+            SMK.HANDLER.set( id, 'initialized', function () {} )
+            SMK.HANDLER.set( id, 'activated',   function () {} )
+            SMK.HANDLER.set( id, 'deactivated', function () {} )
+            SMK.HANDLER.set( id, 'markup-created', function ( smk, tool, geojson ) {
+                log( 'markup', ( geojson && geojson.geometry && geojson.geometry.type ) || 'shape' )
+            } )
+        }
+    },
+
+    'query': {
+        note: 'A query on BC survey parcels, run through WFS',
+        config: [ {
+            layers: [ {
+                id: 'survey-parcels', type: 'wms', isVisible: true,
+                title: 'Land Act Survey Parcels',
+                // /ows answers WMS and WFS. /wms refuses WFS: "No service: ( WFS )".
+                serviceUrl: 'https://openmaps.gov.bc.ca/geo/pub/ows',
+                layerName: 'WHSE_TANTALIS.TA_SURVEY_PARCELS_SVW',
+                styleName: 'Land_Act_Survey_Parcels_Tantalis_Outlined',
+                titleAttribute: 'PARCEL_SHORT_DESCRIPTION', geometryAttribute: 'SHAPE',
+                queries: [ {
+                    id: 'by-type', title: 'Find parcels', description: 'Survey parcels by type and description',
+                    parameters: [
+                        { id: 'type', type: 'select', title: 'Parcel type is',
+                          choices: [ { title: 'Primary', value: 'Primary' }, { title: 'Subdivision', value: 'Subdivision' } ] },
+                        { id: 'text', type: 'input', title: 'description contains', value: '' }
+                    ],
+                    predicate: { operator: 'and', arguments: [
+                        { operator: 'equals',   arguments: [ { operand: 'attribute', name: 'PARCEL_TYPE' }, { operand: 'parameter', id: 'type' } ] },
+                        { operator: 'contains', arguments: [ { operand: 'attribute', name: 'PARCEL_SHORT_DESCRIPTION' }, { operand: 'parameter', id: 'text' } ] }
+                    ] }
+                } ]
+            } ],
+            // The default query entry is enabled: false, so the instance must say true.
+            tools: [ { type: 'query', instance: 'survey-parcels--by-type', enabled: true, position: 'toolbar', icon: 'manage_search', order: 97 } ]
+        } ]
     },
 
     'list-menu': {
@@ -985,10 +998,19 @@ function buildCatalogue() {
      * names an instance for it, so `enabled: true` alone does nothing. A
      * checkbox on either is a lie, so neither gets a row. They are named under
      * the list instead.
+     *
+     * A helper can register as tool-<name> too, and a default can have no code.
+     * A real factory has addInitializer, or is a composite; every composite has
+     * a default entry.
      */
     var rows = []
     var byParent = {}     // parent -> its unbuilt children
     var instanceOnly = []
+
+    function hasFactory( t ) {
+        var f = smkGlobal.TYPE[ 'tool-' + t ]
+        return !!f && ( !!f.addInitializer || !!inDefaults[ t ] )
+    }
 
     Object.keys( types ).sort().forEach( function ( t ) {
         if ( isBuilt( t ) ) return
@@ -1000,6 +1022,7 @@ function buildCatalogue() {
             if ( !byParent[ pa ] ) byParent[ pa ] = []
             return byParent[ pa ].push( t )
         }
+        if ( !hasFactory( t ) ) return
         if ( d && d.instance === true ) return instanceOnly.push( t )
 
         rows.push( t )
@@ -1057,8 +1080,15 @@ function buildCatalogue() {
             dl.appendChild( el( 'dd', '', byParent[ pa ].sort().join( ', ' ) ) )
         } )
         if ( instanceOnly.length ) {
-            dl.appendChild( el( 'dt', '', 'named by a layer query' ) )
-            dl.appendChild( el( 'dd', '', instanceOnly.sort().join( ', ' ) ) )
+            dl.appendChild( el( 'dt', '', 'need a named instance in the config' ) )
+            var dd = el( 'dd', '' )
+            instanceOnly.sort().forEach( function ( t, i ) {
+                if ( i ) dd.appendChild( document.createTextNode( ', ' ) )
+                dd.appendChild( el( 'span', '', t + ' ' ) )
+                var b = exampleButton( t )
+                if ( b ) { b.dataset.type = t; dd.appendChild( b ) }
+            } )
+            dl.appendChild( dd )
         }
         note.appendChild( dl )
         host.appendChild( note )

@@ -1,4 +1,5 @@
 <div class="smk-tool"
+    v-if="showWidget !== false"
     v-bind:class="classes"
     v-on:click="$$emit( 'trigger' )"
     v-bind:title="title"

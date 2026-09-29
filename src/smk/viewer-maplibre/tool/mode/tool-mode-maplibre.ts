@@ -29,8 +29,9 @@ const factory = Tool.define( 'ModeTool',
         // Only meaningful for the maplibre viewer.  Disable for others so the
         // button doesn't show up where it has no effect.
         if ( typeof smk.$viewer.toggleMode !== 'function' ) {
-            self.enabled = false
-            self.visible = false
+            self.enabled    = false
+            self.visible    = false
+            self.showWidget = false
             return
         }
 

@@ -28,6 +28,12 @@
     display: contents;
 }
 
+/* pan in a 2D viewer has no control, so its widget renders nothing. With no
+   other widget the padding and shadow drew an empty box; 1.0 drew none. */
+.smk-actionbar:not( :has( > * ) ) {
+    display: none;
+}
+
 /* .smk-toolbar.smk-hidden  {
     display: none;
 } */

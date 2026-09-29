@@ -388,5 +388,37 @@
         "match": "Max vertices per segment",
         "reason": "Decision D22. The MapLibre inside esri-leaflet-vector notes a large bucket in one Esri World Topographic tile. It draws. Informational.",
         "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-mode-tool",
+        "onlyAdded": true,
+        "reason": "The mode widget, a MapLibre-only tool (see the ModeTool toolState ruling). Leaflet drew a disabled 2D button that did nothing; it now sets showWidget false and draws none.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-ModeTool",
+        "onlyAdded": true,
+        "reason": "The same mode widget as smk-mode-tool, by its tool id.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-mode-label",
+        "onlyAdded": true,
+        "reason": "The 2D/3D label inside the mode widget, as smk-mode-tool.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-status-2d",
+        "onlyAdded": true,
+        "reason": "The mode widget's status class, as smk-mode-tool. No other tool has a 2d status.",
+        "date": "2026-09-23"
     }
 ]

@@ -96,6 +96,8 @@
 .smk-legend-status .smk-display.smk-inline-legend .smk-legend {
     order: 1;
     padding-left: 0;
+    /* A long layer title squeezed the graphic to 8px. The title wraps instead. */
+    flex-shrink: 0;
 }
 
 .smk-legend-status .smk-display.smk-inline-legend .smk-legend-title {

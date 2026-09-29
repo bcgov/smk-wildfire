@@ -143,7 +143,7 @@ export function defineBaseMaps(
     } )
 
     defineBaseMap( 'topography-hillshade', {
-        type: 'esri-tiled-map', order: 13, title: 'Imagery',
+        type: 'esri-tiled-map', order: 13, title: 'Canada Hillshade',
         attribution: 'Copyright 117 DataBC, Government of British Columbia',
         // It sits on top of the vector map in the topography composite, so it
         // must shade the relief, not cover it.

@@ -135,7 +135,9 @@ const factory = Tool.define( 'QueryParametersTool',
                     } )
                     .catch( function ( err: any ) {
                         console.warn( err )
-                        self.showStatusMessage( 'No features found', 'warning' )
+                        // A service that refuses the request is not an empty answer.
+                        const empty = /^(no features|no results|filter is empty|test is empty)$/.test( err && err.message )
+                        self.showStatusMessage( empty ? 'No features found' : 'Search failed - the service did not answer', 'warning' )
                     } )
                     .finally( function () { self.busy = false } )
             },

@@ -43,16 +43,18 @@ smkRef.TYPE.MinimapTool.addInitializer( function ( this: any, smk: any ) {
     let control: any
     followBasemap( smk, this.baseMap, function ( id: string ) {
         // A layer instance can sit on one map only, so the overview gets its own.
-        const ly = smk.$viewer.createBasemapLayer( id )
+        // A composite gives several; the control takes one, so group them.
+        const parts = smk.$viewer.createBasemapLayer( id )
+        const ly    = parts.length > 1 ? L.layerGroup( parts ) : parts[ 0 ]
 
         if ( !control ) {
-            control = new L.Control.MiniMap( ly[ 0 ], option )
+            control = new L.Control.MiniMap( ly, option )
             control.addTo( smk.$viewer.map )
             return
         }
 
         // A vector basemap that is still loading can throw on removal.
-        try { control.changeLayer( ly[ 0 ] ) }
+        try { control.changeLayer( ly ) }
         catch ( e ) { console.warn( 'leaflet minimap: base map would not change:', e ) }
     } )
 } )
