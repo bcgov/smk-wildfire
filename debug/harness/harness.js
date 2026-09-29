@@ -71,6 +71,13 @@ var STORIES = {
         ]
     },
 
+    // 764 BC parks from one GeoJSON. Both 2D viewers cluster them from
+    // `useClustering`.
+    'cluster': {
+        title: 'Clustered points',
+        config: [ L + 'cluster-provincial-parks.json' ]
+    },
+
     'defaults': {
         title:  'SMK defaults (no config)',
         config: []

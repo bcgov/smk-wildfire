@@ -1,4 +1,5 @@
 import { SMK } from '../../smk-ref'
+import '../lib-marker-cluster'
 /**
  * tool-feature-list-clustering-leaflet — clustering display for feature-list tools.
  * Converted from tool-feature-list-clustering-leaflet.js.
