@@ -51,8 +51,6 @@
     border-color: transparent;
     border-radius: 5px;
     user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
     -webkit-user-select: none;
 
     color: black;

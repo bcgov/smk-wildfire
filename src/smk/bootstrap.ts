@@ -214,54 +214,6 @@ function setupGlobalSMK(): void {
 }
 
 // ---------------------------------------------------------------------------
-// IE11 guard — must run before setupGlobalSMK so the error is surfaced early
-// ---------------------------------------------------------------------------
-
-if ( navigator.userAgent.indexOf( 'MSIE ' ) > -1 || navigator.userAgent.indexOf( 'Trident/' ) > -1 ) {
-    const ie11Err = new Error( 'SMK will not function in Internet Explorer 11.' )
-
-    const scripts = document.getElementsByTagName( 'script' )
-    let scriptEl: HTMLScriptElement | null = null
-
-    let stack: string | undefined
-    try {
-        // Intentional reference error to capture the current stack and
-        // locate this script element among document.scripts.
-        // @ts-expect-error  omgwtf is intentionally undefined
-        omgwtf  // eslint-disable-line no-undef
-    } catch ( e: any ) {
-        stack = e.stack
-    }
-
-    if ( stack ) {
-        const entries = stack.split( /\s+at\s+/ )
-        const last    = entries[ entries.length - 1 ]
-        const m       = last.match( /[(](.+?)(?:[:]\d+)+[)]/ )
-        if ( m ) {
-            for ( let i = 0; i < scripts.length; i++ ) {
-                if ( scripts[ i ].src !== m[ 1 ] ) continue
-                scriptEl = scripts[ i ]
-                break
-            }
-        }
-    }
-
-    ;( window.SMK as any ).INIT = function ( option: Record<string, any> ) {
-        const containerSelector = option.containerSel || option[ 'smk-container-sel' ]
-        setTimeout( () => {
-            onFailure( ie11Err, resolveContainer( containerSelector ) )
-        }, 2000 )
-    }
-
-    if ( scriptEl && scriptEl.attributes.getNamedItem( 'smk-container-sel' ) ) {
-        ;( window.SMK as any ).INIT( { containerSel: scriptEl.attributes.getNamedItem( 'smk-container-sel' )!.value } )
-    }
-
-    ;( window.SMK as any ).FAILURE = ie11Err
-    throw ie11Err
-}
-
-// ---------------------------------------------------------------------------
 // Main bootstrap — runs synchronously when the module is first evaluated
 // ---------------------------------------------------------------------------
 
