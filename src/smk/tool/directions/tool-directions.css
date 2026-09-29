@@ -1,3 +1,9 @@
+/* Widen the sidepanel box itself, not the panel inside it, so the viewer's
+   sidepanel offset stays true. */
+.smk-sidepanel:has( > .smk-directions-panel ) {
+    --panel-width: 320px;
+}
+
 .smk-directions-panel .smk-commands .smk-route .smk-command {
     font-size: 14px;
     font-weight: bold;
@@ -11,6 +17,7 @@
 .smk-directions-panel .smk-waypoint {
     display: flex;
     align-items: center;
+    padding: var( --space-1 ) 0;
     border-radius: 0;
     border-top: 1px solid #999;
 }
@@ -18,9 +25,8 @@
 .smk-directions-panel .smk-description {
     align-self: center;
     flex-basis: 100%;
-    margin: var( --space-1 ) 0;
+    margin: var( --space-1 ) var( --space-2 );
     background-color: transparent;
-    margin-right: var( --space-2 );
     font-size: 11px;
 }
 
@@ -40,7 +46,9 @@
     width: 40px;
 }
 
+/* Too wide to join the route buttons, narrow enough to keep the add location
+   button beside it; then it grows to fill that line. */
 .smk-directions-panel .smk-address-search {
-    margin: var( --space-2 );
-    width: calc( 100% - 46px );
+    margin: 0;
+    flex: 1 1 60%;
 }

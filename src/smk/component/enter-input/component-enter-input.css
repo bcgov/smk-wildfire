@@ -20,6 +20,8 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
+    /* The frame must show between the input and a slotted control, not only around them. */
+    gap: var( --space-1 );
     background-color: #bbb;
 }
 

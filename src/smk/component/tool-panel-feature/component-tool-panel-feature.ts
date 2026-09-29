@@ -33,6 +33,17 @@ Vue.component( 'tool-panel-feature', {
                     format: at.format || 'simple',
                 } ) )
         },
+        attributeModeOptions( this: any ): any[] {
+            const template = 'feature-template-' + this.layer.id
+            return [
+                { value: 'default', label: 'Default View' },
+                this.attributeComponent == template && { value: template, label: 'Template View' },
+                this.attributeComponent == 'feature-description' && { value: 'feature-description', label: 'Description View' },
+                { value: 'feature-attributes', label: 'Attributes View' },
+                { value: 'feature-properties', label: 'Properties View' },
+                { value: 'feature-formatted', label: 'Formatted View' },
+            ].filter( Boolean )
+        },
         customLabel( this: any ): any {
             if ( !this.command?.custom ) return false
             return SMK?.HANDLER?.get( this.id, 'show-custom' )( this )

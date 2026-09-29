@@ -388,7 +388,6 @@ export const STORIES: Story[] = [
         { zoomIn: 'add', zoomOut: 'remove' }, { control: true } ) ] },
 
     { name: 'directions-panel', group: 'Panels', source: T + 'directions/', kind: 'panel',
-      known: 'The waypoint list is a <draggable>, which nothing registers. SMK 1.0 loaded vuedraggable 2.16; the conversion dropped it.',
       panel: panel( 'directions-panel', 'DirectionsTool', 'Directions', 'directions', {
         hasRoute: true, optimal: false, geocoderService: null,
         waypoints: [

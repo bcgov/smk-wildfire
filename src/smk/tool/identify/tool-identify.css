@@ -1,5 +1,17 @@
+/* The value is a few digits, so the field takes its content width, not the row. */
+.smk-identify-panel .smk-radius {
+    flex: 0 1 auto;
+}
+
 .smk-identify-panel .smk-radius .smk-input input {
     min-width: 5em;
+}
+
+/* Centred on the unit frame, not the label above it: the frame is 36px and
+   the button 32px, so it sits 2px off the bottom. */
+.smk-identify-panel .smk-current {
+    align-self: flex-end;
+    margin-bottom: 2px;
 }
 
 .smk-identify-panel .smk-radius .smk-input select {

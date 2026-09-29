@@ -227,6 +227,20 @@
     order: 70;
 }
 
+/* Title reads as a muted label and value as the data. Colour and weight only: a theme must not move layout. */
+.smk-theme-wf .smk-attributes .smk-attribute:nth-child( 2n ) {
+    background-color: #f2f2f2;
+}
+
+.smk-theme-wf .smk-attributes .smk-attribute .smk-attribute-title {
+    color: #5f5f5f;
+}
+
+.smk-theme-wf .smk-attributes .smk-attribute > :not( .smk-attribute-title ) {
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
 .smk-theme-wf .smk-layers-panel .smk-legend-item {
     display: flex;
     align-items: center;

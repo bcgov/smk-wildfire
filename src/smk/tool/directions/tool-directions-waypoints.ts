@@ -6,11 +6,20 @@
 import Tool from '../../tool'
 import panelDirectionsHtml from './panel-directions.html?raw'
 import { SMK } from '../../smk-ref'
+import sortableJs     from './lib/sortable-1.7.0.min.js?raw'
+import vuedraggableJs from './lib/vuedraggable-2.16.0.min.js?raw'
 
 declare const Vue: any
 declare const turf: any
 
 const smkRef = SMK
+
+// Both are UMD. With no AMD define, module or exports in scope they take the
+// browser branch: window.Sortable, then Vue.component( 'draggable' ).
+if ( !Vue.component( 'draggable' ) ) {
+    if ( !( window as any ).Sortable ) new Function( 'define', 'module', 'exports', sortableJs )()
+    new Function( 'define', 'module', 'exports', vuedraggableJs )()
+}
 
 function close( w1: any, w2: any ) {
     if ( Math.abs( w1.latitude  - w2.latitude  ) > 1e-5 ) return false

@@ -328,6 +328,13 @@
     },
     {
         "axis": "A",
+        "field": "warnings",
+        "match": "attributeModeOptions",
+        "reason": "v2's tool-panel-feature has an attributeModeOptions computed, and getComponentProps reports every computed as a prop the tool lacks - the same notice as customLabel. Candidate side, harmless.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
         "field": "console",
         "match": "reading 'id'",
         "reason": "SMK 1.0 throws this on a $emit when the whole catalogue is built. The REFERENCE side, recorded in CONTEXT.md 8.1; it says nothing about the rewrite.",
