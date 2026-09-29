@@ -24,5 +24,10 @@
         >
             <img v-bind:src="basemap.optionImageUrl"></img>
         </div>
+
+        <div class="smk-base-map-option-text"
+            v-if="!basemap.createContent && !basemap.optionImageUrl"
+            v-bind:style="mapStyle"
+        >{{ basemap.title }}</div>
     </div>
 </tool-panel>

@@ -53,6 +53,11 @@ const factory = Tool.define( 'BaseMapsTool',
                     return { id: config.id, title: config.title, optionImageUrl: config.optionImageUrl, update() {} }
                 }
 
+                // The live preview is a Leaflet map, and MapLibre runs no Leaflet (D25).
+                if ( smk.$viewer.type === 'maplibre' ) {
+                    return { id: config.id, title: config.title, update() {} }
+                }
+
                 let map: any
                 return {
                     id: config.id,

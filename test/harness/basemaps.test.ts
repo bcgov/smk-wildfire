@@ -66,8 +66,8 @@ describe( 'the basemap picker', () => {
             const osm   = all.find( ( b: any ) => b.id === 'openstreetmap' )
             const other = all.find( ( b: any ) => b.id !== 'openstreetmap' )
             expect( osm.buildsAMiniMap, 'a picture must cost no map' ).toBe( false )
-            // And one without a picture still does, so the test is not vacuous.
-            expect( other.buildsAMiniMap ).toBe( true )
+            // One without a picture: a live Leaflet map, but never in MapLibre (D25).
+            expect( other.buildsAMiniMap ).toBe( viewer !== 'maplibre' )
         } )
 
         it( 'sets every basemap the picker offers', async () => {

@@ -12,11 +12,11 @@
 
 import { Viewer } from '../viewer'
 import { readEsriTileInfo, tileSourceFromInfo } from './esri-tile-info'
+import { esriBasemapTileUrl } from './esri-basemap-tiles'
 import { SMK } from '../smk-ref'
 
 declare const maplibregl: any
 declare const turf:       any
-declare const L:          any   // optional — used only to read esri-leaflet basemap URL templates
 
 // ---------------------------------------------------------------------------
 // ViewerMapLibre constructor
@@ -231,60 +231,6 @@ ViewerMapLibre.prototype.destroy = function () {
 }
 
 // ---------------------------------------------------------------------------
-// initializeBasemaps — register Leaflet factories (so the baseMaps tool can
-// build its Leaflet thumbnail mini-maps), then build MapLibre specs ourselves
-// in setBasemap() using the stored config.
-// ---------------------------------------------------------------------------
-
-ViewerMapLibre.prototype.initializeBasemaps = function (
-    defineBaseMap:     ( id: string, config?: any ) => any,
-    defineBaseMapType: ( type: string, fn?: Function ) => any,
-    viewerCfg?:        any,
-) {
-    defineBaseMapType( 'tile', function ( cfg: any ) {
-        return [ L.tileLayer( cfg.url, Object.assign( { attribution: cfg.attribution }, cfg.option ) ) ]
-    } )
-
-    defineBaseMapType( 'esri-basemap', function ( cfg: any ) {
-        const opt  = Object.assign( { detectRetina: true }, cfg.option )
-        const orig = JSON.parse( JSON.stringify( L.esri.BasemapLayer.TILES[ cfg.key ].options ) )
-        const ly   = L.esri.basemapLayer( cfg.key, JSON.parse( JSON.stringify( opt ) ) )
-        L.esri.BasemapLayer.TILES[ cfg.key ].options = orig
-        return [ ly ]
-    } )
-
-    defineBaseMapType( 'esri-tiled-map', function ( cfg: any ) {
-        return [ L.esri.tiledMapLayer( Object.assign( { url: cfg.url, maxZoom: 30 }, cfg.option ) ) ]
-    } )
-
-    defineBaseMapType( 'esri-vector-basemap', function ( cfg: any ) {
-        if ( L.esri?.Vector?.vectorBasemapLayer )
-            return [ L.esri.Vector.vectorBasemapLayer( cfg.key, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
-        return []
-    } )
-
-    defineBaseMapType( 'esri-vector-tile', function ( cfg: any ) {
-        if ( L.esri?.Vector?.vectorTileLayer )
-            return [ L.esri.Vector.vectorTileLayer( cfg.url, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
-        return []
-    } )
-
-    defineBaseMapType( 'esri-static-basemap-tile', function ( cfg: any ) {
-        if ( L.esri?.Static?.staticBasemapTileLayer )
-            return [ L.esri.Static.staticBasemapTileLayer( cfg.style, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
-        return []
-    } )
-
-    // Vector-only basemap types — no Leaflet equivalent for the thumbnail
-    // mini-map; return [] so the basemap is registered but the preview is
-    // simply blank in the baseMaps tool.
-    defineBaseMapType( 'vector-tile',     function () { return [] } )
-    defineBaseMapType( 'maplibre-style',  function () { return [] } )
-
-    Viewer.prototype.initializeBasemaps.call( this, defineBaseMap, defineBaseMapType, viewerCfg )
-}
-
-// ---------------------------------------------------------------------------
 // MapLibre style spec builders used by setBasemap()
 // ---------------------------------------------------------------------------
 
@@ -332,7 +278,7 @@ function specForConfig( cfg: any, _map?: any, lookup?: ( id: string ) => any ): 
             return [ rasterSpec( cfg.id, [ resolveTileUrl( cfg.url ) ], cfg ) ]
 
         case 'esri-basemap': {
-            const url = lookupEsriBasemapUrl( cfg.key )
+            const url = esriBasemapTileUrl( cfg.key )
             if ( !url ) {
                 console.warn( 'maplibre viewer: no URL for esri-basemap key "' + cfg.key + '"' )
                 return []
@@ -648,13 +594,6 @@ function resolveTileUrl( url: string ): string {
     return out
 }
 
-function lookupEsriBasemapUrl( key: string ): string | null {
-    if ( typeof L === 'undefined' || !L.esri || !L.esri.BasemapLayer ) return null
-    const def = L.esri.BasemapLayer.TILES?.[ key ]
-    if ( !def?.urlTemplate ) return null
-    return resolveTileUrl( def.urlTemplate )
-}
-
 // ---------------------------------------------------------------------------
 // setBasemap / setView / getView / screenToMap / getScale
 // ---------------------------------------------------------------------------
@@ -803,10 +742,7 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
             self.map.setGlyphs( EMPTY_STYLE.glyphs )
     } catch { /* ignore — older versions */ }
 
-    // NOTE: do NOT use this.createBasemapLayer() here. That returns Leaflet
-    // layers (registered for the baseMaps tool's thumbnail mini-maps).  We
-    // build MapLibre style fragments from the stored config instead.
-    const cfg     = this.getBasemapConfig( basemapId )
+    const cfg    = this.getBasemapConfig( basemapId )
     const builder = specForConfig( cfg, self.map, function ( id: string ) {
         return self.getBasemapConfig( id )
     } )

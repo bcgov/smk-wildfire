@@ -8,9 +8,19 @@
     height: 100%;
 }
 
-.smk-base-map-sample, .smk-base-map-option-image {
+.smk-base-map-sample, .smk-base-map-option-image, .smk-base-map-option-text {
     border-radius: 5px;
     margin: var( --space-2 );
+}
+
+/* Same box as a preview, so a text option keeps the picker grid. */
+.smk-base-map-option-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: var( --space-2 );
+    text-align: center;
 }
 
 .smk-base-map-option-image {

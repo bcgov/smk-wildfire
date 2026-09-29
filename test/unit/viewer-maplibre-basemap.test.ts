@@ -17,13 +17,7 @@ class FakeMarker {
 }
 ;( globalThis as any ).maplibregl = { Marker: FakeMarker }
 
-// esri-basemap keys are read off the leaflet esri plugin.
-;( globalThis as any ).L = {
-    esri: { BasemapLayer: { TILES: {
-        Imagery:  { urlTemplate: 'https://example.com/imagery/{z}/{y}/{x}' },
-        Topographic: { urlTemplate: 'https://example.com/topo/{z}/{y}/{x}' },
-    } } },
-}
+// No L here: the MapLibre viewer must draw every basemap type without Leaflet (D25).
 
 let ViewerMapLibre: any
 
@@ -128,5 +122,22 @@ describe( 'maplibre basemaps — composite', () => {
         await settle(); await settle()
 
         expect( v.basemapLayerIds.length ).toBe( 1 )
+    } )
+} )
+
+describe( 'maplibre basemaps — esri-basemap, with no Leaflet', () => {
+    it( 'is not given a Leaflet global by this test', () => {
+        expect( ( globalThis as any ).L ).toBeUndefined()
+    } )
+
+    it( 'takes the tile URL from its own table', async () => {
+        const v = viewerWithRegistry()
+        v.setBasemap( 'imagery-esri' )
+        await settle(); await settle()
+
+        const src = Object.values( v.map.sources )[ 0 ] as any
+        expect( src.tiles ).toEqual( [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        ] )
     } )
 } )

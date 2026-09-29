@@ -141,7 +141,8 @@ function setupGlobalSMK(): void {
         smk.CONFIG = {
             name: 'SMK Default Map',
             viewer: {
-                type:                 'leaflet',
+                // The MapLibre build has no Leaflet viewer to default to.
+                type:                 __SMK_SUPPORT__.viewers.includes( 'leaflet' ) ? 'leaflet' : __SMK_SUPPORT__.viewers[ 0 ],
                 device:               'auto',
                 deviceAutoBreakpoint: 500,
                 waitForLayers:        true,
