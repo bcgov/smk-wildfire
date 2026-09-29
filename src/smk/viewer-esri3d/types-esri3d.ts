@@ -48,30 +48,40 @@ const objs = [
     'fcl/FlareClusterLayer_v4',
 ]
 
-export const Esri3dReady: Promise<any> = new Promise( function ( res, rej ) {
-    smkRef.TYPE.Esri3d = {}
+smkRef.TYPE.Esri3d = {}
 
-    // Dojo AMD require is only available when ArcGIS JS API 4.x is loaded.
-    if ( typeof require !== 'function' ) {
-        console.warn( 'SMK: types-esri3d: Dojo require not available — ESRI 3D viewer disabled' )
-        return res( smkRef.TYPE.Esri3d )
-    }
+let esri3dReady: Promise<any> | null = null
 
-    require( objs, function ( ...args: any[] ) {
-        objs.forEach( function ( o, i ) {
-            const parts      = o.replace( 'esri/', '' ).split( '/' )
-            let   container  = smkRef.TYPE.Esri3d
+/** Load the ArcGIS modules the first time a 3D viewer starts, as SMK 1.0 did. */
+export function loadEsri3d(): Promise<any> {
+    if ( !esri3dReady ) esri3dReady = requireEsri3d()
+    return esri3dReady
+}
 
-            for ( let j = 0; j < parts.length - 1; j++ ) {
-                if ( !( parts[ j ] in container ) ) container[ parts[ j ] ] = {}
-                container = container[ parts[ j ] ]
-            }
+function requireEsri3d(): Promise<any> {
+    return new Promise( function ( res ) {
+        // Dojo AMD require is only available when ArcGIS JS API 4.x is loaded.
+        if ( typeof require !== 'function' ) {
+            console.warn( 'SMK: types-esri3d: Dojo require not available — ESRI 3D viewer disabled' )
+            return res( smkRef.TYPE.Esri3d )
+        }
 
-            container[ parts[ parts.length - 1 ] ] = args[ i ]
+        require( objs, function ( ...args: any[] ) {
+            objs.forEach( function ( o, i ) {
+                const parts      = o.replace( 'esri/', '' ).split( '/' )
+                let   container  = smkRef.TYPE.Esri3d
+
+                for ( let j = 0; j < parts.length - 1; j++ ) {
+                    if ( !( parts[ j ] in container ) ) container[ parts[ j ] ] = {}
+                    container = container[ parts[ j ] ]
+                }
+
+                container[ parts[ parts.length - 1 ] ] = args[ i ]
+            } )
+
+            res( smkRef.TYPE.Esri3d )
         } )
-
-        res( smkRef.TYPE.Esri3d )
     } )
-} )
+}
 
-export default Esri3dReady
+export default loadEsri3d

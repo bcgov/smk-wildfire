@@ -62,6 +62,8 @@ function viewerWithRegistry() {
         addLayer( l: any ) { this.layers[ l.id ] = l; added.push( l.id ) },
         removeLayer() {}, removeSource() {},
         getStyle() { return { layers: [] } },
+        // The load fade listens for each basemap source.
+        on() {}, off() {}, isSourceLoaded() { return false },
     }
     v.getBasemapConfig = ( id: string ) => {
         const c = REGISTRY[ id.toLowerCase() ]

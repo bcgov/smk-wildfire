@@ -144,6 +144,7 @@ function setupGlobalSMK(): void {
                 type:                 'leaflet',
                 device:               'auto',
                 deviceAutoBreakpoint: 500,
+                waitForLayers:        true,
                 themes:               [],
                 location: {
                     extent: [ -139.1782, 47.6039, -110.3533, 60.5939 ],
@@ -375,6 +376,8 @@ function SmkInit(
     console.groupCollapsed( timer )
 
     smk.BOOT = ( smk.BOOT || Promise.resolve() )
+        // The last map's failure went to its own caller. This map must still start.
+        .catch( () => {} )
         .then( () => ( attr as any ).config )
         .then( ( config: string[] ) => parseConfig( config ) )
         .then( ( parsedConfig: any[] ) => {

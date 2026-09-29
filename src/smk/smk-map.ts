@@ -33,26 +33,19 @@ function setAttrs( el: HTMLElement, attrs?: Record<string, any> ): void {
 }
 
 /** Animate opacity from 0 to 1 over `duration` ms; returns a promise. */
-function fadeIn( el: HTMLElement, duration: number ): Promise<void> {
+export function fadeIn( el: HTMLElement, duration: number ): Promise<void> {
     return new Promise<void>( ( resolve ) => {
         el.style.opacity    = '0'
         el.style.display    = ''
-        el.style.transition = 'opacity ' + duration + 'ms'
-        // Force reflow so the transition takes effect.
+        // Commit opacity 0 before the transition exists, or the browser runs 1 -> 0 and the fade never shows.
         void el.offsetWidth
-        el.style.opacity = '1'
-        const done = () => { el.style.transition = ''; el.removeEventListener( 'transitionend', done ); resolve() }
-        el.addEventListener( 'transitionend', done )
-        setTimeout( done, duration + 50 )
-    } )
-}
-
-/** Animate opacity from current to 0 over `duration` ms; returns a promise. */
-function fadeOut( el: HTMLElement, duration: number ): Promise<void> {
-    return new Promise<void>( ( resolve ) => {
         el.style.transition = 'opacity ' + duration + 'ms'
-        el.style.opacity    = '0'
-        const done = () => { el.style.transition = ''; el.removeEventListener( 'transitionend', done ); resolve() }
+        el.style.opacity    = '1'
+        // transitionend bubbles, so a child's transition must not end this fade.
+        const done = ( e?: Event ) => {
+            if ( e && e.target !== el ) return
+            el.style.transition = ''; el.removeEventListener( 'transitionend', done ); resolve()
+        }
         el.addEventListener( 'transitionend', done )
         setTimeout( done, duration + 50 )
     } )
@@ -84,50 +77,65 @@ SmkMap.prototype.initialize = function () {
     container.innerHTML = ''
     container.classList.add( 'smk-map-frame', 'smk-hidden' )
 
+    this.$container = container
+
+    // Inside the frame and centred by CSS, so it stays centred when the frame changes size.
+    // visibility: visible shows it through the hidden frame.
     const spinner = document.createElement( 'img' )
     spinner.src = spinnerGifUrl
-    if ( container.parentNode ) {
-        container.parentNode.insertBefore( spinner, container.nextSibling )
-    }
     Object.assign( spinner.style, {
         zIndex:     '99999',
         visibility: 'visible',
         position:   'absolute',
         width:      '64px',
         height:     '64px',
-        left:       ( container.offsetLeft + container.offsetWidth  / 2 - 32 ) + 'px',
-        top:        ( container.offsetTop  + container.offsetHeight / 2 - 32 ) + 'px',
+        left:       '50%',
+        top:        '50%',
+        margin:     '-32px 0 0 -32px',
     } )
-
-    container.innerHTML = ''
-    this.$container = container
+    // Only a map that waits for its layers needs one, and the config says which.
+    const showSpinner = function () {
+        if ( self.viewer?.waitForLayers !== false ) container.appendChild( spinner )
+    }
 
     const dojoConfig: any = ( window as any ).dojoConfig
     if ( dojoConfig && dojoConfig.packages && dojoConfig.packages[ 0 ] ) {
         dojoConfig.packages[ 0 ].location = this.resolveAssetUrl( 'lib/esri3d' )
     }
 
+    // Named marks let a Host see each boot step in the browser's performance tools.
+    const mark = function ( step: string ) {
+        return function ( v?: any ) {
+            try { performance.mark( 'smk:' + self.$option.id + ':' + step ) } catch { /* no timeline */ }
+            return v
+        }
+    }
+    mark( 'start' )()
+
     return resolved()
         .then( loadConfigs )
         .then( mergeConfigs )
+        .then( mark( 'config' ) )
+        .then( showSpinner )
         .then( initMapFrame )
         .then( resolveDeviceConfig )
         .then( loadViewer )
         .then( loadTools )
         .then( initViewer )
+        .then( mark( 'viewer' ) )
         .then( initTools )
+        .then( mark( 'tools' ) )
         .then( initDisplayContext )
         .then( showMap )
         .finally( function () {
+            mark( 'shown' )()
             container.style.display = 'none'
             container.classList.remove( 'smk-hidden' )
 
-            const fadeInP  = fadeIn( container, 1000 )
-            const fadeOutP = fadeOut( spinner,   1000 )
-
-            return Promise.all( [ fadeInP, fadeOutP ] ).then( function () {
-                spinner.remove()
-            } )
+            // The map is ready now, so SMK.INIT does not wait for the fade.
+            // The spinner is inside the frame, so it would fade in with the map; remove it now.
+            spinner.remove()
+            fadeIn( container, 1000 )
         } )
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -285,8 +293,11 @@ SmkMap.prototype.initialize = function () {
     function showMap() {
         return resolved()
             .then( function () {
-                return self.$viewer.refreshLayers()
+                const refresh = self.$viewer.refreshLayers()
+                    .then( mark( 'layers' ) )
                     .catch( function ( e: Error ) { console.warn( e ) } )
+                // SMK 1.0 kept the map hidden until every layer loaded; a Host can opt out.
+                if ( self.viewer.waitForLayers !== false ) return refresh
             } )
             .then( function () {
                 if ( self.viewer.activeTool )

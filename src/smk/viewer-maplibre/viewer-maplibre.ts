@@ -62,6 +62,10 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
 
     Viewer.prototype.initialize.apply( this, arguments )
 
+    this.mark = function ( step: string ) {
+        try { performance.mark( 'smk:' + smk.$option.id + ':' + step ) } catch { /* no timeline */ }
+    }
+
     this.deadViewerLayer  = {}
     this.basemapSourceIds = []      // tracks current basemap source ids
     this.basemapLayerIds  = []      // tracks current basemap layer ids
@@ -655,6 +659,42 @@ function lookupEsriBasemapUrl( key: string ): string | null {
 // setBasemap / setView / getView / screenToMap / getScale
 // ---------------------------------------------------------------------------
 
+/** isSourceLoaded reports a missing source as a map error, so ask only about one that exists. */
+function sourceLoaded( map: any, sid: string ): boolean {
+    return !map.getSource( sid ) || !!map.isSourceLoaded( sid )
+}
+
+/**
+ * Map.addLayer checks each layer against a serialised copy of the whole style, so a
+ * 255-layer basemap cost 255 serialisations. The last goes through Map.addLayer to mark the redraw.
+ */
+function addBasemapLayers( map: any, layers: any[], before: string | undefined ) {
+    const fresh = layers.filter( ( ly: any ) => !map.getLayer( ly.id ) )
+    fresh.forEach( ( ly: any, i: number ) => {
+        try {
+            if ( i < fresh.length - 1 && map.style?.addLayer ) map.style.addLayer( ly, before, { validate: false } )
+            else map.addLayer( ly, before )
+        } catch ( e ) {
+            console.warn( 'maplibre viewer: basemap layer "' + ly.id + '" skipped:', e )
+        }
+    } )
+}
+
+/** Mark the first time every basemap source has its tiles, so a Host can time the first picture. */
+function markBasemapDrawn( self: any ) {
+    if ( self.basemapDrawnMarked ) return
+    self.basemapDrawnMarked = true
+    // A frame drawn with every basemap source loaded is the first whole picture.
+    const check = function () {
+        try {
+            if ( !self.basemapSourceIds.every( ( sid: string ) => sourceLoaded( self.map, sid ) ) ) return
+        } catch { /* the basemap changed; its sources are gone */ }
+        self.map.off( 'render', check )
+        self.mark?.( 'basemap-drawn' )
+    }
+    self.map.on( 'render', check )
+}
+
 ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
     const self = this
 
@@ -689,6 +729,7 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
 
     Promise.resolve( builder ).then( ( specs: MapLibreBasemapSpec[] ) => {
         if ( token !== self.basemapTracker ) return         // superseded
+        self.mark?.( 'basemap-style' )
         if ( !specs || specs.length === 0 ) {
             console.warn( 'maplibre viewer: no basemap spec produced for "' + basemapId + '"' )
             self.changedBaseMap( { baseMap: basemapId } )
@@ -713,12 +754,12 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
                 self.basemapSourceIds.push( sid )
             } )
             const layers = spec.layers || ( spec.layer ? [ spec.layer ] : [] )
-            layers.forEach( ( ly: any ) => {
-                if ( !self.map.getLayer( ly.id ) ) self.map.addLayer( ly, firstId )
-                self.basemapLayerIds.push( ly.id )
-            } )
+            addBasemapLayers( self.map, layers, firstId )
+            layers.forEach( ( ly: any ) => { self.basemapLayerIds.push( ly.id ) } )
         } )
 
+        self.mark?.( 'basemap-added' )
+        markBasemapDrawn( self )
         self.changedBaseMap( { baseMap: basemapId } )
     } ).catch( ( e: any ) => {
         if ( token !== self.basemapTracker ) return
