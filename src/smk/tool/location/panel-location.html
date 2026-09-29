@@ -6,9 +6,20 @@
     </template>
 
     <template slot="commands">
-        <span class="smk-command" v-if="tool.identify" v-on:click="$$emit( 'identify' )">Identify features</span>
-        <span class="smk-command" v-if="tool.measure" v-on:click="$$emit( 'measure' )">Start measurement</span>
-        <span class="smk-command" v-if="tool.directions" v-on:click="$$emit( 'directions' )">Directions to here</span>
+        <command-button class="smk-identify"
+            v-if="tool.identify"
+            v-on:click="$$emit( 'identify' )"
+        >Identify features</command-button>
+
+        <command-button class="smk-measure"
+            v-if="tool.measure"
+            v-on:click="$$emit( 'measure' )"
+        >Start measurement</command-button>
+
+        <command-button class="smk-directions"
+            v-if="tool.directions"
+            v-on:click="$$emit( 'directions' )"
+        >Directions to here</command-button>
     </template>    
 
     <div class="smk-address">

@@ -309,10 +309,9 @@ export const STORIES: Story[] = [
       } ) },
 
     { name: 'location-panel', group: 'Panels', source: T + 'location/', kind: 'panel',
-      known: 'the template reads `site`, which this component does not define. SMK 1.0 has the same template.',
       panel: panel( 'location-panel', 'LocationTool', 'Location', 'location_on', {
-        feature: { properties: ADDRESS }, tool: { identify: true, measure: true, directions: true }, command: {},
-        locationComponent: {}, titleComp: {},
+        site: { ...ADDRESS, latitude: 53.917065, longitude: -122.749672 },
+        tool: { identify: true, measure: false, directions: true },
       } ) },
 
     // --- Widgets ----------------------------------------------------------
