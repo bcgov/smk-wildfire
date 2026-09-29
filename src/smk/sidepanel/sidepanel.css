@@ -60,7 +60,8 @@
 .smk-panel .smk-commands {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    /* The 1.0 look. flex-start was tried 2026-09-17 and reverted: too big a change. */
+    justify-content: space-between;
     align-items: center;
     align-content: flex-start;
     gap: var( --space-1 );

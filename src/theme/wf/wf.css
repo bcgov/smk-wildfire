@@ -308,15 +308,16 @@
 /* component-command-button.css */
 
 /* A wf command button is white with black text, not the black pill a bare
-   command wears. Three classes, so file order cannot decide it. */
-.smk-theme-wf .smk-command-button .smk-command {
+   command wears. Three classes, so file order cannot decide it.
+   The glyph-only button is bare in 1.0, so it is held out. */
+.smk-theme-wf .smk-command-button:not(.smk-icon) .smk-command {
     color: black;
     background-color: white;
     font-weight: bold;
     border-color: #bbb;
 }
 
-.smk-theme-wf .smk-command-button.smk-disabled .smk-command {
+.smk-theme-wf .smk-command-button.smk-disabled:not(.smk-icon) .smk-command {
     color: #bbb;
     background-color: white;
 }
