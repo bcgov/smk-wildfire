@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import panelBookmarksHtml from './panel-bookmarks.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -43,5 +45,7 @@ const factory = Tool.define( 'BookmarksTool',
     }
 )
 
-smkRef.TYPE[ 'tool-bookmarks' ] = factory
+Tool.register( 'bookmarks', factory, widgetDefaults( panelDefaults( {
+    order: 3, position: [ 'shortcut-menu', 'list-menu' ], icon: 'bookmark', title: 'Bookmarks',
+} ) ) )
 export default factory

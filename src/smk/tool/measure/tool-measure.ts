@@ -58,5 +58,6 @@ const factory = Tool.define( 'MeasureTool',
 
 Tool.register( 'measure', factory, widgetDefaults( panelDefaults( {
     order: 6, position: [ 'shortcut-menu', 'list-menu' ], icon: 'straighten', title: 'Measurement',
+    unit: 'metric',
 } ) ) )
 export default factory

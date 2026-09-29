@@ -49,7 +49,7 @@ if ( typeof window !== 'undefined' ) {
 
 /** The Config defaults of a Tool with internal layers. */
 export function internalLayersDefaults( option: Record<string, any> ): Record<string, any> {
-    return Object.assign( { internalLayer: {} }, option )
+    return Object.assign( { internalLayers: [] }, option )
 }
 
 export default ToolInternalLayers

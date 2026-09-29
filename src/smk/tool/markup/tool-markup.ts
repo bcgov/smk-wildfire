@@ -4,6 +4,7 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { SMK } from '../../smk-ref'
 
 declare const Vue: any
@@ -41,5 +42,7 @@ const factory = Tool.define( 'MarkupTool',
     }
 )
 
-Tool.register( 'markup', factory, { order: 3 } )
+Tool.register( 'markup', factory, widgetDefaults( {
+    instance: true, order: 3, position: 'toolbar', icon: 'edit', title: 'Markup',
+} ) )
 export default factory

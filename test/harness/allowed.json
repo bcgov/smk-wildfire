@@ -311,5 +311,26 @@
         "match": "MarkupTool",
         "reason": "v2 gives the markup tool a showWidget prop that 1.0 did not declare. Added; every flag 1.0 had is still there with the same value.",
         "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "console",
+        "match": "makeWidgetComponent",
+        "reason": "SMK 1.0 throws this when shortcut-menu is built: its addTool calls makeWidgetComponent on the two directions sub-tools, which have no widget, and both initializers die. The REFERENCE side. v2 guards it, as its toolbar always did.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "initializer #0 failed",
+        "reason": "The same 1.0 fault as the makeWidgetComponent entry, reported as a warning. The REFERENCE side.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
+        "field": "console",
+        "match": "reading 'id'",
+        "reason": "SMK 1.0 throws this on a $emit when the whole catalogue is built. The REFERENCE side, recorded in CONTEXT.md 8.1; it says nothing about the rewrite.",
+        "date": "2026-09-19"
     }
 ]

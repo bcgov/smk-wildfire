@@ -95,6 +95,35 @@ function onFailure( err: Error, el?: Element | null ): void {
 // setupGlobalSMK — initialise window.SMK with all defaults
 // ---------------------------------------------------------------------------
 
+/**
+ * The internal-layer groups the Layers panel shows.
+ *
+ * 1.0 pushed one of these from each tool's config module, so a Host could
+ * merge into them by id - merge-config.ts still names the path. A tool that is
+ * not built is skipped by initializeDisplayContext.
+ */
+function defaultDisplayContext(): Record<string, any>[] {
+    // The context id is the tool TYPE, and the group id is the tool ID.
+    const group = ( type: string, id: string, title: string, items: string[] ) => ( {
+        id: type,
+        items: [ {
+            id, type: 'group', title, class: 'smk-inline-legend',
+            isVisible: false, isInternal: true, showItem: false,
+            items: items.map( i => ( { id: id + '--' + i } ) ),
+        } ],
+    } )
+
+    return [
+        group( 'current-location', 'CurrentLocationTool', 'Current Location', [ 'current-location' ] ),
+        group( 'identify', 'IdentifyListTool', 'Identify Features', [
+            'highlight-point', 'highlight-line', 'highlight-polygon', 'search-area',
+            'search-border-1', 'search-border-2', 'location', 'edit-search-area' ] ),
+        group( 'location', 'LocationTool', 'Picked Location', [ 'location' ] ),
+        group( 'search', 'SearchListTool', 'Search for Location', [
+            'result-selected', 'result-highlight', 'results' ] ),
+    ]
+}
+
 function setupGlobalSMK(): void {
     const smk = window.SMK as any
 
@@ -124,7 +153,7 @@ function setupGlobalSMK(): void {
                 baseMap:        'bc-roads',
                 clusterOption:  { showCoverageOnHover: false },
                 zoomSnap:       1,
-                displayContext: [],
+                displayContext: defaultDisplayContext(),
                 baseMapConfig:  [],
             },
             // The Tools a map builds when its Config names none. Each Tool

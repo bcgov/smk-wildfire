@@ -4,12 +4,12 @@
  */
 
 import Tool from '../../tool'
+import locationIconBlue from './config/marker-icon-blue.png'
+import locationShadow   from './config/marker-shadow.png'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import panelLocationHtml from './panel-location.html?raw'
 import { SMK } from '../../smk-ref'
-import markerIconBlue from './config/marker-icon-blue.png'
-import markerShadow   from './config/marker-shadow.png'
 
 declare const Vue: any
 
@@ -29,10 +29,6 @@ const factory = Tool.define( 'LocationTool',
     function ( this: any ) {
         smkRef.TYPE.ToolPanel.call( this, 'location-panel' )
         smkRef.TYPE.ToolInternalLayers.call( this )
-
-        this.internalLayers.push(
-            { id: 'location', style: { markerUrl: markerIconBlue, markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowUrl: markerShadow, shadowSize: [ 41, 41 ] }, legend: { point: true } },
-        )
 
         this.defineProp( 'feature' )
         this.defineProp( 'tool' )
@@ -68,5 +64,10 @@ const factory = Tool.define( 'LocationTool',
     }
 )
 
-Tool.register( 'location', factory, panelDefaults( internalLayersDefaults( { showHeader: false } ) ) )
+Tool.register( 'location', factory, panelDefaults( internalLayersDefaults( {
+    showHeader: false,
+    internalLayers: [
+        { id: 'location', style: { markerUrl: locationIconBlue, markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowUrl: locationShadow, shadowSize: [ 41, 41 ] }, legend: { point: true } },
+    ],
+} ) ) )
 export default factory

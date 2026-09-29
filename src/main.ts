@@ -248,6 +248,7 @@ import './smk/tool/coordinate/tool-coordinate'
 import './smk/tool/legend/tool-legend'
 import './smk/tool/markup/tool-markup'
 import './smk/tool/minimap/tool-minimap'
+import './smk/tool/bookmarks/tool-bookmarks'
 import './smk/tool/about/tool-about'
 import './smk/tool/baseMaps/tool-baseMaps'
 import './smk/tool/layers/tool-layers'
@@ -261,7 +262,6 @@ import './smk/tool/current-location/tool-current-location'
 import './smk/tool/directions/tool-directions'
 import './smk/tool/version/tool-version'
 import './smk/tool/bespoke/tool-bespoke'
-import './smk/tool/bookmarks/tool-bookmarks'
 
 // ---------------------------------------------------------------------------
 // Viewer-specific tool initializers — MUST come after base Tools above so

@@ -280,12 +280,20 @@ function currentConfig( viewerType ) {
 
     // SMK builds only the tools a config enables, so a catalogue tick has to
     // become config and wait for a restart. See buildCatalogue.
-    // position: 'toolbar' is not decoration. tool-base skips the whole adopt
-    // step when position is empty, so a tool with none builds, sits in $tool
-    // and never renders a widget.
+    var defaults = {}
+    startTools().forEach( function ( d ) { defaults[ d.type ] = d } )
+
+    // Only a tool with no default position gets one. tool-base skips the whole
+    // adopt step when position is empty, so such a tool builds, sits in $tool
+    // and never renders a widget. Forcing it on the rest is a lie: it moved the
+    // actionbar tools into the toolbar, and gave a tool that deliberately has
+    // no position - location - a second panel in the sidepanel.
     var extra = Object.keys( extraTools )
     var tail  = extra.length ? [ { tools: extra.map( function ( t ) {
-        return { type: t, enabled: true, position: 'toolbar' }
+        var d = defaults[ t ]
+        var e = { type: t, enabled: true }
+        if ( !d || !d.position ) e.position = 'toolbar'
+        return e
     } ) } ] : []
 
     if ( dropped && !$( '#merge' ).checked )
@@ -771,7 +779,8 @@ function buildTools() {
 // The tool list a map starts from: each type's own defaults, with the default
 // tool set in SMK.CONFIG.tools switched on.
 function startTools() {
-    return window.SMK.TYPE.mergeConfigs( [] ).tools
+    var T = window.SMK && window.SMK.TYPE
+    return T && T.mergeConfigs ? T.mergeConfigs( [] ).tools : []
 }
 
 /**

@@ -26,7 +26,7 @@ const factory = Tool.defineComposite( [
 // Without the two layer lists displayWaypoints() throws on the first
 // waypoint. The services stay empty: a Host brings its own key.
 Tool.register( 'directions', factory, widgetDefaults( panelDefaults( {
-    order: 4, position: [ 'shortcut-menu', 'list-menu' ], title: 'Route Planner',
+    order: 4, position: [ 'shortcut-menu', 'list-menu' ], icon: 'directions_car', title: 'Route Planner',
     optimal: false, geocoderService: {}, routePlannerService: {},
     segmentLayers: [
         { id: '@segments', title: 'Segments',

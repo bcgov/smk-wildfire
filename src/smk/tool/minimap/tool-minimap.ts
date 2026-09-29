@@ -46,5 +46,5 @@ export function overviewZoom( mainZoom: number, mainPx: number, miniPx: number )
 
 const factory = Tool.define( 'MinimapTool' )
 
-Tool.register( 'minimap', factory, { order: 1 } )
+Tool.register( 'minimap', factory, { order: 1, baseMap: null, option: {} } )
 export default factory

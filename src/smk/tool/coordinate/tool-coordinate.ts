@@ -63,5 +63,5 @@ const factory = Tool.define( 'CoordinateTool',
     }
 )
 
-Tool.register( 'coordinate', factory )
+Tool.register( 'coordinate', factory, { format: 'DD' } )
 export default factory
