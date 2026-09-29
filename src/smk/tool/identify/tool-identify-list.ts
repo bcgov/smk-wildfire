@@ -6,10 +6,9 @@
 import Tool from '../../tool'
 import panelIdentifyHtml from './panel-identify.html?raw'
 import { SMK } from '../../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const Vue: any
-declare const turf: any
-
 const smkRef = SMK
 
 Vue.component( 'identify-widget', {

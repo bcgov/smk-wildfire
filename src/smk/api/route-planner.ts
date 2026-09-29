@@ -1,10 +1,9 @@
 import { SMK } from '../smk-ref'
+import * as turf from '@turf/turf'
 /**
  * RoutePlanner — BC Route Planner API wrapper.
  * Converted from api/route-planner.js.
  */
-
-declare const turf: any
 
 const smkRef = SMK
 

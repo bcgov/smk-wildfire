@@ -6,10 +6,9 @@
 import { Viewer } from '../viewer'
 import { defineBaseMaps } from '../base-maps'
 import { SMK } from '../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const L:    any
-declare const turf: any
-
 // ---------------------------------------------------------------------------
 // ViewerLeaflet constructor
 // ---------------------------------------------------------------------------

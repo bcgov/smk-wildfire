@@ -8,10 +8,9 @@ import panelDirectionsHtml from './panel-directions.html?raw'
 import { SMK } from '../../smk-ref'
 import sortableJs     from './lib/sortable-1.7.0.min.js?raw'
 import vuedraggableJs from './lib/vuedraggable-2.16.0.min.js?raw'
+import * as turf from '@turf/turf'
 
 declare const Vue: any
-declare const turf: any
-
 const smkRef = SMK
 
 // Both are UMD. With no AMD define, module or exports in scope they take the

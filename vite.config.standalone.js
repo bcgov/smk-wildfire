@@ -4,7 +4,7 @@
  * Produces dist/smk.standalone.js + dist/smk.standalone.css — a single drop-in
  * UMD bundle that contains SMK *and* every external library it depends on
  * (Vue, Leaflet, MapLibre GL, esri-leaflet, esri-leaflet-vector, proj4,
- * @turf/turf, jQuery).
+ * @turf/turf, Terraformer).
  *
  * The lite build (`vite.config.js` → smk.es.js / smk.umd.js / smk.css) keeps
  * those libs `external` and expects the host page to load them via <script>
@@ -85,6 +85,9 @@ export default defineConfig( {
             // so it needs the compiler. The package default is runtime-only, and
             // the NODE_ENV define above hides Vue's warning about it.
             'vue': 'vue/dist/vue.esm.browser.js',
+            // The package's `browser` field is the whole UMD bundle, which
+            // cannot be tree-shaken. SMK calls about 30 of turf's functions.
+            '@turf/turf': '@turf/turf/turf.es.js',
         },
     },
 } )

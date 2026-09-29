@@ -14,10 +14,9 @@ import { Viewer } from '../viewer'
 import { readEsriTileInfo, tileSourceFromInfo } from './esri-tile-info'
 import { esriBasemapTileUrl } from './esri-basemap-tiles'
 import { SMK } from '../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const maplibregl: any
-declare const turf:       any
-
 // ---------------------------------------------------------------------------
 // ViewerMapLibre constructor
 // ---------------------------------------------------------------------------
@@ -831,14 +830,11 @@ ViewerMapLibre.prototype.getView = function () {
     try {
         const ll1 = this.map.unproject( [ 0,   vert ] )
         const ll2 = this.map.unproject( [ 100, vert ] )
-        const tu  = ( window as any ).turf
-        if ( tu ) {
-            metersPerPixel = ( tu.distance(
-                tu.point( [ ll1.lng, ll1.lat ] ),
-                tu.point( [ ll2.lng, ll2.lat ] ),
-                { units: 'meters' }
-            ) ) / 100
-        }
+        metersPerPixel = ( turf.distance(
+            turf.point( [ ll1.lng, ll1.lat ] ),
+            turf.point( [ ll2.lng, ll2.lat ] ),
+            { units: 'meters' }
+        ) ) / 100
     } catch { /* ignore */ }
 
     return {

@@ -7,10 +7,9 @@ import Tool from '../../tool'
 import widgetSearchHtml from './widget-search.html?raw'
 import panelSearchHtml from './panel-search.html?raw'
 import { SMK } from '../../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const Vue: any
-declare const turf: any
-
 const smkRef = SMK
 
 const precisionZoom: Record<string, number> = {

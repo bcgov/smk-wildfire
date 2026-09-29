@@ -5,10 +5,9 @@
 import { toolFeatureListClusteringLeaflet } from '../tool-feature-list-clustering-leaflet'
 
 declare const L:    any
-declare const turf: any
-
 import '../../../tool/select/tool-select-list'
 import { SMK } from '../../../smk-ref'
+import * as turf from '@turf/turf'
 
 const smkRef = SMK
 

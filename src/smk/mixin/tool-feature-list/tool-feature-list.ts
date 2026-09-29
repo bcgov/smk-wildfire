@@ -1,12 +1,11 @@
 import { SMK } from '../../smk-ref'
+import * as turf from '@turf/turf'
 /**
  * tool-feature-list mixin — manages a feature result list for a Tool.
  * Converted from mixin/tool-feature-list/tool-feature-list.js.
  */
 
 declare const Vue: any
-declare const turf: any
-
 export function ToolFeatureList( this: any, featureSetCallback: ( this: any, smk: any ) => any ): void {
     this.defineProp( 'layers' )
     this.defineProp( 'highlightId' )

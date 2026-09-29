@@ -1,10 +1,9 @@
 /**
  * One layer must not be able to end the identify for the others.
  *
- * The ESRI layer types read `window.Terraformer` before they make a promise,
- * so a missing global throws inside the forEach rather than rejecting. On the
- * BC Wildfire map that single throw ended identifyFeatures for every layer,
- * and the Preview panel never opened for an Incident.
+ * A layer type that throws before it makes a promise throws inside the
+ * forEach rather than rejecting. On the BC Wildfire map that single throw
+ * ended identifyFeatures for every layer.
  */
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 

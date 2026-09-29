@@ -30,6 +30,7 @@ import {
 } from './util'
 import type { Layer }    from './layer/layer'
 import { SMK } from './smk-ref'
+import * as turf from '@turf/turf'
 
 // ---------------------------------------------------------------------------
 // ViewerEvent — typed event subclass for all viewer instances
@@ -710,10 +711,6 @@ export class Viewer {
     }
 
     circleInMap( screenCenter: { x: number; y: number }, pixelRadius: number, sides: number ): any {
-        // TODO: replace turf global with import once turf is bundled explicitly
-        const turf = ( window as any ).turf
-        if ( !turf ) throw new Error( 'turf is not loaded' )
-
         return turf.polygon( [
             circlePoints( screenCenter, pixelRadius, sides )
                 .map( ( p: any ) => this.screenToMap( p ) )
@@ -757,9 +754,8 @@ export class Viewer {
                 layer: self.visibleLayer[ id ] || self.offMapLayer[ id ]
             }
 
-            // A layer type can throw here, not reject: the ESRI types read
-            // window.Terraformer before they make a promise. One such throw
-            // used to end the identify for every other layer as well.
+            // A layer type can throw here, not reject. One such throw used to
+            // end the identify for every other layer as well.
             let p: any
             try {
                 p = ly.getFeaturesInArea?.( area, view, option )

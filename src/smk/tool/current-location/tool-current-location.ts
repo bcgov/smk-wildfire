@@ -9,10 +9,9 @@ import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import widgetCurrentLocationHtml from './widget-current-location.html?raw'
 import { SMK } from '../../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const Vue: any
-declare const turf: any
-
 const smkRef = SMK
 
 Vue.component( 'current-location-widget', {

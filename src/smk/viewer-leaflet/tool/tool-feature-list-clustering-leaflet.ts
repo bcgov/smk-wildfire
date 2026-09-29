@@ -1,13 +1,12 @@
 import { SMK } from '../../smk-ref'
 import '../lib-marker-cluster'
+import * as turf from '@turf/turf'
 /**
  * tool-feature-list-clustering-leaflet — clustering display for feature-list tools.
  * Converted from tool-feature-list-clustering-leaflet.js.
  */
 
 declare const L:    any
-declare const turf: any
-
 const smkRef = SMK
 
 /** Called with tool instance as `this` context; smk is first arg */

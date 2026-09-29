@@ -10,10 +10,9 @@ import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import panelLocationHtml from './panel-location.html?raw'
 import { SMK } from '../../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const Vue: any
-declare const turf: any
-
 const smkRef = SMK
 
 Vue.component( 'location-widget', {

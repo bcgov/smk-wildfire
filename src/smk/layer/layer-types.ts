@@ -13,13 +13,11 @@
  *   Layer['esri-feature']  — EsriFeatureLayer
  *   Layer['esri-tiled']    — EsriTiledLayer
  *   Layer['cluster']       — ClusterLayer
- *
- * External deps still accessed via window globals (not yet converted):
- *   window.Terraformer — used by ESRI layer types for geometry conversion
  */
 
 import { Layer }                                    from './layer'
 import { makePromise, resolved, getProjection, reprojectGeoJSON, featureTitle } from '../util'
+import { arcgisToGeoJSON, geojsonToArcGIS }         from '@terraformer/arcgis'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -88,16 +86,13 @@ function cssColorAsRGBA( color: string, opacity?: number ): string {
 
 /** Map ESRI feature result to GeoJSON feature. */
 function esriResultToFeature( r: any ): any {
-    const Terraformer = ( window as any ).Terraformer
     const f: any = { type: 'Feature' }
 
     if ( r.displayFieldName )
         f.title = r.attributes[ r.displayFieldName ]
 
-    // Terraformer returns class instances (e.g. Terraformer.Point); strip
-    // prototypes so the geometry is plain GeoJSON safe for structured-clone
-    // (used by MapLibre when transferring data to its worker).
-    const geom = Terraformer.ArcGIS.parse( r.geometry )
+    // Only plain GeoJSON survives structured-clone to MapLibre's worker.
+    const geom = arcgisToGeoJSON( r.geometry )
     f.geometry = { type: geom.type, coordinates: geom.coordinates }
 
     if ( f.geometry.type === 'MultiPoint' && f.geometry.coordinates.length === 1 ) {
@@ -347,11 +342,10 @@ class EsriDynamicLayer extends Layer {
     }
 
     getFeaturesInArea( area: any, view: any, _option: any ): Promise<any[]> {
-        const Terraformer  = ( window as any ).Terraformer
         const cfg          = this.config as any
         const serviceUrl   = cfg.serviceUrl + '/identify'
         const dynamicLayers = '[' + cfg.dynamicLayers.join( ',' ) + ']'
-        const esriFeature  = Terraformer.ArcGIS.convert( area )
+        const esriFeature  = geojsonToArcGIS( area )
 
         const data = {
             f:              'json',
@@ -404,10 +398,9 @@ class EsriFeatureLayer extends Layer {
     }
 
     getFeaturesInArea( area: any, view: any, _option: any ): Promise<any[]> {
-        const Terraformer = ( window as any ).Terraformer
         const cfg         = this.config as any
         const serviceUrl  = cfg.serviceUrl + '/query'
-        const esriFeature = Terraformer.ArcGIS.convert( area )
+        const esriFeature = geojsonToArcGIS( area )
 
         const data: Record<string, unknown> = {
             f:              'json',
@@ -454,10 +447,9 @@ class EsriTiledLayer extends Layer {
     }
 
     getFeaturesInArea( area: any, view: any, _option: any ): Promise<any[]> {
-        const Terraformer = ( window as any ).Terraformer
         const cfg         = this.config as any
         const serviceUrl  = cfg.serviceUrl + '/identify'
-        const esriFeature = Terraformer.ArcGIS.convert( area )
+        const esriFeature = geojsonToArcGIS( area )
 
         const data = {
             f:              'json',

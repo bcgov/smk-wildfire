@@ -1,10 +1,9 @@
 import { SMK } from './smk-ref'
+import proj4 from 'proj4'
 /**
  * projections — registers proj4 projection definitions from SMK.PROJECTIONS.
  * Converted from projections.js (include.module -> ES module).
  */
-
-declare const proj4: any
 
 export function registerProjections(): void {
     const projections: Array<{ name?: string; def?: string; alias?: string }> =

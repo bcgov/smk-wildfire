@@ -12,10 +12,9 @@
  */
 
 import '../../../tool/measure/tool-measure'
+import * as turf from '@turf/turf'
 
 declare const SMK:  any
-declare const turf: any
-
 const SRC_ID    = 'smk-measure'
 const FILL_ID   = 'smk-measure-fill'
 const LINE_ID   = 'smk-measure-line'

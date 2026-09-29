@@ -18,8 +18,7 @@
 import { VectorLayer } from '../../layer/layer-types'
 import { Layer }       from '../../layer/layer'
 import { getProjection, reprojectGeoJSON, makePromise } from '../../util'
-
-declare const turf: any
+import * as turf from '@turf/turf'
 
 export class VectorMapLibreLayer extends VectorLayer {}
 

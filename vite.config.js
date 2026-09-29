@@ -51,12 +51,11 @@ export default defineConfig( {
             // page (loaded via <script> tags from src/lib/*).  Listed here so that
             // any future `import 'leaflet'` etc. resolves to the global rather
             // than bundling a second copy.
+            // turf, proj4 and Terraformer are bundled: SMK imports them (D26).
             external: [
                 'vue',
                 'leaflet',
                 'maplibre-gl',
-                'proj4',
-                '@turf/turf',
                 'esri-leaflet',
                 'esri-leaflet-vector',
             ],
@@ -65,8 +64,6 @@ export default defineConfig( {
                     'vue':                 'Vue',
                     'leaflet':             'L',
                     'maplibre-gl':         'maplibregl',
-                    'proj4':               'proj4',
-                    '@turf/turf':          'turf',
                     'esri-leaflet':        'L.esri',
                     'esri-leaflet-vector': 'L.esri.Vector',
                 },
@@ -85,6 +82,8 @@ export default defineConfig( {
         extensions: [ '.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs' ],
         alias: {
             '@': resolve( import.meta.dirname, 'src' ),
+            // turf's `browser` field is a UMD bundle that cannot be tree-shaken.
+            '@turf/turf': '@turf/turf/turf.es.js',
         },
     },
 
