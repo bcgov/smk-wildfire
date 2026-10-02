@@ -10,6 +10,9 @@ export function ToolInternalLayers( this: any ): void {
     this.$initializers.push( function ( this: any, smk: any ) {
         const self = this
 
+        // 1.0.16001 Hosts (WFNEWS, WFIM) style internal layers through `internalLayer`, keyed by id.
+        mergeKeyedLayers( this.internalLayers, this.internalLayer )
+
         this.internalLayers.forEach( function ( ly: any ) {
             ly.id          = self.id + '--' + ly.id
             ly.type        = 'vector'
@@ -39,6 +42,29 @@ export function ToolInternalLayers( this: any ): void {
             this.getInternalLayer( id ).load( geojson )
         }
     } )
+}
+
+function mergeKeyedLayers( layers: any[], keyed: any ): void {
+    if ( !keyed || typeof keyed !== 'object' ) return
+
+    Object.keys( keyed ).forEach( function ( id ) {
+        const ly = layers.find( function ( l: any ) { return l.id === id } )
+        if ( ly ) deepMerge( ly, keyed[ id ] )
+        else      layers.push( deepMerge( { id }, keyed[ id ] ) )
+    } )
+}
+
+function deepMerge( target: any, source: any ): any {
+    Object.keys( source || {} ).forEach( function ( k ) {
+        const s = source[ k ]
+        if ( isPlainObject( s ) && isPlainObject( target[ k ] ) ) deepMerge( target[ k ], s )
+        else target[ k ] = isPlainObject( s ) ? deepMerge( {}, s ) : s
+    } )
+    return target
+}
+
+function isPlainObject( v: any ): boolean {
+    return v != null && typeof v === 'object' && !Array.isArray( v )
 }
 
 // Assign to SMK.TYPE for backward compat
