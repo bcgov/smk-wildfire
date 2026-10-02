@@ -101,10 +101,9 @@ function readRenderer( serviceUrl: string, cfg: any ): Promise<any> {
 /**
  * esri-leaflet put each service's copyrightText into Leaflet's attribution
  * control by itself. MapLibre only shows what a source declares, so carry it.
+ * 1.0 never gave esri-leaflet the Config's attribution, so the service's wins.
  */
-function readAttribution( serviceUrl: string, cfg: any ): Promise<string> {
-    if ( cfg.attribution ) return Promise.resolve( cfg.attribution )
-
+function readAttribution( serviceUrl: string ): Promise<string> {
     return readServiceInfo( serviceUrl )
         .then( ( d: any ) => ( d && d.copyrightText ) || '' )
 }
@@ -128,7 +127,7 @@ export class EsriFeatureMapLibreLayer extends EsriFeatureLayer {}
         fetch( queryUrl )
             .then( r => r.ok ? r.json() : Promise.reject( new Error( 'esri-feature query failed: ' + r.status ) ) ),
         readRenderer( base, cfg ),
-        readAttribution( base, cfg ),
+        readAttribution( base ),
     ] )
         .then( ( [ geojson, renderer, attribution ]: any[] ) => {
             const fillId   = id + '_fill'
@@ -140,6 +139,7 @@ export class EsriFeatureMapLibreLayer extends EsriFeatureLayer {}
             const strokeWidth = paintValue( renderer, 'strokeWidth', 2 )
 
             return {
+                esri:     true,
                 sourceId: id,
                 source:   {
                     type: 'geojson',

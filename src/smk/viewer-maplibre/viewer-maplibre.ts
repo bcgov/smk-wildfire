@@ -87,9 +87,7 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
     self.map = new maplibregl.Map( {
         container:           el,
         style:               EMPTY_STYLE,
-        // Leaflet showed attribution by default. Compact keeps the credit in
-        // an 'i' button, which the crowded bottom-right corner can hold.
-        attributionControl:  { compact: true },
+        attributionControl:  false,
         interactive:         true,
         dragRotate:          false,
         pitchWithRotate:     false,
@@ -108,6 +106,12 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
         zoom:                2,
     } )
 
+    // Leaflet showed attribution by default. Compact keeps the credit in
+    // an 'i' button, which the crowded bottom-right corner can hold.
+    self.attribution = new maplibregl.AttributionControl( { compact: true } )
+    self.map.addControl( self.attribution )
+    startClosed( self.attribution )
+
     // Begin with everything off; tool initializers re-enable based on config.
     self.map.scrollZoom.disable()
     self.map.boxZoom.disable()
@@ -118,9 +122,7 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
     return new Promise<void>( ( resolve ) => {
         self.map.once( 'load', function () {
 
-            // The credit must stay readable, so it is not collapsed. It wraps
-            // to two or three lines on a narrow frame, so tell the status
-            // column how much room to leave instead.
+            // An open credit wraps to two or three lines on a narrow frame.
             publishAttributionHeight( smk, el )
 
             // Demote tile-decode/network errors so a single bad raster tile
@@ -195,6 +197,25 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
             resolve()
         } )
     } )
+}
+
+/**
+ * MapLibre opens a compact credit when the first one arrives, and closes it at
+ * the first drag. Close it at that first opening; the 'i' button opens it.
+ */
+function startClosed( ctrl: any ) {
+    const box = ctrl?._container as HTMLElement | undefined
+    if ( !box || typeof MutationObserver !== 'function' ) return
+
+    const close = (): boolean => {
+        if ( !box.classList.contains( 'maplibregl-compact-show' ) ) return false
+        box.classList.remove( 'maplibregl-compact-show' )
+        return true
+    }
+    if ( close() ) return
+
+    const watch = new MutationObserver( () => { if ( close() ) watch.disconnect() } )
+    watch.observe( box, { attributes: true, attributeFilter: [ 'class' ] } )
 }
 
 /**
@@ -291,7 +312,13 @@ function specForConfig( cfg: any, _map?: any, lookup?: ( id: string ) => any ): 
                 console.warn( 'maplibre viewer: no URL for esri-basemap key "' + cfg.key + '"' )
                 return []
             }
-            return [ rasterSpec( cfg.id, [ url ], cfg ) ]
+            // esri-leaflet's basemapLayer carried each key's credit; read the service's.
+            const spec = Object.assign( rasterSpec( cfg.id, [ url ], cfg ), { esri: true } )
+            return readEsriTileInfo( url.replace( /\/tile\/.*$/, '' ) ).then( ( info: any ) => {
+                const src = spec.source as any
+                if ( !src.attribution && info?.copyrightText ) src.attribution = info.copyrightText
+                return [ spec ]
+            } )
         }
 
         case 'esri-tiled-map': {
@@ -309,12 +336,13 @@ function specForConfig( cfg: any, _map?: any, lookup?: ( id: string ) => any ): 
 
                 if ( from.tileSize ) src.tileSize = from.tileSize
                 if ( from.bounds )   src.bounds   = from.bounds
+                if ( !src.attribution && from.attribution ) src.attribution = from.attribution
 
                 // The config may narrow the cache's range. Neither widens it.
                 if ( from.minzoom != null ) src.minzoom = Math.max( src.minzoom ?? 0, from.minzoom )
                 if ( from.maxzoom != null ) src.maxzoom = Math.min( src.maxzoom ?? 22, from.maxzoom )
 
-                return [ spec ]
+                return [ Object.assign( spec, { esri: true } ) ]
             } )
         }
 
@@ -359,6 +387,7 @@ interface MapLibreBasemapSpec {
     layers?:   any[]
     glyphs?:   string
     sprite?:   string
+    esri?:     boolean
 }
 
 /**
@@ -498,12 +527,22 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
     // service's own: it can add sources and rename every layer.
     const styleUrl = cfg.styleUrl
         || ( cfg.itemId ? ITEM_STYLE_URL.replace( '{id}', cfg.itemId ) : root + '/resources/styles/root.json' )
-    return fetch( styleUrl, { credentials: 'omit' } )
+    const style = fetch( styleUrl, { credentials: 'omit' } )
+    // The style names no credit; esri-leaflet-vector read it from the service.
+    const credit = cfg.attribution
+        ? Promise.resolve( cfg.attribution )
+        : root
+            ? fetch( root + '?f=json', { credentials: 'omit' } )
+                .then( ( r ) => r.ok ? r.json() : null )
+                .then( ( info: any ) => info?.copyrightText || '' )
+                .catch( () => '' )
+            : Promise.resolve( '' )
+    return style
         .then( ( r ) => {
             if ( !r.ok ) throw new Error( 'esri vector style fetch ' + r.status + ' ' + styleUrl )
-            return r.json()
+            return Promise.all( [ r.json(), credit ] )
         } )
-        .then( ( fetched: any ) => {
+        .then( ( [ fetched, attribution ]: any[] ) => {
             // esri-leaflet-vector lets the host restyle the service through
             // option.style( style ). Honour the same hook, or a host's custom
             // basemap silently renders the raw service style instead — whose
@@ -538,7 +577,7 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                     const service = /^https?:\/\//.test( src.url || '' ) ? src.url.replace( /\/+$/, '' ) : root
                     if ( !hasOwnTiles ) src.tiles = [ service + '/tile/{z}/{y}/{x}.pbf' ]
                     delete src.url
-                    if ( cfg.attribution && !src.attribution ) src.attribution = cfg.attribution
+                    if ( attribution && !src.attribution ) src.attribution = attribution
                     if ( src.minzoom == null ) src.minzoom = 0
                     if ( src.maxzoom == null ) src.maxzoom = 22
                 }
@@ -563,6 +602,7 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
             }
 
             return [ {
+                esri: true,
                 sources,
                 layers,
                 glyphs: style.glyphs ? resolveStyleUrl( style.glyphs, styleUrl ) : undefined,
@@ -767,6 +807,7 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
         // Insert basemap layers at the bottom (before the first existing layer).
         const firstId = self.map.getStyle()?.layers?.[ 0 ]?.id
         specs.forEach( ( spec: any ) => {
+            if ( spec.esri ) self.creditEsri()
             // Optional style-level resources for vector basemaps
             if ( spec.glyphs && typeof self.map.setGlyphs === 'function' ) {
                 try { self.map.setGlyphs( spec.glyphs ) } catch { /* ignore */ }
@@ -896,12 +937,26 @@ function specSources( spec: any ): Array<[ string, any ]> {
     return out
 }
 
+/**
+ * esri-leaflet put "Powered by Esri" in front of the credits once any Esri
+ * layer was on the map. Esri's terms ask for it, so it stays once shown.
+ */
+ViewerMapLibre.prototype.creditEsri = function () {
+    const ctrl = this.attribution
+    if ( !ctrl || ctrl.options.customAttribution === ESRI_CREDIT ) return
+    ctrl.options.customAttribution = ESRI_CREDIT
+    if ( this.map?.style ) ctrl._updateAttributions?.()
+}
+
+const ESRI_CREDIT = 'Powered by <a href="https://www.esri.com" target="_blank">Esri</a>'
+
 ViewerMapLibre.prototype.addViewerLayer = function ( viewerLayer: any ) {
     if ( !viewerLayer ) return
     const self = this
 
     const layers  = specLayers( viewerLayer )
     const sources = specSources( viewerLayer )
+    if ( viewerLayer.esri ) self.creditEsri()
 
     if ( layers.length > 0 || sources.length > 0 ) {
         sources.forEach( ( [ sid, src ] ) => {

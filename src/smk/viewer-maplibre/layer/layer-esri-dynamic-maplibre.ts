@@ -37,6 +37,7 @@ export class EsriDynamicMapLibreLayer extends EsriDynamicLayer {}
     const opacity = cfg.opacity != null ? cfg.opacity : 1
 
     return Promise.resolve( {
+        esri:     true,
         sourceId: id,
         source: {
             type:        'raster',

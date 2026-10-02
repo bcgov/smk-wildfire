@@ -36,7 +36,8 @@ export function resetTileServiceCache(): void { resetEsriTileInfoCache() }
             tiles:       from.tiles,
             // A cache may be built with 512px tiles. Asking at 256 stretches it.
             tileSize:    from.tileSize || 256,
-            attribution: cfg.attribution || from.attribution || '',
+            // 1.0 built this from the url alone, so the service's credit showed.
+            attribution: from.attribution || '',
         }
         if ( from.minzoom != null ) source.minzoom = from.minzoom
         if ( from.maxzoom != null ) source.maxzoom = from.maxzoom
@@ -50,6 +51,7 @@ export function resetTileServiceCache(): void { resetEsriTileInfoCache() }
         if ( inner != null ) source.maxzoom = Math.min( source.maxzoom ?? 24, inner )
 
         return {
+            esri:     true,
             sourceId: id,
             source,
             layer: {
