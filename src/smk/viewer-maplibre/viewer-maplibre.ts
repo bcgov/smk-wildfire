@@ -1145,9 +1145,16 @@ ViewerMapLibre.prototype.temporaryFeature = function ( acetate: string, geometry
             ? { id: layerId, type: 'line', source: sourceId,
                 paint: Object.assign( { 'line-color': '#3388ff', 'line-width': 3 }, opt?.paint ) }
             : { id: layerId, type: 'fill', source: sourceId,
-                paint: Object.assign( { 'fill-color': '#3388ff', 'fill-opacity': 0.3, 'fill-outline-color': '#3388ff' }, opt?.paint ) }
+                paint: Object.assign( { 'fill-color': '#3388ff', 'fill-opacity': 0.2 }, paintWith( opt?.paint, 'fill-' ) ) }
 
         this.map.addLayer( layerSpec )
+
+        // SMK 1.0 drew a 3px Leaflet stroke. A fill layer only outlines at 1px, so add a line layer.
+        if ( layerSpec.type === 'fill' ) {
+            this.map.addLayer( { id: layerId + '-outline', type: 'line', source: sourceId,
+                layout: { 'line-cap': 'round', 'line-join': 'round' },
+                paint: Object.assign( { 'line-color': '#3388ff', 'line-width': 3 }, paintWith( opt?.paint, 'line-' ) ) } )
+        }
     }
 
     this.map.getSource( sourceId )?.setData( { type: 'FeatureCollection', features: layerFeatures } )
@@ -1156,6 +1163,12 @@ ViewerMapLibre.prototype.temporaryFeature = function ( acetate: string, geometry
 function emptyFC() { return { type: 'FeatureCollection', features: [] } }
 
 function isPointFeature( f: any ) { return f?.geometry?.type === 'Point' }
+
+function paintWith( paint: any, prefix: string ): any {
+    const out: any = {}
+    Object.keys( paint || {} ).forEach( function ( k ) { if ( k.startsWith( prefix ) ) out[ k ] = paint[ k ] } )
+    return out
+}
 
 function toFeatureCollection( geometry: any ): any {
     if ( !geometry )                             return emptyFC()

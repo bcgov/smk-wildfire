@@ -61,6 +61,7 @@ function viewer() {
 
 const point = ( lng: number, lat: number ) => ( { type: 'Point', coordinates: [ lng, lat ] } )
 const line  = ( a: number[], b: number[] ) => ( { type: 'LineString', coordinates: [ a, b ] } )
+const polygon = () => ( { type: 'Polygon', coordinates: [ [ [ -123, 49 ], [ -124, 49 ], [ -124, 50 ], [ -123, 49 ] ] ] } )
 
 beforeEach( () => { markerInstances.length = 0 } )
 
@@ -227,6 +228,38 @@ describe( 'temporaryFeature — layers', () => {
 
         expect( Object.keys( v.map.layers ) ).toHaveLength( 0 )
         expect( Object.keys( v.map.sources ) ).toHaveLength( 0 )
+    } )
+
+    it( 'draws a Polygon with the SMK 1.0 look: 0.2 fill under a 3px round stroke', () => {
+        const v = viewer()
+        v.temporaryFeature( 'near-me', polygon(), {} )
+
+        const fill    = v.map.layers[ 'smk-acetate-near-me' ]
+        const outline = v.map.layers[ 'smk-acetate-near-me-outline' ]
+        expect( fill.type ).toBe( 'fill' )
+        expect( fill.paint ).toEqual( { 'fill-color': '#3388ff', 'fill-opacity': 0.2 } )
+        expect( outline.type ).toBe( 'line' )
+        expect( outline.source ).toBe( 'smk-acetate-near-me' )
+        expect( outline.paint ).toEqual( { 'line-color': '#3388ff', 'line-width': 3 } )
+        expect( outline.layout ).toEqual( { 'line-cap': 'round', 'line-join': 'round' } )
+        expect( Object.keys( v.map.layers ) ).toEqual( [ 'smk-acetate-near-me', 'smk-acetate-near-me-outline' ] )
+    } )
+
+    it( 'sends fill paint to the fill layer and line paint to the outline', () => {
+        const v = viewer()
+        v.temporaryFeature( 'near-me', polygon(), { paint: { 'fill-opacity': 0.5, 'line-width': 1 } } )
+
+        expect( v.map.layers[ 'smk-acetate-near-me' ].paint[ 'fill-opacity' ] ).toBe( 0.5 )
+        expect( v.map.layers[ 'smk-acetate-near-me' ].paint[ 'line-width' ] ).toBeUndefined()
+        expect( v.map.layers[ 'smk-acetate-near-me-outline' ].paint[ 'line-width' ] ).toBe( 1 )
+        expect( v.map.layers[ 'smk-acetate-near-me-outline' ].paint[ 'fill-opacity' ] ).toBeUndefined()
+    } )
+
+    it( 'adds no outline layer for a LineString', () => {
+        const v = viewer()
+        v.temporaryFeature( 'arrow-line', line( [ -123, 49 ], [ -124, 50 ] ), {} )
+
+        expect( v.map.layers[ 'smk-acetate-arrow-line-outline' ] ).toBeUndefined()
     } )
 
     it( 'splits a mixed collection: point to a marker, line to the layer', () => {
