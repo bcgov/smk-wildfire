@@ -77,11 +77,49 @@ describe( 'point style', () => {
         expect( circle.paint[ 'circle-stroke-width' ] ).toBe( 3 )
     } )
 
-    it( 'answers a 5px dot when the style says nothing', async () => {
+    it( 'answers a 10px dot when the style says nothing, as 1.0 Leaflet did', async () => {
         const spec = await create( fakeViewer(), { id: 'bare' } )
 
         const circle = layerById( spec, '_circle' )
-        expect( circle.paint[ 'circle-radius' ] ).toBe( 5 )
+        expect( circle.paint[ 'circle-radius' ] ).toBe( 10 )
+    } )
+} )
+
+describe( 'what 1.0 Leaflet left undrawn', () => {
+    it( 'draws no edge for stroke: false, as identify search-area asks', async () => {
+        const spec = await create( fakeViewer(), {
+            id: 'search-area', style: { stroke: false, fill: true, fillColor: '#548ADB', fillOpacity: 0.3 },
+        } )
+
+        const fill = layerById( spec, '_fill' )
+        expect( fill.paint[ 'fill-opacity' ] ).toBe( 0.3 )
+        expect( fill.paint[ 'fill-outline-color' ] ).toBeUndefined()
+        expect( layerById( spec, '_line' ).paint[ 'line-opacity' ] ).toBe( 0 )
+    } )
+
+    it( 'draws no fill for fill: false', async () => {
+        const spec = await create( fakeViewer(), { id: 'outline', style: { fill: false, strokeColor: 'red' } } )
+
+        expect( layerById( spec, '_fill' ).paint[ 'fill-opacity' ] ).toBe( 0 )
+        expect( layerById( spec, '_line' ).paint[ 'line-opacity' ] ).toBe( 1 )
+    } )
+
+    it( 'draws nothing for a styled point that names no colour and no marker', async () => {
+        const spec = await create( fakeViewer(), {
+            id: 'location', style: { markerUrl: null, markerSize: [ 40, 40 ], markerOffset: [ 20, 20 ] },
+        } )
+
+        const circle = layerById( spec, '_circle' )
+        expect( circle.paint[ 'circle-opacity' ] ).toBe( 0 )
+        expect( circle.paint[ 'circle-stroke-opacity' ] ).toBe( 0 )
+    } )
+
+    it( 'fills a styled point that names only a fill colour, with no ring', async () => {
+        const spec = await create( fakeViewer(), { id: 'dot', style: { fillColor: 'red', fillOpacity: 1 } } )
+
+        const circle = layerById( spec, '_circle' )
+        expect( circle.paint[ 'circle-opacity' ] ).toBe( 1 )
+        expect( circle.paint[ 'circle-stroke-opacity' ] ).toBe( 0 )
     } )
 } )
 

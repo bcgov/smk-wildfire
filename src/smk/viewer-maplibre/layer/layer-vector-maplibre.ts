@@ -147,12 +147,24 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
     const fillColor     = style.fillColor     || strokeColor
     const fillOpacity   = ( style.fillOpacity != null ? Number( style.fillOpacity ) : 0.3 ) * opacity
 
+    // Leaflet obeys stroke: false and fill: false; identify's search area is a fill with no edge.
+    const lineOpacity   = style.stroke === false ? 0 : strokeOpacity
+    const areaOpacity   = style.fill   === false ? 0 : fillOpacity
+
+    // 1.0 gave a styled point only the colours it named, so a style with none drew nothing.
+    const styled        = cfg.style != null
+    const namesStroke   = !!( style.strokeColor || style.color )
+    const pointLine     = styled && !namesStroke ? 0 : lineOpacity
+    const pointFill     = ( styled && !namesStroke && !style.fillColor ) || style.fill === false ? 0
+                        : ( fillOpacity || strokeOpacity )
+
     // A point takes strokeWidth as its diameter and a fixed 2px ring, which is
     // the rule the Leaflet adapter uses. One style config then draws the same
     // dot in either viewer.
+    // With no strokeWidth, 1.0's Leaflet kept circleMarker's own 10px radius.
     const radius        = style.radius != null ? Number( style.radius )
                         : style.strokeWidth != null ? strokeWidth / 2
-                        : 5
+                        : 10
     const pointStroke   = style.radius != null ? Math.max( 1, strokeWidth - 1 ) : 2
 
     // A marker image replaces the dot, the same as Leaflet's L.icon.
@@ -226,10 +238,10 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
             paint: {
                 'circle-radius':         radius,
                 'circle-color':          fillColor,
-                'circle-opacity':        fillOpacity || strokeOpacity,
+                'circle-opacity':        pointFill,
                 'circle-stroke-color':   strokeColor,
                 'circle-stroke-width':   pointStroke,
-                'circle-stroke-opacity': strokeOpacity,
+                'circle-stroke-opacity': pointLine,
             },
         }
     }
@@ -263,8 +275,8 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
                 filter: [ 'in', [ 'geometry-type' ], [ 'literal', [ 'Polygon', 'MultiPolygon' ] ] ],
                 paint:  {
                     'fill-color':         fillColor,
-                    'fill-opacity':       fillOpacity,
-                    'fill-outline-color': strokeColor,
+                    'fill-opacity':       areaOpacity,
+                    ...( style.stroke === false ? {} : { 'fill-outline-color': strokeColor } ),
                 },
             },
             {
@@ -275,7 +287,7 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
                 paint: {
                     'line-color':   strokeColor,
                     'line-width':   strokeWidth,
-                    'line-opacity': strokeOpacity,
+                    'line-opacity': lineOpacity,
                 },
             },
         ],
