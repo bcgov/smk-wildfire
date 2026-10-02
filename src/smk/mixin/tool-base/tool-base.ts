@@ -15,6 +15,7 @@ export function ToolBase( this: any ): void {
     this.defineProp( 'group',    { onSet: function ( this: any ) { this.changedGroup() } } )
     this.defineProp( 'parentId' )
     this.defineProp( 'showTitle' )
+    this.defineProp( 'showStatus' )
     this.defineProp( 'icon' )
     this.defineProp( 'order' )
     this.defineProp( 'busy' )
@@ -24,6 +25,7 @@ export function ToolBase( this: any ): void {
     this.active  = false
     this.group   = false
     this.busy    = false
+    this.showStatus = true
 
     this.$propFilter.baseClasses = false
 
@@ -124,7 +126,9 @@ export function ToolBase( this: any ): void {
                 }
             } )
 
+        // A Host that shows the Tool's state in its own UI turns this off.
         this.showStatusMessage = function ( message: string, status: string, delay: number ) {
+            if ( this.showStatus === false ) return Promise.resolve()
             return smk.getStatusMessage().show( message, status, delay, this.busy )
         }
     } )
