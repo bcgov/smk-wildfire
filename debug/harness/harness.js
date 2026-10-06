@@ -47,16 +47,24 @@ function setReady( state, why ) {
 // ---------------------------------------------------------------------------
 // Stories — the starting configs
 //
-// A story adds data and nothing else. None of them names a tool, an icon, a
-// title, a position or an order, so what you see is what SMK does with its own
-// defaults. To change a tool, use the Tools panel, or paste a config into the
-// Config tab.
+// A story adds data and nothing else, except "WFNEWS main map", which is the
+// whole WFNEWS config, tools included. In the others, what you see is what SMK
+// does with its own defaults. To change a tool, use the Tools panel, or paste a
+// config into the Config tab.
 // ---------------------------------------------------------------------------
 
 var L = '../layer/'
 
 // The first key is the one the page opens with.
 var STORIES = {
+    // The WFNEWS main map: its layers, their default visibility, and its tools.
+    // Written from the WFNEWS source by `npm run story:wfnews`; see build/wfnews-story.js.
+    'wfnews': {
+        title: 'WFNEWS main map',
+        // Ruled 2026-09-23: this mode shows the map without waiting for the layers.
+        config: [ '../config/wfnews.json', '../config/viewer-no-layer-wait.json' ]
+    },
+
     'layers': {
         title: 'Sample layers',
         config: [
@@ -82,6 +90,23 @@ var STORIES = {
         title:  'SMK defaults (no config)',
         config: []
     }
+}
+
+// The header's mode switch. Each sets these bar controls, keyed by element id.
+var MODES = {
+    smk:    { story: 'layers' },
+    wfnews: { story: 'wfnews', viewer: 'maplibre', theme: 'wf', build: 'v2' }
+}
+
+/** Press the mode button that matches the bar with nothing added, or none. */
+function showMode() {
+    var clean = !dropped && !Object.keys( extraTools ).length && !Object.keys( argEdit ).length &&
+                !Object.keys( removedTools ).length
+    $$( '#mode button' ).forEach( function ( b ) {
+        var m = MODES[ b.dataset.mode ]
+        var on = clean && Object.keys( m ).every( function ( k ) { return $( '#' + k ).value === m[ k ] } )
+        b.setAttribute( 'aria-pressed', on ? 'true' : 'false' )
+    } )
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +271,7 @@ var smk     = null            // the map the panels drive
 var driving = null            // its viewer name
 var dropped = null            // config from a dropped file or the textarea
 var extraTools = {}           // catalogue types switched on, applied at the next start
+var removedTools = {}         // built tools taken out ("type" or "type--instance"), applied at the next start
 var argEdit = {}              // tool args edited in the Tools panel, applied at the next start
 var logView = false
 var refReady    = Promise.resolve()   // settles when the 1.0 pane has answered
@@ -304,12 +330,34 @@ function currentConfig( viewerType ) {
         return e
     } ) } ] : []
 
-    var args = argEditConfig()
+    var args = argEditConfig().concat( removedToolConfig() )
 
     if ( dropped && !$( '#merge' ).checked )
         return [ head ].concat( dropped, tail, args )
 
     return [ head ].concat( story.config, dropped || [], tail, args )
+}
+
+/** The tools taken out with a remove button, as one fragment that turns each off. */
+function removedToolConfig() {
+    var keys = Object.keys( removedTools )
+    if ( !keys.length ) return []
+    return [ { tools: keys.map( function ( k ) {
+        var part = k.split( '--' )
+        var e = { type: part[ 0 ], enabled: false }
+        if ( part[ 1 ] ) e.instance = part[ 1 ]
+        return e
+    } ) } ]
+}
+
+/** Take one built tool out. SMK builds tools only at start, so this restarts, and keeps the rest. */
+function removeTool( tool, id ) {
+    var key = argEditKey( tool )
+    if ( extraTools[ tool.type ] && !tool.instance ) delete extraTools[ tool.type ]
+    else removedTools[ key ] = true
+    log( 'remove', id + ' - restarting' )
+    writeQuery()
+    restart()
 }
 
 /** The merge key of one built tool. Bespoke tools repeat a type per instance. */
@@ -373,6 +421,7 @@ function setNeedRestart( why ) {
     chip.textContent = why || ''
     chip.hidden      = !why
     $( '#restart' ).classList.toggle( 'wants', needRestart )
+    showMode()
 }
 
 /** One pane for each viewer, each with its own frame for SMK to fill. */
@@ -772,11 +821,55 @@ function resizeAll() {
 // enabled greys it and blocks activation, active opens the panel.
 var LIVE = { showWidget: 1, enabled: 1, visible: 1, active: 1 }
 
+// What each live flag means, shown as the column label's tooltip.
+var FLAG_HELP = {
+    showWidget: 'showWidget: is the button in the page at all? (v-if on the widget template)',
+    enabled:    'enabled: does clicking the button do anything? In a config the same word means "build this tool".',
+    visible:    "visible: is the tool's own output showing? Most tools set this themselves.",
+    active:     'active: is the tool operating now - its panel open, its mode engaged?'
+}
+
+function viewerNames() {
+    return ( window.SMK.SUPPORT || {} ).viewers || VIEWERS
+}
+
+/** One header for a tool grid. The labels are short; the tooltips say what they mean. */
+function toolGridHead( lastCols ) {
+    var head = el( 'div', 'grid-head' )
+    head.appendChild( el( 'span', 'name', 'tool' ) )
+    head.appendChild( el( 'span' ) )    // the example column
+    viewerNames().forEach( function ( v ) {
+        var s = el( 'span', 'v', v )
+        s.title = 'Does ' + v + ' have an implementation?'
+        head.appendChild( s )
+    } )
+    lastCols.forEach( function ( c ) {
+        var s = el( 'span', 'v', c[ 0 ] )
+        s.title = c[ 1 ]
+        head.appendChild( s )
+    } )
+    return head
+}
+
+/** One cell per viewer, a tick or a cross, from SMK.SUPPORT. Empty when it knows nothing. */
+function supportCells( type ) {
+    var t = ( ( window.SMK.SUPPORT || {} ).tools || {} )[ type ]
+    return viewerNames().map( function ( v ) {
+        if ( !t ) return el( 'span', 'cell' )
+        var has = ( t.shared && !t.viewers.length ) || t.viewers.indexOf( v ) >= 0
+        var c = el( 'span', 'cell mark ' + ( has ? 'yes' : 'no' ), has ? '\u2713' : '\u2715' )
+        c.title = v + ( has ? ' has an implementation' : ' has NO implementation' )
+        return c
+    } )
+}
+
 function buildTools() {
     var host = $( '#tools' )
     host.innerHTML = ''
 
     if ( !smk ) { host.appendChild( el( 'div', 'ro', 'no map is driving' ) ); buildCatalogue(); return }
+
+    host.appendChild( toolGridHead( Object.keys( LIVE ).map( function ( f ) { return [ f, FLAG_HELP[ f ] ] } ) ) )
 
     Object.keys( smk.$tool ).sort().forEach( function ( id ) {
         var tool = smk.$tool[ id ]
@@ -786,30 +879,28 @@ function buildTools() {
 
         var name = el( 'div', 'name', id )
         name.appendChild( el( 'small', '', tool.type || '' ) )
+        name.title = id + ' (' + tool.type + ')'
         row.appendChild( name )
 
-        var sup = toolSupport( tool.type )
-        if ( sup ) { sup.classList.add( 'support-row' ); row.appendChild( sup ) }
+        row.appendChild( exampleButton( tool.type ) || el( 'span' ) )
+        supportCells( tool.type ).forEach( function ( c ) { row.appendChild( c ) } )
 
-        var ex = exampleButton( tool.type )
-        if ( ex ) row.appendChild( ex )
-
-        var flags = el( 'div', 'flags' )
+        // Every flag has its own column, so a tool without one leaves the cell empty.
         Object.keys( LIVE ).forEach( function ( f ) {
-            if ( !( f in tool.$prop ) ) return
-            var lab = el( 'label' )
-            var box = document.createElement( 'input' )
-            box.type = 'checkbox'
-            box.checked = !!tool[ f ]
-            box.onchange = function () {
-                tool[ f ] = box.checked
-                log( 'set', id + '.' + f + ' = ' + box.checked )
+            var cell = el( 'span', 'cell' )
+            if ( f in tool.$prop ) {
+                var box = document.createElement( 'input' )
+                box.type    = 'checkbox'
+                box.title   = FLAG_HELP[ f ]
+                box.checked = !!tool[ f ]
+                box.onchange = function () {
+                    tool[ f ] = box.checked
+                    log( 'set', id + '.' + f + ' = ' + box.checked )
+                }
+                cell.appendChild( box )
             }
-            lab.appendChild( box )
-            lab.appendChild( document.createTextNode( f ) )
-            flags.appendChild( lab )
+            row.appendChild( cell )
         } )
-        row.appendChild( flags )
 
         var args = el( 'div', 'args' )
         var more = el( 'button', 'more', 'args' )
@@ -818,6 +909,11 @@ function buildTools() {
             if ( args.classList.contains( 'on' ) && !args.childElementCount ) fillArgs( args, tool, id )
         }
         row.appendChild( more )
+
+        var rm = el( 'button', 'remove', '\u00d7' )
+        rm.title = 'Remove ' + id + ' and restart. Tick it under Not built to bring it back.'
+        rm.onclick = function () { removeTool( tool, id ) }
+        row.appendChild( rm )
 
         host.appendChild( row )
         host.appendChild( args )
@@ -910,45 +1006,43 @@ function buildCatalogue() {
     } )
 
     if ( !rows.length ) host.appendChild( el( 'div', 'ro', 'every bundled tool you can switch on is built' ) )
+    else host.appendChild( toolGridHead( [ [ 'build', 'build: turns it on in the config and restarts' ] ] ) )
 
     rows.forEach( function ( type ) {
-        var d   = inDefaults[ type ]
-        var why = !d ? 'registered type, no defaults'
-                     : 'has defaults, enabled: false'
+        var d = inDefaults[ type ]
 
-        if ( children[ type ] ) why += ' - also builds ' + children[ type ].join( ', ' )
-        why += '. Built with position: toolbar'
+        // Most rows "have defaults, are off, and have their own position"; say only what differs.
+        var notes = []
+        if ( !d ) notes.push( 'no default config' )
+        if ( children[ type ] ) notes.push( 'also builds ' + children[ type ].join( ', ' ) )
+        if ( !d || !d.position ) notes.push( 'goes in the toolbar' )
 
         var row = el( 'div', 'row' )
         row.dataset.name = type.toLowerCase()
 
         var name = el( 'div', 'name', type )
-        name.appendChild( el( 'small', '', why ) )
+        if ( notes.length ) name.appendChild( el( 'small', '', notes.join( '; ' ) ) )
+        name.title = type + ( notes.length ? ' - ' + notes.join( '; ' ) : '' )
         row.appendChild( name )
 
-        var sup = toolSupport( type )
-        if ( sup ) { sup.classList.add( 'support-row' ); row.appendChild( sup ) }
+        row.appendChild( exampleButton( type ) || el( 'span' ) )
+        supportCells( type ).forEach( function ( c ) { row.appendChild( c ) } )
 
-        var ex = exampleButton( type )
-        if ( ex ) row.appendChild( ex )
-
-        var lab = el( 'label' )
+        var lab = el( 'span', 'cell' )
         var box = document.createElement( 'input' )
         box.type    = 'checkbox'
+        box.title   = 'Build ' + type + ' and restart'
         box.checked = !!extraTools[ type ]
         box.onchange = function () {
-            if ( box.checked ) extraTools[ type ] = true
-            else               delete extraTools[ type ]
+            if ( !box.checked )          delete extraTools[ type ]
+            else if ( removedTools[ type ] ) delete removedTools[ type ]
+            else                         extraTools[ type ] = true
             log( 'catalogue', type + ( box.checked ? ' on' : ' off' ) + ' - restarting' )
             writeQuery()
             restart()
         }
         lab.appendChild( box )
-        lab.appendChild( document.createTextNode( 'build it' ) )
-
-        var flags = el( 'div', 'flags' )
-        flags.appendChild( lab )
-        row.appendChild( flags )
+        row.appendChild( lab )
         host.appendChild( row )
     } )
 
@@ -1057,13 +1151,6 @@ function supportChips( viewersWithIt, sharedEverywhere ) {
     return flags
 }
 
-/** What SMK.SUPPORT says about one tool type, or null when it knows nothing. */
-function toolSupport( type ) {
-    var t = ( ( window.SMK.SUPPORT || {} ).tools || {} )[ type ]
-    if ( !t ) return null
-    return supportChips( t.viewers, t.shared && !t.viewers.length )
-}
-
 // ---------------------------------------------------------------------------
 // Layers
 // ---------------------------------------------------------------------------
@@ -1113,8 +1200,12 @@ function layerRow( host, dc, id, isInternal ) {
     var row = el( 'div', 'row' )
     row.dataset.name = ( id + ' ' + ( cfg.type || '' ) ).toLowerCase()
 
+    // The title as well as the id: a config names a layer by title, and the
+    // two rarely match, so an id alone sends you looking for the wrong string.
     var name = el( 'div', 'name', id )
-    name.appendChild( el( 'small', '', ( cfg.type || 'unknown type' ) + ( isInternal ? ' - internal, made by a tool' : '' ) ) )
+    name.appendChild( el( 'small', '', ( cfg.type || 'unknown type' ) +
+        ( cfg.title && cfg.title !== id ? ' - ' + cfg.title : '' ) +
+        ( isInternal ? ' - internal, made by a tool' : '' ) ) )
     row.appendChild( name )
 
     var flags = el( 'div', 'flags' )
@@ -1552,9 +1643,18 @@ function readQuery() {
         var v = QUERY.get( pair[ 1 ] )
         if ( v === null ) return
         var node = $( pair[ 0 ] )
-        if ( node.type === 'checkbox' ) node.checked = v !== '0' && v !== 'false'
-        else if ( [].some.call( node.options, function ( o ) { return o.value === v } ) ) node.value = v
+        if ( node.type === 'checkbox' ) { node.checked = v !== '0' && v !== 'false'; return }
+
+        // A value no option carries used to be dropped in silence, so the page
+        // ran the first Story and the link looked as if it had worked. A stale
+        // cached harness.js does exactly this.
+        if ( [].some.call( node.options, function ( o ) { return o.value === v } ) ) node.value = v
+        else console.warn( 'harness: ?' + pair[ 1 ] + '=' + v + ' is not an option here - using "' +
+                           node.value + '". A cached harness.js does this.' )
     } )
+
+    ;( QUERY.get( 'remove' ) || '' ).split( ',' ).filter( Boolean )
+        .forEach( function ( t ) { removedTools[ t ] = true } )
 
     ;( QUERY.get( 'tools' ) || '' ).split( ',' ).filter( Boolean )
         .forEach( function ( t ) { extraTools[ t ] = true } )
@@ -1576,6 +1676,8 @@ function writeQuery() {
     } )
     var extra = Object.keys( extraTools )
     if ( extra.length ) q.set( 'tools', extra.join( ',' ) )
+    var removed = Object.keys( removedTools )
+    if ( removed.length ) q.set( 'remove', removed.join( ',' ) )
 
     history.replaceState( null, '', location.pathname + '?' + q )
 }
@@ -1601,8 +1703,21 @@ document.addEventListener( 'DOMContentLoaded', function () {
     }
 
     ;[ '#story', '#viewer', '#build', '#theme', '#mobile' ].forEach( function ( s ) {
-        $( s ).onchange = function () { writeQuery(); restart() }
+        $( s ).onchange = function () { writeQuery(); showMode(); restart() }
     } )
+
+    $$( '#mode button' ).forEach( function ( b ) {
+        b.onclick = function () {
+            var m = MODES[ b.dataset.mode ]
+            Object.keys( m ).forEach( function ( k ) { $( '#' + k ).value = m[ k ] } )
+            // A mode is a clean start: forget the tools built, args edited and config added since.
+            extraTools = {}; removedTools = {}; argEdit = {}; dropped = null
+            $( '#config' ).value  = ''
+            $( '#merge' ).checked = true
+            writeQuery(); showMode(); restart()
+        }
+    } )
+    showMode()
 
     // No restart needed - it only moves the panes that are already running.
     $( '#sync' ).onchange = function () { writeQuery(); syncViews() }

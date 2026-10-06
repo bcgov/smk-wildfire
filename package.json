@@ -29,6 +29,7 @@
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser",
     "test:harness": "npm run build:lite && node build/run-harness.js",
+    "story:wfnews": "node build/wfnews-story.js",
     "ref:v1": "node build/fetch-ref.js",
     "coverage": "vitest run --project unit --coverage",
     "coverage:harness": "npm run build:lite && node build/run-harness.js --coverage && node build/coverage-report.js",
