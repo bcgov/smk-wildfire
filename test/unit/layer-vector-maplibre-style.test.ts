@@ -29,6 +29,8 @@ function fakeViewer( option: { image?: any } = {} ) {
             hasImage: ( id: string ) => id in images,
             addImage: ( id: string, img: any, opt: any ) => { images[ id ] = { img, opt } },
             loadImage: () => Promise.resolve( option.image || { data: { width: 48, height: 48 } } ),
+            // A 2x screen takes the 48px image as it is; jsdom has no canvas to shrink it.
+            getPixelRatio: () => 2,
             getSource: () => undefined,
         },
     }
