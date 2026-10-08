@@ -8,7 +8,7 @@
  */
 
 import spinnerGifUrl from './spinner.gif'
-import { waitAll, resolved, resolveContainer } from './util'
+import { waitAll, resolved, resolveContainer, projection } from './util'
 import { SMK } from './smk-ref'
 
 declare const Vue: any
@@ -456,7 +456,6 @@ SmkMap.prototype.getConfig = function () {
 
     cfg.layers = this.$viewer.getLayerConfig()
 
-    const { projection } = require( './util' )
     cfg.viewer.location = projection( 'center', 'zoom', 'extent' )( this.$viewer.getView() )
     cfg.viewer.location.center = [ cfg.viewer.location.center.longitude, cfg.viewer.location.center.latitude ]
 

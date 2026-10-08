@@ -3,13 +3,7 @@
  * Converted from base-maps.js (include.module -> ES module).
  */
 
-import topoStyleJson  from './assets/vector-basemap-topo.json'
-import nightStyleJson from './assets/vector-basemap-night.json'
 import { SMK } from './smk-ref'
-
-// Pre-parse JSON styles (the AMD build parsed them via JSON.parse on the template string)
-const topoStyle  = topoStyleJson  as any
-const nightStyle = nightStyleJson as any
 
 export function defineBaseMaps(
     defineBaseMap:     ( id: string, config?: any ) => any,
@@ -105,8 +99,11 @@ export function defineBaseMaps(
     // Current basemaps
     // -----------------------------------------------------------------------
 
+    // GeoBC's standard BC Basemap, with hillshade, as published on the item.
+    // The service's own style is another one, with no hillshade.
     defineBaseMap( 'bc-roads', {
         type: 'esri-vector-tile', order: 20, title: 'BC BaseMap Vector',
+        itemId: 'bbe05270d3a642f5b62203d6c454f457',
         url: 'https://tiles.arcgis.com/tiles/ubm4tcTYICKBpist/arcgis/rest/services/BC_BASEMAP_20240307/VectorTileServer',
         option: { maxNativeZoom: 17, maxZoom: 30 },
     } )
@@ -122,18 +119,18 @@ export function defineBaseMaps(
         layers: [ 'topography-vector', 'topography-hillshade' ],
     } )
 
+    // Esri Canada's item carries no style, so the service's own is the design.
     defineBaseMap( 'topography-vector', {
         type: 'esri-vector-tile', order: 11, title: 'Canada Topographic Vector',
         url: 'https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer',
-        option: {
-            style( _style: any ) { return topoStyle },
-        },
     } )
 
     defineBaseMap( 'topography-hillshade', {
         type: 'esri-tiled-map', order: 13, title: 'Imagery',
         attribution: 'Copyright 117 DataBC, Government of British Columbia',
-        option: { minZoom: 4, maxZoom: 30 },
+        // It sits on top of the vector map in the topography composite, so it
+        // must shade the relief, not cover it.
+        option: { minZoom: 4, maxZoom: 30, opacity: 0.35 },
         url: 'https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Hillshade/MapServer',
     } )
 
@@ -149,12 +146,12 @@ export function defineBaseMaps(
         option: { token: esriToken, maxNativeZoom: 19, maxZoom: 30 },
     } )
 
+    // Esri's World Street Map (Night). A stored copy of an older Esri night
+    // style drifted, and its sprite item was withdrawn.
     defineBaseMap( 'night', {
         type: 'esri-vector-tile', order: 25, title: 'Night',
-        url: 'https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer',
-        option: {
-            style( _style: any ) { return nightStyle },
-        },
+        itemId: '86f556a2d1fd468181855a35e344567f',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
     } )
 
     defineBaseMap( 'esri-imagery', {

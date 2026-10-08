@@ -119,7 +119,9 @@ function setupGlobalSMK(): void {
                 location: {
                     extent: [ -139.1782, 47.6039, -110.3533, 60.5939 ],
                 },
-                baseMap:        'bc-roads-raster',
+                // SMK 1.0 opened on 'Topographic', an id the picker now hides.
+                // Ruled 2026-09-08: open on the BC basemap.
+                baseMap:        'bc-roads',
                 clusterOption:  { showCoverageOnHover: false },
                 zoomSnap:       1,
                 displayContext: [],

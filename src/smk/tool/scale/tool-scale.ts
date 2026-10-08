@@ -62,7 +62,10 @@ const factory = Tool.define( 'ScaleTool',
         const firstDigit = [ null, 1, 2, 3, 5, 5, 5, 5, 10, 10 ]
 
         function rounded( s: number ) {
-            const f = firstDigit[ 1 * ( parseInt( s + '' ) ) ] as number
+            // The index is the first DIGIT. The conversion from 1.0 read
+            // `(s+'')[0]` as parseInt(s), so every lookup ran off the end of
+            // the table, the width was NaN and the ruler never drew.
+            const f = firstDigit[ Number( ( s + '' )[ 0 ] ) ] as number
             return f * Math.pow( 10, ( Math.floor( s ) + '' ).length - 1 )
         }
 

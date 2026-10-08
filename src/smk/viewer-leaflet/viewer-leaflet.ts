@@ -136,7 +136,9 @@ ViewerLeaflet.prototype.initializeBasemaps = function (
     } )
 
     defineBaseMapType( 'esri-vector-tile', function ( cfg: any ) {
-        return [ L.esri.Vector.vectorTileLayer( cfg.url, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
+        // esri-leaflet-vector takes an item id or a service url, and an item
+        // brings its publisher's style.
+        return [ L.esri.Vector.vectorTileLayer( cfg.itemId || cfg.url, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
     } )
 
     defineBaseMapType( 'esri-vector-basemap', function ( cfg: any ) {
@@ -161,11 +163,27 @@ ViewerLeaflet.prototype.initializeBasemaps = function (
 ViewerLeaflet.prototype.setBasemap = function ( basemapId: string ) {
     const self = this
 
-    if ( this.currentBasemap ) {
-        this.currentBasemap.forEach( ( ly: any ) => self.map.removeLayer( ly ) )
+    // Setting the basemap that is already showing tore the old one down and
+    // built it again. With a vector tile basemap that is still loading -
+    // topography, the default - esri-leaflet-vector's onRemove removes a
+    // sublayer it has not created yet and the whole tool fails to initialize.
+    // The map is set once from the config and again by the baseMaps tool, so
+    // this happened on every start.
+    if ( this.currentBasemapId === basemapId && this.currentBasemap ) {
+        this.changedBaseMap( { baseMap: basemapId } )
+        return
     }
 
-    this.currentBasemap = this.createBasemapLayer( basemapId )
+    if ( this.currentBasemap ) {
+        this.currentBasemap.forEach( ( ly: any ) => {
+            // A layer that will not come off must not stop the map.
+            try { self.map.removeLayer( ly ) }
+            catch ( e ) { console.warn( 'leaflet viewer: base map layer would not remove:', e ) }
+        } )
+    }
+
+    this.currentBasemapId = basemapId
+    this.currentBasemap   = this.createBasemapLayer( basemapId )
     this.map.addLayer( this.currentBasemap[ 0 ] )
 
     if ( this.currentBasemap[ 0 ].bringToBack )
@@ -241,7 +259,14 @@ ViewerLeaflet.prototype.addViewerLayer = function ( viewerLayer: any ) {
 }
 
 ViewerLeaflet.prototype.positionViewerLayer = function ( viewerLayer: any, zOrder: number ) {
-    viewerLayer.setZIndex( zOrder )
+    // Only a raster layer has setZIndex. esri-leaflet 3's featureLayer is a
+    // feature manager over a GeoJSON group and has none, so this threw and
+    // createViewerLayer switched the layer off - esri-feature never drew in
+    // this viewer. Found by the harness project on axis B, 2026-09-07.
+    if ( typeof viewerLayer.setZIndex === 'function' ) return viewerLayer.setZIndex( zOrder )
+
+    // A vector layer draws in its own pane, so its order is the pane's.
+    if ( typeof viewerLayer.bringToFront === 'function' ) viewerLayer.bringToFront()
 }
 
 // ---------------------------------------------------------------------------
