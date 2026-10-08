@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import panelMenuHtml from './panel-menu.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -105,5 +107,7 @@ const factory = Tool.define( 'MenuTool',
     }
 )
 
-smkRef.TYPE[ 'tool-menu' ] = factory
+Tool.register( 'menu', factory, widgetDefaults( panelDefaults( {
+    icon: 'menu', position: 'toolbar',
+} ) ) )
 export default factory

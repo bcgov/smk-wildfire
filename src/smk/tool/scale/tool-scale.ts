@@ -75,5 +75,5 @@ const factory = Tool.define( 'ScaleTool',
     }
 )
 
-smkRef.TYPE[ 'tool-scale' ] = factory
+Tool.register( 'scale', factory, { order: 2, showFactor: true, showBar: true, showZoom: false } )
 export default factory

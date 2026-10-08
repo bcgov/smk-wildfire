@@ -4,7 +4,7 @@
  */
 
 import { SMKEvent } from './event'
-import { ToolBase } from './mixin/tool-base/tool-base'
+import { ToolBase, baseDefaults } from './mixin/tool-base/tool-base'
 import { type as smkType } from './util'
 import { SMK } from './smk-ref'
 
@@ -43,6 +43,8 @@ export interface ToolStatic {
         methods?:    ToolDefineOptions[ 'methods' ],
     ): ToolFactory & { addInitializer?: ( init: Function ) => void }
     defineComposite( toolDefs: ToolFactory[] ): ToolFactory
+    register( type: string, factory: ToolFactory, defaults?: Record<string, any> ): ToolFactory
+    defaults(): Record<string, any>[]
 }
 
 // ---------------------------------------------------------------------------
@@ -241,6 +243,29 @@ ToolStatic.defineComposite = function ( toolDefs ) {
             return t( config )[ 0 ]
         } )
     }
+}
+
+// ---------------------------------------------------------------------------
+// Tool.register — a Config tool type, and the defaults its entry starts from
+// ---------------------------------------------------------------------------
+
+// In registration order: initTools keeps it for Tools with the same `order`.
+const typeDefaults: Record<string, any>[] = []
+
+ToolStatic.register = function ( type, factory, defaults = {} ) {
+    SMK.TYPE[ 'tool-' + type ] = factory
+
+    const entry = baseDefaults( Object.assign( { type }, defaults ) )
+    const i     = typeDefaults.findIndex( d => d.type === type )
+    if ( i < 0 ) typeDefaults.push( entry )
+    else         typeDefaults[ i ] = entry
+
+    return factory
+}
+
+/** Each registered type's defaults, as a Config tools list. */
+ToolStatic.defaults = function () {
+    return JSON.parse( JSON.stringify( typeDefaults ) )
 }
 
 // Assign to SMK.TYPE for backward compat

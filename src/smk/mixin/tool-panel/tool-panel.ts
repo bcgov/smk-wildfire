@@ -35,4 +35,14 @@ if ( typeof window !== 'undefined' ) {
     if ( smk && smk.TYPE ) smk.TYPE.ToolPanel = ToolPanel
 }
 
+/** The Config defaults of a Tool with a panel. */
+export function panelDefaults( option: Record<string, any> ): Record<string, any> {
+    return Object.assign( {
+        showPanel:  true,
+        showHeader: true,
+        showSwipe:  false,
+        expand:     0,
+    }, option )
+}
+
 export default ToolPanel

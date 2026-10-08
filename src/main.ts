@@ -24,7 +24,6 @@ import type { UTIL as UTILType }    from './smk/util'
 declare global {
     interface Window {
         SMK:       SMKNamespace
-        include:   IncludeLoader
         dojoConfig: Record<string, any>
     }
 }
@@ -93,12 +92,6 @@ export interface LayerConfig {
     minScale?:    number
     maxScale?:    number
     [key: string]: unknown
-}
-
-export interface IncludeLoader {
-    module: ( name: string, deps: string[] | null, factory: Function ) => void
-    tag:    ( name: string, attr?: any ) => any
-    SMK?:   boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -240,35 +233,37 @@ import './smk/viewer-maplibre/viewer-maplibre'
 // ---------------------------------------------------------------------------
 // Tools
 // ---------------------------------------------------------------------------
-import './smk/tool/about/tool-about'
+// Each type registers its defaults as it loads. The order here is the order
+// of the default tool list, which orders Tools with the same `order`.
 import './smk/tool/pan/tool-pan'
-import './smk/tool/zoom/tool-zoom'
-import './smk/tool/coordinate/tool-coordinate'
-import './smk/tool/version/tool-version'
-import './smk/tool/scale/tool-scale'
-import './smk/tool/reset-view/tool-reset-view'
-import './smk/tool/minimap/tool-minimap'
-import './smk/tool/menu/tool-menu'
-import './smk/tool/toolbar/tool-toolbar'
 import './smk/tool/actionbar/tool-actionbar'
-import './smk/tool/dropdown/tool-dropdown'
-import './smk/tool/baseMaps/tool-baseMaps'
-import './smk/tool/list-menu/tool-list-menu'
+import './smk/tool/toolbar/tool-toolbar'
 import './smk/tool/shortcut-menu/tool-shortcut-menu'
-import './smk/tool/bespoke/tool-bespoke'
-import './smk/tool/bookmarks/tool-bookmarks'
-import './smk/tool/current-location/tool-current-location'
-import './smk/tool/location/tool-location'
+import './smk/tool/list-menu/tool-list-menu'
+import './smk/tool/menu/tool-menu'
+import './smk/tool/dropdown/tool-dropdown'
+import './smk/tool/zoom/tool-zoom'
+import './smk/tool/reset-view/tool-reset-view'
+import './smk/tool/scale/tool-scale'
+import './smk/tool/coordinate/tool-coordinate'
 import './smk/tool/legend/tool-legend'
-import './smk/tool/layers/tool-layers'
 import './smk/tool/markup/tool-markup'
+import './smk/tool/minimap/tool-minimap'
+import './smk/tool/about/tool-about'
+import './smk/tool/baseMaps/tool-baseMaps'
+import './smk/tool/layers/tool-layers'
 import './smk/tool/measure/tool-measure'
 import './smk/tool/identify/tool-identify'
 import './smk/tool/search/tool-search'
 import './smk/tool/select/tool-select'
 import './smk/tool/query/tool-query'
-import './smk/tool/query-place/tool-query-place'
+import './smk/tool/location/tool-location'
+import './smk/tool/current-location/tool-current-location'
 import './smk/tool/directions/tool-directions'
+import './smk/tool/version/tool-version'
+import './smk/tool/bespoke/tool-bespoke'
+import './smk/tool/bookmarks/tool-bookmarks'
+import './smk/tool/query-place/tool-query-place'
 
 // ---------------------------------------------------------------------------
 // Viewer-specific tool initializers — MUST come after base Tools above so
@@ -374,10 +369,6 @@ import './smk/viewer-leaflet/tool/query/tool-query-leaflet.css'
 import './smk/viewer-esri3d/viewer-esri3d.css'
 
 // Themes (all shipped; host picks one via <body class="smk-theme-*">)
-import './theme/alpha/alpha.css'
-import './theme/beta/beta.css'
-import './theme/delta/delta.css'
-import './theme/gamma/gamma.css'
 import './theme/modern/modern.css'
 import './theme/wf/wf.css'
 

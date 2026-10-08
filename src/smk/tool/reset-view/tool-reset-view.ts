@@ -4,6 +4,7 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import widgetResetViewHtml from './widget-reset-view.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -31,5 +32,7 @@ const factory = Tool.define( 'ResetViewTool',
     }
 )
 
-smkRef.TYPE[ 'tool-reset-view' ] = factory
+Tool.register( 'reset-view', factory, widgetDefaults( {
+    position: 'actionbar', order: 10, icon: 'zoom_out_map', title: 'Reset View',
+} ) )
 export default factory

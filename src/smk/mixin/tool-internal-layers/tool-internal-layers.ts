@@ -47,4 +47,9 @@ if ( typeof window !== 'undefined' ) {
     if ( smk && smk.TYPE ) smk.TYPE.ToolInternalLayers = ToolInternalLayers
 }
 
+/** The Config defaults of a Tool with internal layers. */
+export function internalLayersDefaults( option: Record<string, any> ): Record<string, any> {
+    return Object.assign( { internalLayer: {} }, option )
+}
+
 export default ToolInternalLayers

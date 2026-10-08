@@ -43,5 +43,5 @@ const factory = Tool.define( 'ToolBarTool',
     }
 )
 
-smkRef.TYPE[ 'tool-toolbar' ] = factory
+Tool.register( 'toolbar', factory )
 export default factory

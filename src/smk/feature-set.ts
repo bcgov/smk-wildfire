@@ -16,7 +16,7 @@ import { SMKEvent }      from './event'
 import { isDeepEqual }   from './util'
 
 // ---------------------------------------------------------------------------
-// Inlined from src/lib/include.js — used only for stable feature ID hashing
+// SMK 1.0's include.hash — used only for stable feature ID hashing
 // ---------------------------------------------------------------------------
 
 const _typeCode: Record<string, string> = {

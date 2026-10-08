@@ -40,5 +40,5 @@ const factory = Tool.define( 'LegendTool',
     }
 )
 
-smkRef.TYPE[ 'tool-legend' ] = factory
+Tool.register( 'legend', factory )
 export default factory

@@ -35,5 +35,5 @@ const factory = Tool.define( 'ShortcutMenuTool',
     }
 )
 
-smkRef.TYPE[ 'tool-shortcut-menu' ] = factory
+Tool.register( 'shortcut-menu', factory, { order: 10 } )
 export default factory

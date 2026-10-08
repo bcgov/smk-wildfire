@@ -144,4 +144,16 @@ if ( typeof window !== 'undefined' ) {
     if ( smk && smk.TYPE ) smk.TYPE.ToolBase = ToolBase
 }
 
+/** The Config defaults every Tool type starts from. */
+export function baseDefaults( option: Record<string, any> ): Record<string, any> {
+    return Object.assign( {
+        instance:  null,
+        order:     1,
+        enabled:   false,
+        title:     null,
+        icon:      'widgets',
+        showTitle: false,
+    }, option )
+}
+
 export default ToolBase

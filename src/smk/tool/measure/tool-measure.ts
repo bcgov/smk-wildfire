@@ -4,6 +4,8 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
 import panelMeasureHtml from './panel-measure.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -54,5 +56,7 @@ const factory = Tool.define( 'MeasureTool',
     }
 )
 
-smkRef.TYPE[ 'tool-measure' ] = factory
+Tool.register( 'measure', factory, widgetDefaults( panelDefaults( {
+    order: 6, position: [ 'shortcut-menu', 'list-menu' ], icon: 'straighten', title: 'Measurement',
+} ) ) )
 export default factory

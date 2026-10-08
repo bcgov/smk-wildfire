@@ -6,6 +6,7 @@
 import Tool from '../../tool'
 import panelQueryResultsHtml from './panel-query-results.html?raw'
 import { SMK } from '../../smk-ref'
+import { highlightLayers } from '../../mixin/tool-feature-list/highlight-layers'
 
 declare const Vue: any
 
@@ -24,9 +25,7 @@ const factory = Tool.define( 'QueryResultsTool',
         smkRef.TYPE.ToolFeatureList.call( this, function ( smk: any ) { return smk.$viewer.queried[ ( this as any ).instance ] } )
 
         this.internalLayers.push(
-            { id: 'highlight-polygon', style: { fill: true, stroke: true, fillColor: 'white', fillOpacity: 0.5, strokeColor: 'black', strokeWidth: 3, strokeOpacity: 0.8 } },
-            { id: 'highlight-line',    style: { stroke: true, strokeColor: 'black', strokeWidth: 3, strokeOpacity: 0.8 } },
-            { id: 'highlight-point',   style: { markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowSize: [ 41, 41 ] } },
+            ...highlightLayers(),
         )
 
         this.defineProp( 'tool' )

@@ -4,6 +4,9 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
+import { panelFeatureDefaults } from '../../mixin/tool-panel-feature/tool-panel-feature'
 import QueryParametersFactory from './tool-query-parameters'
 import QueryResultsFactory from './tool-query-results'
 import QueryFeatureFactory from './tool-query-feature'
@@ -17,5 +20,10 @@ const factory = Tool.defineComposite( [
     QueryFeatureFactory,
 ] )
 
-smkRef.TYPE[ 'tool-query' ] = factory
+// instance: true keeps this out of the tool list until a layer query names
+// an instance for it.
+Tool.register( 'query', factory, widgetDefaults( panelDefaults( panelFeatureDefaults( {
+    instance: true, order: 5, within: false,
+    command: { within: true, select: true },
+} ) ) ) )
 export default factory

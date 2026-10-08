@@ -16,3 +16,8 @@ dist/**
 temp/**
 
 **/etc/**
+
+# Test output
+.vitest-attachments/
+test/browser/__screenshots__/
+coverage/

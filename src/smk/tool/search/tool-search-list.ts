@@ -7,6 +7,9 @@ import Tool from '../../tool'
 import widgetSearchHtml from './widget-search.html?raw'
 import panelSearchHtml from './panel-search.html?raw'
 import { SMK } from '../../smk-ref'
+import markerIconYellow from './config/marker-icon-yellow.png'
+import starIconYellow   from './config/star-icon-yellow.png'
+import markerShadow     from './config/marker-shadow.png'
 
 declare const Vue: any
 declare const turf: any
@@ -121,9 +124,9 @@ const factory = Tool.define( 'SearchListTool',
         smkRef.TYPE.ToolInternalLayers.call( this )
 
         this.internalLayers.push(
-            { id: 'result-selected',  title: 'Selected Search Result',     style: { markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowSize: [ 41, 41 ] }, legend: { point: true } },
-            { id: 'result-highlight', title: 'Highlighted Search Result',   style: { markerSize: [ 40, 36 ], markerOffset: [ 20, 18 ], shadowSize: [ 31, 31 ] } },
-            { id: 'results',          title: 'Search Results',              style: { markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowSize: [ 41, 41 ] }, legend: { point: true } },
+            { id: 'result-selected',  title: 'Selected Search Result',   style: { markerUrl: markerIconYellow, markerSize: [ 25, 41 ], markerOffset: [ 12, 41 ], shadowUrl: markerShadow, shadowSize: [ 41, 41 ] }, legend: { point: true } },
+            { id: 'result-highlight', title: 'Highlighted Search Result', style: { markerUrl: starIconYellow, markerSize: [ 40, 36 ], markerOffset: [ 20, 18 ], shadowUrl: markerShadow, shadowSize: [ 31, 31 ] } },
+            { id: 'results',          title: 'Search Results',            style: { markerUrl: starIconYellow, markerSize: [ 20, 19 ], markerOffset: [ 10, 9 ], shadowUrl: markerShadow, shadowSize: [ 21, 21 ] }, legend: { point: true } },
         )
 
         this.defineProp( 'results' )

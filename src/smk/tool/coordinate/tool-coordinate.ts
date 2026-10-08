@@ -63,5 +63,5 @@ const factory = Tool.define( 'CoordinateTool',
     }
 )
 
-smkRef.TYPE[ 'tool-coordinate' ] = factory
+Tool.register( 'coordinate', factory )
 export default factory

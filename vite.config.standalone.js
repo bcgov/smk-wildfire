@@ -16,6 +16,7 @@
 
 import { defineConfig } from 'vite'
 import { resolve } from 'path'
+import { scanSupport } from './build/scan-support.js'
 import { execSync } from 'child_process'
 import { createRequire } from 'module'
 
@@ -34,6 +35,14 @@ function git( cmd ) {
 
 export default defineConfig( {
     define: {
+        // The bundled Vue 2 reads process.env.NODE_ENV, which does not exist in a
+        // browser. Without this the whole bundle throws before SMK is defined.
+        'process.env.NODE_ENV': JSON.stringify( 'production' ),
+
+        // Which viewer implements which tool and layer type. Read from the
+        // file tree at build time, because nothing registers it at run time.
+        __SMK_SUPPORT__:     JSON.stringify( scanSupport( import.meta.dirname ) ),
+
         __SMK_COMMIT__:      JSON.stringify( git( 'rev-parse HEAD' ) ),
         __SMK_BRANCH__:      JSON.stringify( git( 'rev-parse --abbrev-ref HEAD' ) ),
         __SMK_LAST_COMMIT__: JSON.stringify( git( 'log -1 --format=%ci' ) ),
@@ -45,7 +54,9 @@ export default defineConfig( {
         lib: {
             entry: resolve( import.meta.dirname, 'src/standalone-entry.ts' ),
             name: 'SMK',
-            fileName: () => `smk.${ version }.js`,
+            // A stable name: the version lives in package.json, so a consumer's
+            // build config does not change with every SMK release.
+            fileName: () => 'smk.standalone.js',
             formats: [ 'umd' ],
         },
         outDir: 'dist',
@@ -59,7 +70,7 @@ export default defineConfig( {
             // No externals — bundle everything
             output: {
                 assetFileNames: ( info ) => {
-                    if ( info.name && info.name.endsWith( '.css' ) ) return `smk.${ version }.css`
+                    if ( info.name && info.name.endsWith( '.css' ) ) return 'smk.standalone.css'
                     return info.name || 'asset-[hash][extname]'
                 },
             },
@@ -70,6 +81,10 @@ export default defineConfig( {
         extensions: [ '.ts', '.tsx', '.mts', '.js', '.jsx', '.mjs' ],
         alias: {
             '@': resolve( import.meta.dirname, 'src' ),
+            // SMK mounts every tool with `new Vue( { el } )` and an HTML string,
+            // so it needs the compiler. The package default is runtime-only, and
+            // the NODE_ENV define above hides Vue's warning about it.
+            'vue': 'vue/dist/vue.esm.browser.js',
         },
     },
 } )

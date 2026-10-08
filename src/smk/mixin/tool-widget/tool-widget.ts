@@ -37,4 +37,9 @@ if ( typeof window !== 'undefined' ) {
     if ( smk && smk.TYPE ) smk.TYPE.ToolWidget = ToolWidget
 }
 
+/** The Config defaults of a Tool with a widget. */
+export function widgetDefaults( option: Record<string, any> ): Record<string, any> {
+    return Object.assign( { showWidget: true }, option )
+}
+
 export default ToolWidget

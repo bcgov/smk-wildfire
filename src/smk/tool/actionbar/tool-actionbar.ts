@@ -41,5 +41,5 @@ const factory = Tool.define( 'ActionBarTool',
     }
 )
 
-smkRef.TYPE[ 'tool-actionbar' ] = factory
+Tool.register( 'actionbar', factory )
 export default factory

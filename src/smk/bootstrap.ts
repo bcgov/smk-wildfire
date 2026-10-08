@@ -19,12 +19,11 @@
  * `window.SMK.TYPE.*` before the async init chain begins.
  */
 
-// Build-time constants injected by vite.config.js via `define`
-declare const __SMK_COMMIT__:      string
-declare const __SMK_BRANCH__:      string
-declare const __SMK_LAST_COMMIT__: string
-declare const __SMK_ORIGIN__:      string
-declare const __SMK_VERSION__:     string
+import { resolveContainer } from './util'
+import { BUILD } from './build-info'
+
+// Build-time constant injected by vite.config.js via `define`
+declare const __SMK_SUPPORT__:     { viewers: string[], tools: Record<string, { shared: boolean, viewers: string[] }>, layers: Record<string, string[]> }
 
 // ---------------------------------------------------------------------------
 // Types
@@ -126,33 +125,26 @@ function setupGlobalSMK(): void {
                 displayContext: [],
                 baseMapConfig:  [],
             },
+            // The Tools a map builds when its Config names none. Each Tool
+            // type registers its own defaults with Tool.register.
             tools: [
-                { type: 'pan' },
                 { type: 'actionbar', enabled: true },
-                { type: 'zoom',      mouseWheel: true, doubleClick: true, box: true, control: true, position: 'actionbar', order: 1,  icon: { zoomIn: 'add', zoomOut: 'remove' }, title: { zoomIn: 'Zoom In', zoomOut: 'Zoom Out' } },
-                { type: 'reset-view', position: 'actionbar', order: 10, icon: 'zoom_out_map', title: 'Reset View' },
-                { type: 'scale', showFactor: true, showBar: true },
-                { type: 'coordinate' },
-                { type: 'toolbar',  enabled: true },
-                { type: 'about',    enabled: true, position: 'toolbar', icon: 'help' },
-                { type: 'baseMaps', enabled: true, position: 'toolbar', icon: 'map', mapStyle: { width: '110px', height: '110px' } },
-                { type: 'search',   enabled: true, position: 'toolbar', icon: 'search' },
-                { type: 'identify', enabled: true, position: 'toolbar', icon: 'info_outline' },
-                { type: 'layers',   enabled: true, position: 'toolbar', icon: 'layers' },
-                { type: 'menu',     enabled: true, position: 'toolbar', icon: 'menu' },
+                { type: 'toolbar',   enabled: true },
+                { type: 'search',    enabled: true },
+                { type: 'location',  enabled: true },
             ],
         }
 
     if ( !smk.BOOT ) smk.BOOT = Promise.resolve()
     smk.TAGS_DEFINED = false
 
-    smk.BUILD = {
-        commit:     __SMK_COMMIT__,
-        branch:     __SMK_BRANCH__,
-        lastCommit: __SMK_LAST_COMMIT__,
-        origin:     __SMK_ORIGIN__,
-        version:    __SMK_VERSION__,
-    }
+    smk.BUILD = BUILD
+
+    // Which viewer implements which tool and which layer type. A layer adapter
+    // registers itself so a browser could work the layers out, but a tool
+    // initializer registers nothing — it tests smk.$viewer.type inside itself.
+    // So the file tree is read at build time and the answer shipped here.
+    smk.SUPPORT = __SMK_SUPPORT__
 
     // Always install the full HANDLER (main.ts only stubs it with has/get)
     smk.HANDLER = {
@@ -225,7 +217,7 @@ if ( navigator.userAgent.indexOf( 'MSIE ' ) > -1 || navigator.userAgent.indexOf(
     ;( window.SMK as any ).INIT = function ( option: Record<string, any> ) {
         const containerSelector = option.containerSel || option[ 'smk-container-sel' ]
         setTimeout( () => {
-            onFailure( ie11Err, document.querySelector( containerSelector ) )
+            onFailure( ie11Err, resolveContainer( containerSelector ) )
         }, 2000 )
     }
 
@@ -278,7 +270,7 @@ try {
             ;( window.SMK as any ).BOOT = ( ( window.SMK as any ).BOOT || Promise.resolve() )
                 .then( () => {
                     const e = new Error( 'Cannot call SMK.INIT if map initialized from <script> element' )
-                    onFailure( e, document.querySelector( sel ) )
+                    onFailure( e, resolveContainer( sel ) )
                     throw e
                 } )
             return ( window.SMK as any ).BOOT
@@ -360,7 +352,7 @@ function SmkInit(
         } )
         .catch( ( e: Error ) => {
             try {
-                onFailure( e, document.querySelector( ( attr as any ).containerSel ) )
+                onFailure( e, resolveContainer( ( attr as any ).containerSel ) )
             } catch ( ee ) {
                 console.error( 'failure showing failure:', ee )
             }

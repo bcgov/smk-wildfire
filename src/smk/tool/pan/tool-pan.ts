@@ -40,5 +40,9 @@ const factory = Tool.define( 'PanTool', {
     initialize( _smk: any ) {},
 } )
 
-smkRef.TYPE[ 'tool-pan' ] = factory
+Tool.register( 'pan', factory, {
+    position: 'actionbar', order: 2, control: true,
+    icon:  { compass: 'navigation', navModePan: 'open_with', navModeRotate: '3d_rotation' },
+    title: { compass: 'Reset Orientation', navModePan: 'Panning Mode', navModeRotate: 'Rotate Mode' },
+} )
 export default factory

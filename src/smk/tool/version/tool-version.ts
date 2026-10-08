@@ -4,6 +4,9 @@
  */
 
 import Tool from '../../tool'
+import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
+import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
+import { BUILD } from '../../build-info'
 import panelVersionHtml from './panel-version.html?raw'
 import { SMK } from '../../smk-ref'
 
@@ -34,5 +37,8 @@ const factory = Tool.define( 'VersionTool',
     }
 )
 
-smkRef.TYPE[ 'tool-version' ] = factory
+// The panel reads build.version, and does not mount without it.
+Tool.register( 'version', factory, widgetDefaults( panelDefaults( {
+    order: 99, position: 'list-menu', icon: 'build', title: 'Version Info', build: BUILD,
+} ) ) )
 export default factory

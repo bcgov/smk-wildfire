@@ -25,5 +25,10 @@ const factory = Tool.define( 'ZoomTool', {
     initialize( _smk: any ) {},
 } )
 
-smkRef.TYPE[ 'tool-zoom' ] = factory
+Tool.register( 'zoom', factory, {
+    position: 'actionbar', order: 1,
+    mouseWheel: true, doubleClick: true, box: true, control: true,
+    icon:  { zoomIn: 'add',     zoomOut: 'remove'   },
+    title: { zoomIn: 'Zoom In', zoomOut: 'Zoom Out' },
+} )
 export default factory
