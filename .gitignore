@@ -21,7 +21,3 @@ temp/**
 .vitest-attachments/
 test/browser/__screenshots__/
 coverage/
-
-# Written by npm run story:wfnews from a WFNEWS checkout
-debug/config/wfnews.json
-debug/config/wfnews/

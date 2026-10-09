@@ -45,7 +45,6 @@ describe( 'the deep link', () => {
     } )
 
     it( 'builds the catalogue tools it names', async () => {
-        // Sample layers: the page now opens on WFNEWS, which builds both already.
         const bare = await harness( '?viewer=leaflet&story=layers' )
         const some = await harness( '?viewer=leaflet&story=layers&tools=measure,identify' )
 

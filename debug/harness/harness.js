@@ -47,24 +47,15 @@ function setReady( state, why ) {
 // ---------------------------------------------------------------------------
 // Stories — the starting configs
 //
-// A story adds data and nothing else, except "WFNEWS main map", which is the
-// whole WFNEWS config, tools included. In the others, what you see is what SMK
-// does with its own defaults. To change a tool, use the Tools panel, or paste a
-// config into the Config tab.
+// A story adds data and nothing else, so what you see is what SMK does with its
+// own defaults. To change a tool, use the Tools panel, or paste a config into
+// the Config tab.
 // ---------------------------------------------------------------------------
 
 var L = '../layer/'
 
 // The first key is the one the page opens with.
 var STORIES = {
-    // The WFNEWS main map: its layers, their default visibility, and its tools.
-    // Written from the WFNEWS source by `npm run story:wfnews`; see build/wfnews-story.js.
-    'wfnews': {
-        title: 'WFNEWS main map',
-        // Ruled 2026-09-23: this mode shows the map without waiting for the layers.
-        config: [ '../config/wfnews.json', '../config/viewer-no-layer-wait.json' ]
-    },
-
     'layers': {
         title: 'Sample layers',
         config: [
@@ -90,23 +81,6 @@ var STORIES = {
         title:  'SMK defaults (no config)',
         config: []
     }
-}
-
-// The header's mode switch. Each sets these bar controls, keyed by element id.
-var MODES = {
-    smk:    { story: 'layers' },
-    wfnews: { story: 'wfnews', viewer: 'maplibre', theme: 'wf', build: 'v2' }
-}
-
-/** Press the mode button that matches the bar with nothing added, or none. */
-function showMode() {
-    var clean = !dropped && !Object.keys( extraTools ).length && !Object.keys( argEdit ).length &&
-                !Object.keys( removedTools ).length
-    $$( '#mode button' ).forEach( function ( b ) {
-        var m = MODES[ b.dataset.mode ]
-        var on = clean && Object.keys( m ).every( function ( k ) { return $( '#' + k ).value === m[ k ] } )
-        b.setAttribute( 'aria-pressed', on ? 'true' : 'false' )
-    } )
 }
 
 // ---------------------------------------------------------------------------
@@ -434,7 +408,6 @@ function setNeedRestart( why ) {
     chip.textContent = why || ''
     chip.hidden      = !why
     $( '#restart' ).classList.toggle( 'wants', needRestart )
-    showMode()
 }
 
 /** One pane for each viewer, each with its own frame for SMK to fill. */
@@ -1733,21 +1706,8 @@ document.addEventListener( 'DOMContentLoaded', function () {
     }
 
     ;[ '#story', '#viewer', '#build', '#theme', '#mobile' ].forEach( function ( s ) {
-        $( s ).onchange = function () { writeQuery(); showMode(); restart() }
+        $( s ).onchange = function () { writeQuery(); restart() }
     } )
-
-    $$( '#mode button' ).forEach( function ( b ) {
-        b.onclick = function () {
-            var m = MODES[ b.dataset.mode ]
-            Object.keys( m ).forEach( function ( k ) { $( '#' + k ).value = m[ k ] } )
-            // A mode is a clean start: forget the tools built, args edited and config added since.
-            extraTools = {}; removedTools = {}; argEdit = {}; dropped = null
-            $( '#config' ).value  = ''
-            $( '#merge' ).checked = true
-            writeQuery(); showMode(); restart()
-        }
-    } )
-    showMode()
 
     // No restart needed - it only moves the panes that are already running.
     $( '#sync' ).onchange = function () { writeQuery(); syncViews() }
