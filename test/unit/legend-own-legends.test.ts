@@ -7,20 +7,13 @@
  * own. Found 2026-09-19 in the Harness on maplibre.
  */
 import { describe, it, expect, beforeAll } from 'vitest'
+import { nextTick } from 'vue'
 
 let showOwnLegends: ( smk: any ) => void
-let ticks: Array<() => void> = []
 
 beforeAll( async () => {
-    // main.ts seeds these before any tool module loads. tool-legend registers
-    // a component, constructs a Vue and reads nextTick, so all three answer.
+    // main.ts seeds this before any tool module loads.
     ;( window as any ).SMK = { UTIL: {}, TYPE: {}, COMPONENT: {}, MAP: {}, VIEWER: {} }
-
-    const Vue: any = function () {}
-    Vue.component = () => {}
-    Vue.nextTick = ( cb: () => void ) => ticks.push( cb )
-    ;( window as any ).Vue = Vue
-
     ;( { showOwnLegends } = await import( '../../src/smk/tool/legend/tool-legend' ) )
 } )
 
@@ -40,11 +33,6 @@ function fakeSmk() {
     }
 }
 
-function runTicks() {
-    const due = ticks
-    ticks = []
-    due.forEach( cb => cb() )
-}
 
 describe( 'showOwnLegends', () => {
     it( 'asks the display contexts for their legends', () => {
@@ -53,12 +41,12 @@ describe( 'showOwnLegends', () => {
         expect( smk.asked[ 0 ], 'the pane never asked, so it renders nothing' ).toBe( true )
     } )
 
-    it( 'turns them off only after Vue has rendered', () => {
+    it( 'turns them off only after Vue has rendered', async () => {
         const smk = fakeSmk()
         showOwnLegends( smk )
         expect( smk.asked, 'off came in the same turn as on' ).toEqual( [ true ] )
 
-        runTicks()
+        await nextTick()
         expect( smk.asked ).toEqual( [ true, false ] )
     } )
 } )
@@ -74,12 +62,12 @@ describe( 'the LegendTool initializer', () => {
         own.call( tool, smk )
     }
 
-    it( 'asks as soon as a display context arrives', () => {
+    it( 'asks as soon as a display context arrives', async () => {
         const smk = fakeSmk()
         initialize( smk )
         smk.contextAdded()
 
-        runTicks()
+        await nextTick()
         expect( smk.asked, 'the pane waits for the Layers panel to ask' )
             .toEqual( [ true, false ] )
     } )

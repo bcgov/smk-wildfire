@@ -3,10 +3,9 @@
  */
 
 declare const L:    any
-declare const turf: any
-
 import '../../../tool/identify/tool-identify-list'
 import { SMK } from '../../../smk-ref'
+import * as turf from '@turf/turf'
 
 const smkRef = SMK
 

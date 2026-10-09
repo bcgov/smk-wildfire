@@ -16,7 +16,7 @@ beforeAll( async () => {
 
 const CONFIG = { id: 'wms', serviceUrl: 'https://openmaps.gov.bc.ca/geo/pub/ows', layerName: 'pub:A' }
 
-async function mount() {
+async function mount( extra: Record<string, unknown> = {} ) {
     const urls: string[] = []
     ;( globalThis as any ).fetch = ( url: string ) => {
         urls.push( url )
@@ -43,12 +43,12 @@ async function mount() {
         off: () => {},
     }
 
-    const config = { ...CONFIG }
-    const spec = await WmsMapLibreLayer.create.call( {}, [ { config } ], 0 )
+    const layer = new WmsMapLibreLayer( { ...CONFIG, ...extra } )
+    const spec = await WmsMapLibreLayer.create.call( {}, [ layer ], 0 )
     spec._smk_onAdd( map )
     flush()
     const fire = ( ev: string ) => { on[ ev ](); flush() }
-    return { urls, fire, view, config, flush }
+    return { urls, fire, view, layer, flush }
 }
 
 describe( 'WMS image requests', () => {
@@ -67,9 +67,25 @@ describe( 'WMS image requests', () => {
     } )
 
     it( 'asks again when a Host forces a refresh', async () => {
-        const { urls, config, flush } = await mount()
-        ;( config as any )._smkRefresh()
+        const { urls, layer, flush } = await mount()
+        layer.refresh()
         flush()
         expect( urls.length ).toBe( 2 )
+    } )
+
+    it( 'sends the params a Host sets, and drops one set to null', async () => {
+        const { urls, layer, flush } = await mount()
+        layer.setParams( { time: '2026-09-29T00:00:00Z' } )
+        flush()
+        expect( urls[ 1 ] ).toContain( '&time=2026-09-29T00%3A00%3A00Z' )
+
+        layer.setParams( { time: null } )
+        flush()
+        expect( urls[ 2 ] ).not.toContain( 'time=' )
+    } )
+
+    it( 'sends the Config params from the first request', async () => {
+        const { urls } = await mount( { params: { elevation: 500 } } )
+        expect( urls[ 0 ] ).toContain( '&elevation=500' )
     } )
 } )

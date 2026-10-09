@@ -1,13 +1,13 @@
 /**
  * component-tool-panel-feature — panel for displaying a single feature's details.
  */
-import template from './component-tool-panel-feature.html?raw'
+import render from './component-tool-panel-feature.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'tool-panel-feature', {
+component( 'tool-panel-feature', {
     extends: SMK?.COMPONENT?.ToolPanelBase,
-    template,
+    render,
     props: [
         'feature',
         'layer',

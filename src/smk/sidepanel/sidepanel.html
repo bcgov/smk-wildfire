@@ -8,10 +8,9 @@
         v-show="visible"
         v-bind:class="[ 'smk-expand-' + expand ]"
     >
+        <template v-for="panel in panels" v-bind:key="panel.prop.id">
         <component class="smk-elastic-panel"
-            v-for="panel in panels"
             v-if="panel.prop.active && panel.prop.showPanel !== false"
-            v-bind:key="panel.prop.id"
             v-bind:is="panel.component"
             v-bind="panel.prop"
         >
@@ -33,5 +32,6 @@
                 v-on:click="closePanel( panel.prop.id )"
             >close</i>
         </component>
+        </template>
     </div>
 </transition>

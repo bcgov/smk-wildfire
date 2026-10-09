@@ -32,14 +32,15 @@ beforeAll( async () => {
 
         const atStart = seen.length
 
-        // The commands the panel's own controls send.
-        await run.page.evaluate( ( id: string ) =>
-            ( window as any ).SMK.MAP[ id ].emit( 'LayersTool', 'activate' ), 'harness-' + viewer )
+        // The commands the panel's own controls send. Braces: emit returns the
+        // whole map, and its reactive parts are too deep for Playwright to send back.
+        await run.page.evaluate( ( id: string ) => {
+            ( window as any ).SMK.MAP[ id ].emit( 'LayersTool', 'activate' ) }, 'harness-' + viewer )
         await run.page.waitForTimeout( 2000 )
         const afterOpen = seen.length
 
-        await run.page.evaluate( ( id: string ) =>
-            ( window as any ).SMK.MAP[ id ].emit( 'LayersTool', 'change', { legend: true } ),
+        await run.page.evaluate( ( id: string ) => {
+            ( window as any ).SMK.MAP[ id ].emit( 'LayersTool', 'change', { legend: true } ) },
             'harness-' + viewer )
         await run.page.waitForTimeout( 2500 )
 

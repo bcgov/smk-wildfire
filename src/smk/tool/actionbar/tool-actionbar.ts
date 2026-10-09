@@ -4,24 +4,24 @@
  */
 
 import Tool from '../../tool'
-import actionbarHtml from './actionbar.html?raw'
+import actionbarRender from './actionbar.html?vue'
 import { SMK } from '../../smk-ref'
+import { mountRoot, reactive } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
 const factory = Tool.define( 'ActionBarTool',
     function ( this: any ) {
-        this.model = {
+        this.model = reactive( {
             widgets: [] as any[],
-        }
+        } )
     },
     function ( this: any, smk: any ) {
         const self = this
 
-        this.vm = new Vue( {
-            el:   smk.addToOverlay( actionbarHtml ),
+        this.vm = mountRoot( smk.addToOverlay( '<div>' ), {
+            render: actionbarRender,
             data: this.model,
             methods: {
                 trigger( toolId: string, event: string, arg: any, comp: any ) {

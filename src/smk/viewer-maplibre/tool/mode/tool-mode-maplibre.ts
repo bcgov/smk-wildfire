@@ -4,17 +4,17 @@
  */
 
 import Tool from '../../../tool'
-import widgetModeHtml from './widget-mode.html?raw'
+import widgetModeRender from './widget-mode.html?vue'
 import './widget-mode.css'
 import { SMK } from '../../../smk-ref'
+import { component } from '../../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'mode-widget', {
+component( 'mode-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
-    template: widgetModeHtml,
+    render: widgetModeRender,
 } )
 
 const factory = Tool.define( 'ModeTool',

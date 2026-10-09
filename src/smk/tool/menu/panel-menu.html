@@ -1,7 +1,7 @@
 <tool-panel class="smk-menu-panel"
     v-bind="$$projectProps( 'tool-panel' )"
 >
-    <template slot="header">
+    <template #header>
         <div class="smk-menu-title">
             <slot></slot>
         </div>
@@ -17,12 +17,12 @@
         </div>
     </template>
 
+    <template v-for="p in subPanels" v-bind:key="'p' + p.prop.id">
     <component class="smk-panel"
-        v-for="p in subPanels"
         v-if="p.prop.active"
-        v-bind:key="'p' + p.prop.id"
         v-bind:is="p.component"
         v-bind="p.prop"
     ></component>
+    </template>
 
 </tool-panel>

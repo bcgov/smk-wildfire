@@ -4,21 +4,21 @@
  */
 
 import Tool from '../../tool'
-import panelSelectHtml from './panel-select.html?raw'
+import panelSelectRender from './panel-select.html?vue'
 import { SMK } from '../../smk-ref'
 import { highlightLayers } from '../../mixin/tool-feature-list/highlight-layers'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'select-widget', {
+component( 'select-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'select-panel', {
+component( 'select-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelSelectHtml,
+    render: panelSelectRender,
     props: [ 'layers', 'highlightId', 'command' ],
 } )
 

@@ -9,7 +9,8 @@
 </style>
 
 <!-- The libraries a Host gives SMK, the same list as the harness. -->
-<script src="../../src/lib/vue-2.7.16.min.js"></script>
+<!-- smk.es.js imports vue; the map points it at the runtime build. -->
+<script type="importmap">{ "imports": { "vue": "../../src/lib/vue-3.5.43.runtime.esm-browser.prod.js" } }</script>
 <link rel="stylesheet" href="../../src/lib/leaflet/leaflet-1.7.1.css"/>
 <script src="../../src/lib/leaflet/leaflet-1.7.1.js"></script>
 <script src="../../src/lib/leaflet/esri-leaflet-3.0.19.min.js"></script>
@@ -17,10 +18,6 @@
 <script src="../../src/lib/leaflet/maplibre-gl-5.24.0.min.js"></script>
 <script src="../../src/lib/leaflet/esri-leaflet-vector-4.3.1.min.js"></script>
 <script src="../../src/lib/leaflet/esri-leaflet-static-basemap-tile-1.0.0.min.js"></script>
-<script src="../../src/lib/proj4-2.4.4.min.js"></script>
-<script src="../../src/lib/turf-5.1.6.min.js"></script>
-<script src="../../src/lib/terraformer/terraformer-1.0.7.js"></script>
-<script src="../../src/lib/terraformer/terraformer-arcgis-parser-1.0.5.js"></script>
 
 <script type="module" src="../../dist/smk.es.js"></script>
 <link rel="stylesheet" href="../../dist/smk.css"/>
@@ -41,6 +38,9 @@
  *   SMK.TYPE.Tool.define the plugin registers a Tool
  *   SMK.HANDLER.set      fill a bespoke tool's panel
  *   SMK.INIT             with containerSel as an ELEMENT, not a selector
+ *   baseMapConfig        add a Basemap to this map only (D27)
+ *   finishedIdentify     learn when an identify ends, with no wrapper (D27)
+ *   setDisplayContextItems( ..., { replace: true } )   swap the layer tree (D27)
  *
  * Query: viewer, theme, h (frame height, to match a harness pane).
  */
@@ -99,7 +99,10 @@ document.addEventListener( 'DOMContentLoaded', function () {
                 id:           'host',
                 containerSel: document.getElementById( 'frame' ),
                 config: [
-                    { viewer: { type: viewer, themes: [ theme ] } },
+                    { viewer: { type: viewer, themes: [ theme ], baseMapConfig: [ {
+                        id: 'host-streets', type: 'tile', title: 'Host Streets',
+                        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    } ] } },
                     { layers: [ {
                         type: 'host-demo', id: 'host-demo-layer', title: 'Host Demo',
                         isVisible: true, opacity: 0.9,
@@ -115,10 +118,29 @@ document.addEventListener( 'DOMContentLoaded', function () {
             } )
         } )
         .then( function ( map ) {
-            window.HOST.map   = map || SMK.MAP.host
-            window.HOST.state = 'ready'
-            step( 'map built', !!window.HOST.map )
-            document.body.dataset.harness = 'ready'
+            window.HOST.map = map = map || SMK.MAP.host
+            step( 'map built', !!map )
+
+            var v = map.$viewer
+            step( 'baseMapConfig adds a basemap to this map',
+                !!v.basemap[ 'host-streets' ] && !SMK.TYPE.Viewer.prototype.basemap[ 'host-streets' ] )
+
+            var before = v.displayContext.layers
+            v.setDisplayContextItems( 'layers', [
+                { id: 'host-demo-layer', type: 'layer', title: 'Host Demo, replaced', isVisible: true },
+            ], { replace: true } )
+            step( 'display context replaced', v.displayContext.layers !== before )
+
+            // A clear is an identify too, and needs no service to answer.
+            return new Promise( function ( res ) {
+                v.finishedIdentify( function () { res( true ) } )
+                v.identifyFeatures()
+                setTimeout( function () { res( false ) }, 5000 )
+            } ).then( function ( finished ) {
+                step( 'finishedIdentify fires', finished )
+                window.HOST.state = 'ready'
+                document.body.dataset.harness = 'ready'
+            } )
         } )
         .catch( function ( e ) {
             fail( e && e.message ? e.message : String( e ) )

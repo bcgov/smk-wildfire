@@ -83,7 +83,7 @@ function start( chrome: Chrome ) {
         const story = STORIES.find( s => s.name === m.story ) ?? STORIES[ 0 ]
 
         if ( state.vm ) {
-            try { state.vm.$destroy() } catch { /* already gone */ }
+            try { chrome.destroy ? chrome.destroy( state.vm ) : state.vm.$destroy() } catch { /* already gone */ }
             state.vm.$el?.remove()
             state.vm = null
         }

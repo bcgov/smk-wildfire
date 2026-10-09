@@ -270,14 +270,6 @@ describe( 'EsriDynamicLayer', () => {
 
     describe( 'getFeaturesInArea()', () => {
         beforeEach( () => {
-            // Terraformer stub
-            ;( global as any ).window = { ...( global as any ).window, Terraformer: {
-                ArcGIS: {
-                    convert: ( _f: any ) => ( { geometry: { rings: [] } } ),
-                    parse:   ( g: any ) => ( { type: 'Polygon', coordinates: [] } ),
-                }
-            } }
-
             vi.stubGlobal( 'fetch', mockFetchOk( {
                 results: [ {
                     displayFieldName: 'NAME',
@@ -346,12 +338,6 @@ describe( 'EsriFeatureLayer', () => {
 
     describe( 'getFeaturesInArea()', () => {
         beforeEach( () => {
-            ;( global as any ).window = { ...( global as any ).window, Terraformer: {
-                ArcGIS: {
-                    convert: ( _f: any ) => ( { geometry: { rings: [] } } ),
-                    parse:   ( _g: any ) => ( { type: 'Polygon', coordinates: [] } ),
-                }
-            } }
             vi.stubGlobal( 'fetch', mockFetchOk( {
                 features: [ {
                     displayFieldName: 'LABEL',

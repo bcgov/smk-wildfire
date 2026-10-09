@@ -1,11 +1,12 @@
 /**
  * component-feature-list — displays a list of features from multiple layers.
  */
-import template from './component-feature-list.html?raw'
-declare const Vue: any
+import render from './component-feature-list.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'feature-list', {
-    template,
+component( 'feature-list', {
+    emits: [ 'active', 'hover', 'remove' ],
+    render,
     props: {
         layers:      Array,
         highlightId: String,

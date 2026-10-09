@@ -7,8 +7,8 @@ import { SMKEvent } from './event'
 import { ToolBase, baseDefaults } from './mixin/tool-base/tool-base'
 import { type as smkType } from './util'
 import { SMK } from './smk-ref'
-
-declare const Vue: any
+import { component, propNames, isComponentOptions } from './vue'
+import { reactive, toRaw, markRaw } from 'vue'
 
 // ---------------------------------------------------------------------------
 // Public types for the Tool.define factory
@@ -119,11 +119,14 @@ Tool.prototype.defineProp = function ( name: string, opt?: any ) {
         set( val ) {
             const oldVal = prop.val
             const newVal = prop.validate( val, oldVal, name )
-            if ( newVal === oldVal ) return
+            if ( toRaw( newVal ) === toRaw( oldVal ) ) return
 
-            prop.val = newVal
+            // Vue 2 made a value reactive in place, so a tool could push onto
+            // an array it had set. Vue 3 tracks only the proxy, so keep that.
+            prop.val = newVal === null || typeof newVal !== 'object' ? newVal
+                : isComponentOptions( newVal ) ? markRaw( newVal ) : reactive( newVal )
             prop.onSet.forEach( function ( f: Function ) {
-                f.call( self, name, newVal )
+                f.call( self, name, prop.val )
             } )
         },
     } )
@@ -135,18 +138,19 @@ Tool.prototype.getComponentProps = function ( componentName: string ) {
     if ( this.$componentProp[ componentName ] )
         return this.$componentProp[ componentName ]
 
-    const component = Vue.component( componentName )
-    if ( !component ) throw new Error( 'component "' + componentName + '" not defined' )
+    const options = component( componentName )
+    if ( !options ) throw new Error( 'component "' + componentName + '" not defined' )
 
-    const propNames = Object.keys( component.prototype ).filter( function ( c: string ) {
+    const names = propNames( options ).filter( function ( c: string ) {
         if ( c in self.$propFilter ) return self.$propFilter[ c ]
         if ( c in self.$prop ) return true
         console.warn( 'prop "' + c + '" is defined in "' + componentName + '", but is not in tool', self )
         return false
     } )
 
-    const prop = this.$componentProp[ componentName ] = {}
-    propNames.forEach( function ( p: string ) {
+    // Rendered by a root that only holds it, so the tool's writes must reach the proxy.
+    const prop = this.$componentProp[ componentName ] = reactive( {} )
+    names.forEach( function ( p: string ) {
         ( prop as any )[ p ] = self[ p ]
         self.$prop[ p ].onSet.unshift( function ( name: string, val: any ) {
             console.debug( 'set', componentName, name, val )

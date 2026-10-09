@@ -3,9 +3,6 @@
  * Converted from feature-set.js to TypeScript ES module.
  *
  * Depends (converted): event.ts, util.ts
- * Depends (not yet converted): turf — used only in getStats().vertexCount;
- *   accessed as (window as any).turf.
- *   TODO: import turf directly once bundled.
  *
  * include.hash() is inlined as a local `hashValue()` function.
  *
@@ -14,6 +11,7 @@
 
 import { SMKEvent }      from './event'
 import { isDeepEqual }   from './util'
+import * as turf from '@turf/turf'
 
 // ---------------------------------------------------------------------------
 // SMK 1.0's include.hash — used only for stable feature ID hashing
@@ -325,9 +323,6 @@ export class FeatureSet {
             get featureCount() { return ids.length },
             get vertexCount() {
                 if ( v !== undefined ) return v
-                // TODO: import turf directly once bundled
-                const turf = ( window as any ).turf
-                if ( !turf ) return 0
                 return ( v = ids.reduce( ( accum, id ) =>
                     accum + turf.coordReduce( self.featureSet[ id ].geometry, ( a: number ) => a + 1, 0 )
                 , 0 ) )

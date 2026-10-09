@@ -1,11 +1,11 @@
 /**
  * component-feature-attributes — displays formatted feature attribute list.
  */
-import template from './component-feature-attributes.html?raw'
+import render from './component-feature-attributes.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'feature-attributes', {
+component( 'feature-attributes', {
     extends: SMK?.COMPONENT?.FeatureBase,
-    template,
+    render,
 } )

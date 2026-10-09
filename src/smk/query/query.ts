@@ -24,6 +24,7 @@
 import { SMKEvent }             from '../event'
 import { makePromise, resolved, asyncReduce, featureTitle } from '../util'
 import { SMK } from '../smk-ref'
+import * as turf from '@turf/turf'
 
 // ---------------------------------------------------------------------------
 // Predicate / parameter types shared by all query types
@@ -764,7 +765,6 @@ function makeVectorOperand( predicate: PredicateArg, param: ParamMap ): ValueGet
 }
 
 function overlapsExtent( extent: number[], geom: any ): boolean {
-    const turf = ( window as any ).turf
     const extentGeom = turf.bboxPolygon( extent )
 
     switch ( geom.type ) {

@@ -15,12 +15,18 @@ export interface FrameOptions {
     methods?: Record<string, ( ...args: any[] ) => any>
 }
 
-export function frameWith( Vue: any, chrome: string, data: any, opt: FrameOptions ) {
+/**
+ * Mounts options over host, putting the root in host's place. v2 passes a
+ * Vue 3 mount; the 1.0 stage passes `( o, el ) => new Vue( o ).$mount( el )`.
+ */
+export type Mount = ( options: any, host: HTMLElement ) => any
+
+export function frameWith( mount: Mount, chrome: string, data: any, opt: FrameOptions ) {
     const host = opt.host ?? document.body.appendChild( document.createElement( 'div' ) )
     const { theme = 'wf', mobile = false, width = 1200, height = 800 } = opt
     const trigger = ( id: string, event: string, arg: any ) => opt.trigger?.( id, event, arg )
 
-    const vm = new Vue( {
+    return mount( {
         data() { return data },
         methods: {
             trigger,
@@ -35,8 +41,5 @@ export function frameWith( Vue: any, chrome: string, data: any, opt: FrameOption
                 style="position:relative;width:${ width }px;height:${ height }px">
                 <div class="smk-overlay">${ chrome }</div>
             </div>`,
-    } )
-
-    vm.$mount( host )
-    return vm
+    }, host )
 }

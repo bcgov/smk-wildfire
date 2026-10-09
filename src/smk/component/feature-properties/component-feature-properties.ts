@@ -1,13 +1,13 @@
 /**
  * component-feature-properties — displays raw feature GeoJSON properties.
  */
-import template from './component-feature-properties.html?raw'
+import render from './component-feature-properties.html?vue'
 import { SMK } from '../../smk-ref'
-declare const Vue: any
+import { component } from '../../vue'
 
-Vue.component( 'feature-properties', {
+component( 'feature-properties', {
     extends: SMK?.COMPONENT?.FeatureBase,
-    template,
+    render,
     computed: {
         sortedProperties( this: any ): string[] {
             if ( !this.feature || !this.feature.properties ) return []

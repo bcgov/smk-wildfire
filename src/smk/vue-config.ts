@@ -1,12 +1,11 @@
 /**
- * vue-config — Vue 2 filters, components, and directives for SMK.
+ * vue-config — the filters, components and directive every SMK template uses.
  * Converted from vue-config.js (include.module -> ES module).
  */
 
 import spinnerGifUrl from './spinner.gif'
 import { getMetersPerUnit } from './util'
-
-declare const Vue: any
+import { component, directive, globalProperty, h } from './vue'
 
 // ---------------------------------------------------------------------------
 // Filters
@@ -106,37 +105,41 @@ export function dimensionalNumber( value: any, dim: number, unit: string, decima
 // Registration
 // ---------------------------------------------------------------------------
 
-export function setupVueConfig(): void {
-    Vue.filter( 'formatTitle', formatTitle )
-    Vue.filter( 'formatNumber', formatNumber )
-    Vue.filter( 'formatDate', formatDate )
-    Vue.filter( 'formatTime', formatTime )
-    Vue.filter( 'dimensionalNumber', dimensionalNumber )
+/** Vue 3 has no filters; templates call these as $filters.name( value, ... ). */
+export const filters = { formatTitle, formatNumber, formatDate, formatTime, dimensionalNumber }
 
-    Vue.component( 'busy-spinner', {
+export function setupVueConfig(): void {
+    globalProperty( '$filters', filters )
+
+    component( 'busy-spinner', {
         props: [ 'active' ],
-        template: `<img v-if="active" class="smk-busy-spinner" :src="spinnerSrc">`,
         data() {
             return { spinnerSrc: spinnerGifUrl }
-        }
+        },
+        render( this: any ) {
+            return this.active ? h( 'img', { class: 'smk-busy-spinner', src: this.spinnerSrc } ) : null
+        },
     } )
 
-    Vue.component( 'status-message', {
+    component( 'status-message', {
         props: [ 'status', 'message' ],
-        template: `<div v-if="message" class="smk-status-message" :class="'smk-status-' + status">{{ message }}</div>`
+        render( this: any ) {
+            return this.message
+                ? h( 'div', { class: [ 'smk-status-message', 'smk-status-' + this.status ] }, this.message )
+                : null
+        },
     } )
 
-    Vue.directive( 'content', {
-        inserted( el: any, binding: any ) {
-            if ( binding.value && binding.value.createContent )
-                binding.value.createContent( el )
-        }
+    // SMK 1.0.39 called createContent, and 1.0.16001, the WFNEWS build, called create.
+    directive( 'content', {
+        mounted( el: any, binding: any ) {
+            const v = binding.value
+            const create = v && ( v.createContent || v.create )
+            if ( typeof create === 'function' ) create.call( v, el )
+        },
     } )
 }
 
-// Auto-call on module load — Vue must be available as a global before SMK
-if ( typeof window !== 'undefined' && ( window as any ).Vue ) {
-    setupVueConfig()
-}
+setupVueConfig()
 
 export default setupVueConfig

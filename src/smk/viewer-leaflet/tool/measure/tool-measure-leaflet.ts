@@ -1,11 +1,10 @@
 import type { SmkInstance } from '../../viewer-leaflet'
 import './lib/leaflet-measure.min.js'
 import './lib/leaflet-measure.css'
+import * as turf from '@turf/turf'
 
 declare const SMK: any
 declare const L: any
-declare const turf: any
-
 SMK.TYPE.MeasureTool.addInitializer( function ( this: any, smk: SmkInstance ) {
     if ( ( smk as any ).$viewer.type !== 'leaflet' ) return
 

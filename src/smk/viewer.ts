@@ -30,6 +30,7 @@ import {
 } from './util'
 import type { Layer }    from './layer/layer'
 import { SMK } from './smk-ref'
+import * as turf from '@turf/turf'
 
 // ---------------------------------------------------------------------------
 // ViewerEvent — typed event subclass for all viewer instances
@@ -46,6 +47,8 @@ const ViewerEvent = SMKEvent.define( [
     'changedLayerVisibility',
     'changedDevice',
     'changedDisplayContext',
+    'startedIdentify',
+    'finishedIdentify',
 ] )
 
 // ---------------------------------------------------------------------------
@@ -179,7 +182,8 @@ export class Viewer {
             if ( !def ) return self.basemap[ lowerId ]
             const config  = smk.viewer.baseMapConfig?.find( ( b: any ) => b.id.toLowerCase() === lowerId )
             const option  = Object.assign( {}, def.option, config?.option )
-            self.basemap[ lowerId ] = Object.assign( { id: lowerId }, def, config, { option } )
+            // The id last: the picker and setBasemap compare lower case ids.
+            self.basemap[ lowerId ] = Object.assign( {}, def, config, { id: lowerId, option } )
         }
 
         function defineBaseMapType( id: string, fn?: any ) {
@@ -323,6 +327,17 @@ export class Viewer {
 
         if ( window.SMK?.HANDLER?.has( 'viewer', 'defineBaseMapType' ) )
             window.SMK.HANDLER.get( 'viewer', 'defineBaseMapType' )!( defineBaseMapType )
+
+        // A baseMapConfig entry for an id nobody defined adds a Basemap to
+        // this map only. An entry for a defined id already merged above.
+        ;( viewerCfg?.baseMapConfig || [] ).forEach( ( b: any ) => {
+            if ( !b?.id || defineBaseMap( b.id ) ) return
+            if ( !b.type && typeof b.create !== 'function' ) {
+                console.warn( `baseMapConfig "${ b.id }" names no type, and no base map has that id` )
+                return
+            }
+            defineBaseMap( b.id, Object.assign( { title: b.id, order: 1000 }, b ) )
+        } )
     }
 
     getBasemapIds(): string[] {
@@ -470,9 +485,10 @@ export class Viewer {
         return !!this.displayContext[ context ]
     }
 
-    setDisplayContextItems( context: string, items?: any[] ): void {
+    setDisplayContextItems( context: string, items?: any[], option?: { replace?: boolean } ): void {
         const self = this
-        if ( this.isDisplayContext( context ) ) {
+        const replacing = this.isDisplayContext( context )
+        if ( replacing && !option?.replace ) {
             console.warn( `displayContext ${ context } is already defined` )
             return
         }
@@ -483,12 +499,19 @@ export class Viewer {
             : { changedVisibility: () => {}, setView: () => {}, root: null }
 
         dc.changedVisibility( () => { ( self as any ).changedLayerVisibility() } )
-        ;( this as any ).changedView( () => { dc.setView( self.getView() ) } )
 
-        // Only when a context is added. The legend's handler calls
+        // Read the context at call time, so a replaced one gets the view and
+        // the old one is not kept alive by this handler.
+        if ( !replacing )
+            ( this as any ).changedView( () => { self.displayContext[ context ]?.setView( self.getView() ) } )
+        else
+            dc.setView( this.getView() )
+
+        // Only when a context is added or replaced. The legend's handler calls
         // getDisplayContexts(), which calls setView, which can change
         // visibility — firing this from changedVisibility loops forever.
         ;( this as any ).changedDisplayContext()
+        if ( replacing ) ( this as any ).changedLayerVisibility()
     }
 
     eachDisplayContext( cb: ( dc: any, context: string ) => void ): void {
@@ -710,10 +733,6 @@ export class Viewer {
     }
 
     circleInMap( screenCenter: { x: number; y: number }, pixelRadius: number, sides: number ): any {
-        // TODO: replace turf global with import once turf is bundled explicitly
-        const turf = ( window as any ).turf
-        if ( !turf ) throw new Error( 'turf is not loaded' )
-
         return turf.polygon( [
             circlePoints( screenCenter, pixelRadius, sides )
                 .map( ( p: any ) => this.screenToMap( p ) )
@@ -737,7 +756,11 @@ export class Viewer {
 
         const lock = this.acquireIdentifyMutex()
 
-        if ( !location || !area ) return resolved()
+        // A Host learns when an identify starts and ends; a clear counts too.
+        const finished = () => { ( self as any ).finishedIdentify( { location, area } ) }
+        ;( this as any ).startedIdentify( { location, area } )
+
+        if ( !location || !area ) return resolved().then( finished )
 
         function IdentifyDiscardedError(): Error {
             const e: any = new Error( 'Identify results discarded' )
@@ -757,9 +780,8 @@ export class Viewer {
                 layer: self.visibleLayer[ id ] || self.offMapLayer[ id ]
             }
 
-            // A layer type can throw here, not reject: the ESRI types read
-            // window.Terraformer before they make a promise. One such throw
-            // used to end the identify for every other layer as well.
+            // A layer type can throw here, not reject. One such throw used to
+            // end the identify for every other layer as well.
             let p: any
             try {
                 p = ly.getFeaturesInArea?.( area, view, option )
@@ -809,6 +831,7 @@ export class Viewer {
             .finally( () => {
                 if ( !lock.held() ) throw IdentifyDiscardedError()
             } )
+            .then( finished )
     }
 
     anyLayersLoading(): boolean {

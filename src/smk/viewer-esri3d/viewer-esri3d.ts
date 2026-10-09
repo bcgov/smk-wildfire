@@ -6,8 +6,8 @@
 import { Viewer } from '../viewer'
 import { loadEsri3d } from './types-esri3d'
 import { SMK } from '../smk-ref'
+import * as turf from '@turf/turf'
 
-declare const turf: any
 declare const L: any
 
 const smkRef = SMK

@@ -1,11 +1,11 @@
 <tool-panel class="smk-directions-panel" 
     v-bind="$$projectProps( 'tool-panel' )"
 >
-    <template slot="header">
+    <template #header>
         <slot></slot>
     </template>
 
-    <template slot="commands">
+    <template #commands>
         <command-button class="smk-route"
             v-bind:disabled="busy || !hasRoute"
             v-on:click="$$emit( 'route' )"
@@ -90,10 +90,10 @@
                     v-else
                 >
                     <span class="smk-ordinate">
-                        <label>latitude<div>{{ site.latitude | formatNumber( 6, 3 ) }}</div></label>
+                        <label>latitude<div>{{ $filters.formatNumber( site.latitude, 6, 3 ) }}</div></label>
                     </span>
                     <span class="smk-ordinate">
-                        <label>longitude<div>{{ site.longitude | formatNumber( 6, 3 ) }}</div></label>
+                        <label>longitude<div>{{ $filters.formatNumber( site.longitude, 6, 3 ) }}</div></label>
                     </span>
                 </div>
             </div>

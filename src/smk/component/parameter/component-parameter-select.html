@@ -14,7 +14,7 @@
             <option
                 v-for="option in choices"
                 v-bind:value="option.value"
-            >{{ option.title ? option.title : '' }}{{ option.title ? '' : option.value | formatTitle }}</option>
+            >{{ option.title ? option.title : '' }}{{ $filters.formatTitle( option.title ? '' : option.value ) }}</option>
         </select>
 
         <input

@@ -4,12 +4,11 @@
  */
 
 declare const L:    any
-declare const turf: any
-
 import { VectorLayer }                          from '../../layer/layer-types'
 import { Layer }                                from '../../layer/layer'
 import { resolved, getProjection, makePromise } from '../../util'
 import                                              '../lib-marker-cluster'
+import * as turf from '@turf/turf'
 
 export class VectorLeafletLayer extends VectorLayer {}
 

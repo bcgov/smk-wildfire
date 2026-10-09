@@ -1,14 +1,13 @@
 /**
- * component — base Vue 2 component objects for SMK.
+ * component — base component objects for SMK.
  * Converted from component/component.js (include.module -> ES module).
  */
 
-import formatLinkHtml from './format-link.html?raw'
-import toolWidgetHtml from './tool-widget.html?raw'
+import toolWidgetRender from './tool-widget.html?vue'
 import { templateReplace, projection } from '../util'
 import { SMK } from '../smk-ref'
-
-declare const Vue: any
+import { component, propNames } from '../vue'
+import { toDisplayString } from 'vue'
 
 // ---------------------------------------------------------------------------
 // FeatureBase — base mixin for feature display components
@@ -60,38 +59,28 @@ export const FeatureBase: any = {
 }
 
 // ---------------------------------------------------------------------------
-// makeFormatter helper
+// Attribute formatters - HTML for v-html. Vue 2 mounted a component for each
+// one; these write the same markup, and '' where its v-if was false.
 // ---------------------------------------------------------------------------
 
-function makeFormatter( template: string, input?: ( ...args: any[] ) => any ) {
-    const component = Vue.extend( { template } )
-    const formatInput = input || function () { return {} }
-    return function ( attribute: any, feature: any, layer: any ) {
-        return function ( ...args: any[] ) {
-            const inp = formatInput.apply( null, args )
-            const c1 = Vue.extend( {
-                extends: component,
-                data() {
-                    return Object.assign( { attribute, feature, layer }, inp )
-                }
-            } )
-            return new c1().$mount().$el.outerHTML
-        }
-    }
-}
+const ESCAPE: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+const text  = ( v: any ) => toDisplayString( v ).replace( /[&<>"']/g, c => ESCAPE[ c ] )
+const value = ( html: string ) => '<span class="smk-value">' + html + '</span>'
 
-const formatter: Record<string, ReturnType<typeof makeFormatter>> = {
-    simple:           makeFormatter( '<span class="smk-value" v-if="attribute.value">{{ attribute.value }}</span>' ),
-    HTML:             makeFormatter( '<span class="smk-value" v-if="attribute.value" v-html="attribute.value"></span>' ),
-    asLocalTimestamp: makeFormatter( '<span class="smk-value" v-if="attribute.value">{{ ( new Date( attribute.value ) ).toLocaleString() }}</span>' ),
-    asLocalDate:      makeFormatter( '<span class="smk-value" v-if="attribute.value">{{ ( new Date( attribute.value ) ).toLocaleDateString() }}</span>' ),
-    asLocalTime:      makeFormatter( '<span class="smk-value" v-if="attribute.value">{{ ( new Date( attribute.value ) ).toLocaleTimeString() }}</span>' ),
-    asUnit:           makeFormatter(
-        '<span class="smk-value" v-if="attribute.value">{{ attribute.value }} <span class="smk-unit">{{ unit }}</span></span>',
-        ( unit: string ) => ( { unit } )
-    ),
-    asLink:           makeFormatter( formatLinkHtml, ( url: string, label: string ) => ( { url, label } ) ),
-    asHTML:           makeFormatter( '<span class="smk-value" v-if="html" v-html="html"></span>', ( html: string ) => ( { html } ) ),
+type Formatter = ( attribute: any, feature: any, layer: any ) => ( ...args: any[] ) => string
+
+const formatter: Record<string, Formatter> = {
+    simple:           ( a ) => () => a.value ? value( text( a.value ) ) : '',
+    HTML:             ( a ) => () => a.value ? value( a.value ) : '',
+    asLocalTimestamp: ( a ) => () => a.value ? value( text( new Date( a.value ).toLocaleString() ) ) : '',
+    asLocalDate:      ( a ) => () => a.value ? value( text( new Date( a.value ).toLocaleDateString() ) ) : '',
+    asLocalTime:      ( a ) => () => a.value ? value( text( new Date( a.value ).toLocaleTimeString() ) ) : '',
+    asUnit:           ( a ) => ( unit: string ) => a.value
+        ? value( text( a.value ) + ' <span class="smk-unit">' + text( unit ) + '</span>' ) : '',
+    asLink:           ( a ) => ( url: string, label: string ) => url
+        ? value( '<a href="' + text( url ) + '" target="_blank">' + text( label || a.value || url )
+            + '<i class="material-icons">open_in_new</i></a>' ) : '',
+    asHTML:           () => ( html: string ) => html ? value( html ) : '',
 }
 
 // ---------------------------------------------------------------------------
@@ -161,7 +150,7 @@ export const ToolPanelBase: any = {
             if ( !componentProps[ componentName ] ) {
                 componentProps[ componentName ] = projection.apply(
                     null,
-                    Object.keys( ( new ( Vue.component( componentName ) )() )._props )
+                    propNames( component( componentName ) )
                 )
             }
             return componentProps[ componentName ]( this.$props )
@@ -171,7 +160,7 @@ export const ToolPanelBase: any = {
 
 export const ToolWidgetBase: any = {
     extends: ToolBase,
-    template: toolWidgetHtml,
+    render: toolWidgetRender,
     props: {
         showWidget: Boolean,
     },

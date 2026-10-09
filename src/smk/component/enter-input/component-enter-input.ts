@@ -1,11 +1,12 @@
 /**
  * component-enter-input — text/number input with enter-key handling.
  */
-import template from './component-enter-input.html?raw'
-declare const Vue: any
+import render from './component-enter-input.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'enter-input', {
-    template,
+component( 'enter-input', {
+    emits: [ 'change', 'key-down-arrow', 'key-up-arrow', 'key-enter' ],
+    render,
     data() {
         return { position: null as number | null }
     },
@@ -27,8 +28,9 @@ Vue.component( 'enter-input', {
     },
 } )
 
-Vue.component( 'enter-number', {
-    template,
+component( 'enter-number', {
+    emits: [ 'change', 'key-down-arrow', 'key-up-arrow', 'key-enter' ],
+    render,
     data() {
         return {
             type:     'tel',

@@ -1,10 +1,10 @@
 import { SMK } from '../../smk-ref'
+import { component, runtimeTemplateComponent } from '../../vue'
 /**
  * tool-panel-feature mixin — manages a feature detail panel for a Tool.
  * Converted from mixin/tool-panel-feature/tool-panel-feature.js.
  */
 
-declare const Vue: any
 
 export function ToolPanelFeature( this: any, featureSetCallback: ( this: any, smk: any ) => any ): void {
     this.defineProp( 'feature' )
@@ -29,13 +29,18 @@ export function ToolPanelFeature( this: any, featureSetCallback: ( this: any, sm
         this.tool = smk.getToolTypesAvailable()
         delete this.tool[ this.type ]
 
+        const self = this
         smk.on( this.id, {
             'swipe-up': function () {
                 smk.$sidepanel.setExpand( 2 )
             },
             'swipe-down': function () {
                 smk.$sidepanel.incrExpand( -1 )
-            }
+            },
+            // The panel's view picker. Vue 3 will not let the panel write its own prop.
+            'attribute-mode': function ( mode: string ) {
+                self.attributeMode = mode
+            },
         } )
 
         // TODO: remove, attributeView deprecated
@@ -54,24 +59,18 @@ export function ToolPanelFeature( this: any, featureSetCallback: ( this: any, sm
                 template = layer.config.popupTemplate
             }
 
-            if ( !Vue.component( this.attributeComponent ) ) {
+            if ( !component( this.attributeComponent ) ) {
                 if ( template ) {
-                    try {
-                        Vue.component( this.attributeComponent, {
-                            template,
-                            extends: SMK?.COMPONENT?.FeatureBase,
-                        } )
-                    } catch ( e ) {
-                        console.warn( 'failed compiling template:', this.attributeComponent, e )
-                        layer.config.popupTemplate = null
-                    }
+                    // A Config template is data, so it compiles here, on first show.
+                    component( this.attributeComponent,
+                        runtimeTemplateComponent( template, SMK?.COMPONENT?.FeatureBase ) )
                 } else {
                     console.warn( 'component not found:', this.attributeComponent )
                     layer.config.popupTemplate = null
                 }
             }
 
-            if ( Vue.component( this.attributeComponent ) ) return
+            if ( component( this.attributeComponent ) ) return
         }
 
         if ( feature.properties.description ) {

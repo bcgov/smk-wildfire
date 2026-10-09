@@ -18,6 +18,7 @@
 
 import { SMKEvent }           from './event'
 import { makeId, resolved }   from './util'
+import { reactive }           from 'vue'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -349,13 +350,16 @@ export class LayerDisplayContext {
         this.itemId   = {}
         this.layerIds = []
 
-        this.root = new LayerDisplay.folder( {
+        // SMK changes these items and the Layers and Legend panels draw them.
+        // Vue 2 tracked that in place; Vue 3 tracks only a proxy, so the walk
+        // below must reach every item through this one, and itemId keep it.
+        this.root = reactive( new LayerDisplay.folder( {
             id:         'root',
             type:       'folder',
             isExpanded: true,
             isVisible:  true,
             items,
-        }, layerCatalog ) as LayerDisplay.folder
+        }, layerCatalog ) ) as LayerDisplay.folder
 
         let counter = 1000
         const nextId = () => { counter += 1; return counter }

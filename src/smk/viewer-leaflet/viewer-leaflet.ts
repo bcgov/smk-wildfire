@@ -6,10 +6,9 @@
 import { Viewer } from '../viewer'
 import { defineBaseMaps } from '../base-maps'
 import { SMK } from '../smk-ref'
+import * as turf from '@turf/turf'
 
 declare const L:    any
-declare const turf: any
-
 // ---------------------------------------------------------------------------
 // ViewerLeaflet constructor
 // ---------------------------------------------------------------------------
@@ -49,9 +48,17 @@ ViewerLeaflet.prototype.initialize = function ( smk: any ) {
         doubleClickZoom: false,
         zoomSnap:        smk.viewer.zoomSnap,
         minZoom:         smk.viewer.minZoom,
+        maxZoom:         smk.viewer.maxZoom,
+        maxBounds:       latLngBounds( smk.viewer.maxBounds ),
     } )
 
     self.map.scrollWheelZoom.disable()
+
+    // Leaflet sees a window resize only; a Map Frame can change size without one.
+    if ( typeof ResizeObserver === 'function' ) {
+        this.resizeObserver = new ResizeObserver( function () { self.mapResized() } )
+        this.resizeObserver.observe( el )
+    }
 
     this.setView( smk.viewer.location )
 
@@ -110,8 +117,34 @@ ViewerLeaflet.prototype.initialize = function ( smk: any ) {
 }
 
 ViewerLeaflet.prototype.destroy = function () {
+    this.resizeObserver?.disconnect()
     this.map.remove()
     Viewer.prototype.destroy.call( this )
+}
+
+ViewerLeaflet.prototype.mapResized = function () {
+    this.map.invalidateSize( { animate: false } )
+}
+
+/** A Config extent [ west, south, east, north ] as Leaflet bounds. */
+function latLngBounds( ext?: number[] ): any {
+    if ( !Array.isArray( ext ) || ext.length < 4 ) return undefined
+    return L.latLngBounds( [ ext[ 1 ], ext[ 0 ] ], [ ext[ 3 ], ext[ 2 ] ] )
+}
+
+/**
+ * The pane for part i of a Basemap. esri-leaflet-vector names no pane, so its
+ * canvas took overlayPane and covered the Host layers. Under tilePane (200),
+ * so a Host's own tiles also draw over the Basemap.
+ */
+function basemapPane( map: any, i: number ): string {
+    const name = 'smk-basemap-' + i
+    if ( !map.getPane( name ) ) {
+        const pane = map.createPane( name )
+        pane.style.zIndex        = String( 100 + i )
+        pane.style.pointerEvents = 'none'
+    }
+    return name
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +217,9 @@ ViewerLeaflet.prototype.setBasemap = function ( basemapId: string ) {
 
     this.currentBasemapId = basemapId
     this.currentBasemap   = this.createBasemapLayer( basemapId )
+    this.currentBasemap.forEach( ( ly: any, i: number ) => {
+        if ( ly.options ) ly.options.pane = basemapPane( self.map, i )
+    } )
     this.map.addLayer( this.currentBasemap[ 0 ] )
 
     if ( this.currentBasemap[ 0 ].bringToBack )

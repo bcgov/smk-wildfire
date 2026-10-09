@@ -1,21 +1,23 @@
 /**
  * component-parameter — constant, input, and select parameter components.
  */
-import constantTemplate from './component-parameter-constant.html?raw'
-import inputTemplate    from './component-parameter-input.html?raw'
-import selectTemplate   from './component-parameter-select.html?raw'
-declare const Vue: any
+import constantTemplate from './component-parameter-constant.html?vue'
+import inputTemplate    from './component-parameter-input.html?vue'
+import selectTemplate   from './component-parameter-select.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'parameter-constant', {
-    template: constantTemplate,
+component( 'parameter-constant', {
+    emits: [ 'mounted' ],
+    render: constantTemplate,
     props: [ 'id', 'title', 'value', 'type', 'focus' ],
     mounted( this: any ) {
         this.$emit( 'mounted' )
     },
 } )
 
-Vue.component( 'parameter-input', {
-    template: inputTemplate,
+component( 'parameter-input', {
+    emits: [ 'mounted', 'input', 'pickDown', 'pickUp', 'execute', 'change', 'reset' ],
+    render: inputTemplate,
     props: [ 'id', 'title', 'value', 'type', 'focus' ],
     data( this: any ) {
         return { input: this.value || '' }
@@ -33,8 +35,9 @@ Vue.component( 'parameter-input', {
     },
 } )
 
-Vue.component( 'parameter-select', {
-    template: selectTemplate,
+component( 'parameter-select', {
+    emits: [ 'mounted', 'input' ],
+    render: selectTemplate,
     props: [ 'id', 'title', 'choices', 'value', 'type', 'focus', 'useFallback' ],
     data( this: any ) {
         return { selected: this.value || '' }

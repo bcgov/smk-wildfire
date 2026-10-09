@@ -272,6 +272,15 @@ try {
 // SmkInit — create a map instance from options / script element attributes
 // ---------------------------------------------------------------------------
 
+// Counting SMK.MAP repeated an id after a destroy, and for two INITs before
+// either had booted. The first map is still 1.
+let lastMapId = 0
+export function nextMapId(): number {
+    const map = ( window.SMK as any ).MAP || {}
+    do { lastMapId += 1 } while ( String( lastMapId ) in map )
+    return lastMapId
+}
+
 function SmkInit(
     option:   Record<string, any> | null,
     scriptEl?: HTMLScriptElement | null,
@@ -315,7 +324,7 @@ function SmkInit(
         } )
     }
 
-    defineAttr( 'id', 'smk-id', () => Object.keys( smk.MAP ).length + 1 )
+    defineAttr( 'id', 'smk-id', nextMapId )
     defineAttr( 'containerSel', 'smk-container-sel' )
     defineAttr( 'config', 'smk-config', () => '?smk-', ( val ) => {
         if ( typeof val === 'string' )

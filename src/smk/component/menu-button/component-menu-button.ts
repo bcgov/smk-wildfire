@@ -1,11 +1,12 @@
 /**
  * component-menu-button — button that reveals a dropdown menu.
  */
-import template from './component-menu-button.html?raw'
-declare const Vue: any
+import render from './component-menu-button.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'menu-button', {
-    template,
+component( 'menu-button', {
+    emits: [ 'click' ],
+    render,
     props: {
         title:     { type: String },
         disabled:  { type: Boolean, default: false },

@@ -20,10 +20,10 @@
     <div class="smk-coordinate" v-if="feature.geometry">
         <!-- <div >Location:</div> -->
         <span class="smk-ordinate">
-            <label>latitude<div>{{ feature.geometry.coordinates[ 1 ] | formatNumber( 6, 3 ) }}</div></label>
+            <label>latitude<div>{{ $filters.formatNumber( feature.geometry.coordinates[ 1 ], 6, 3 ) }}</div></label>
         </span>
         <span class="smk-ordinate">
-            <label>longitude<div>{{ feature.geometry.coordinates[ 0 ] | formatNumber( 6, 3 ) }}</div></label>
+            <label>longitude<div>{{ $filters.formatNumber( feature.geometry.coordinates[ 0 ], 6, 3 ) }}</div></label>
         </span>
     </div>
 </div>

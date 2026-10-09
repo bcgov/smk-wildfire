@@ -5,8 +5,7 @@
 
 import { VectorLayer } from '../../layer/layer-types'
 import { SMK } from '../../smk-ref'
-
-declare const turf: any
+import * as turf from '@turf/turf'
 
 const smkRef = SMK
 

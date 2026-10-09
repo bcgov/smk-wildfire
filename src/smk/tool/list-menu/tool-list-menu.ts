@@ -6,20 +6,20 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelListMenuHtml from './panel-list-menu.html?raw'
+import panelListMenuRender from './panel-list-menu.html?vue'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'list-menu-widget', {
+component( 'list-menu-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'list-menu-panel', {
+component( 'list-menu-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelListMenuHtml,
+    render: panelListMenuRender,
     props: [ 'subWidgets' ],
 } )
 

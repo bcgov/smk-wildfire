@@ -1,18 +1,15 @@
 /**
  * component-select-option — radio-style option group with v-model support.
  */
-import template from './component-select-option.html?raw'
-declare const Vue: any
+import render from './component-select-option.html?vue'
+import { component } from '../../vue'
 
-Vue.component( 'select-option', {
-    template,
+component( 'select-option', {
+    emits: [ 'change' ],
+    render,
     props: {
         options: { type: Array, default: () => [] },
         value:   {},
-    },
-    model: {
-        prop:  'value',
-        event: 'change',
     },
     methods: {
         clickOption( this: any, option: any ) {

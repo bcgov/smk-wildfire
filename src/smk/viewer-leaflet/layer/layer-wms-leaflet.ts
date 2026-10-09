@@ -26,12 +26,14 @@ export class WmsLeafletLayer extends WmsLayer {}
     const transparent = layers[ 0 ].config.transparent
     const where       = layers.map( ( c: any ) => c.config.where || 'include' ).reverse().join( ';' )
     const header      = layers[ 0 ].config.header
+    const cfg0        = layers[ 0 ].config
 
     return resolveSLD( this, layers[ 0 ].config.sld ).then( function ( sld: string | undefined ) {
         let layer: any
 
         if ( header && Object.keys( header ).length > 0 ) {
             layer = L.nonTiledLayer.wmsFetch( serviceUrl, {
+                ...cfg0.params,
                 layers:      layerNames,
                 styles:      styleNames,
                 version,
@@ -45,6 +47,7 @@ export class WmsLeafletLayer extends WmsLayer {}
             } )
         } else {
             layer = L.nonTiledLayer.wms( serviceUrl, {
+                ...cfg0.params,
                 layers:      layerNames,
                 styles:      styleNames,
                 version,
@@ -61,6 +64,15 @@ export class WmsLeafletLayer extends WmsLayer {}
             layer.wmsParams.sld_body = sld
             delete layer.wmsParams.styles
         }
+
+        // WmsLayer.refresh: drop the keys params gave last time, then redraw with the new ones.
+        let applied = Object.keys( cfg0.params || {} )
+        const refresh = function () {
+            applied.forEach( k => { delete layer.wmsParams[ k ] } )
+            applied = Object.keys( cfg0.params || {} )
+            layer.setParams( Object.assign( {}, cfg0.params ) )
+        }
+        layers.forEach( ( ly: any ) => { ly._smkRefresh = refresh } )
 
         layer.on( 'load',    () => layers.forEach( ( ly: any ) => { ly.loading = false } ) )
         layer.on( 'loading', () => layers.forEach( ( ly: any ) => { ly.loading = true  } ) )

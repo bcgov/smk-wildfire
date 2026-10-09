@@ -14,12 +14,8 @@
 
 import type * as LType   from 'leaflet'
 import type * as MlgType from 'maplibre-gl'
-import type Proj4Type    from 'proj4'
 
 declare global {
-    // Vue 2.7 — kept loose because tools use ad-hoc Vue.component( … ) etc.
-    const Vue: any
-
     // Leaflet
     const L: typeof LType & {
         esri?:    any
@@ -31,20 +27,7 @@ declare global {
     // MapLibre
     const maplibregl: typeof MlgType
 
-    // proj4
-    const proj4: typeof Proj4Type
-
-    // Turf 5.x classic UMD
-    const turf: any
-
-    // Terraformer
-    const Terraformer:                    any
-    const ArcgisToGeoJSON:                any   // terraformer-arcgis-parser exposes this
-    const WKT:                            any   // terraformer-wkt-parser
-
-    // jQuery (used by some legacy paths)
-    const jQuery: any
-    const $:      any
+    // turf, proj4 and Terraformer are imported, not globals (D26).
 }
 
 export {}

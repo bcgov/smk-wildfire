@@ -13,10 +13,10 @@
 
     <div class="smk-coordinate">
         <span class="smk-ordinate">
-            <label>latitude<div>{{ site.latitude | formatNumber( 6, 3 ) }}</div></label>
+            <label>latitude<div>{{ $filters.formatNumber( site.latitude, 6, 3 ) }}</div></label>
         </span>
         <span class="smk-ordinate">
-            <label>longitude<div>{{ site.longitude | formatNumber( 6, 3 ) }}</div></label>
+            <label>longitude<div>{{ $filters.formatNumber( site.longitude, 6, 3 ) }}</div></label>
         </span>
     </div>
 

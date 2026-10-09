@@ -113,7 +113,7 @@
     transition: all 1s ease-in-out;
 }
 
-.smk-device-mobile.smk-theme-wf .smk-sidepanel.sidepanel-slide-enter, 
+.smk-device-mobile.smk-theme-wf .smk-sidepanel.sidepanel-slide-enter-from,
 .smk-device-mobile.smk-theme-wf .smk-sidepanel.sidepanel-slide-leave-to {
     opacity: 0;
     /* top: 100% */

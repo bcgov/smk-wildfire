@@ -6,12 +6,12 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { SMK } from '../../smk-ref'
+import { component } from '../../vue'
 
-declare const Vue: any
 
 const smkRef = SMK
 
-Vue.component( 'markup-widget', {
+component( 'markup-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
     props: [ 'drawMode' ],
 } )

@@ -1,12 +1,9 @@
 import { SMK } from '../smk-ref'
+import { geojsonToArcGIS } from '@terraformer/arcgis'
 /**
  * util-esri3d — GeoJSON ↔ ESRI geometry conversion and symbol helpers.
  * Converted from util-esri3d.js.
- *
- * Depends on `Terraformer` global (ESRI Terraformer ArcGIS plugin).
  */
-
-declare const Terraformer: any
 
 const smkRef = SMK
 
@@ -18,23 +15,23 @@ let featureId = 1000
 
 const geojsonType: Record<string, ( obj: any ) => any[]> = {
     Point( obj ) {
-        return [ Object.assign( { type: 'point' }, Terraformer.ArcGIS.convert( obj ) ) ]
+        return [ Object.assign( { type: 'point' }, geojsonToArcGIS( obj ) ) ]
     },
     MultiPoint( obj ) {
         return obj.coordinates.reduce( ( acc: any[], c: any ) =>
             acc.concat( convertGeojson( { type: 'Point', coordinates: c } ) ), [] )
     },
     LineString( obj ) {
-        return [ Object.assign( { type: 'polyline' }, Terraformer.ArcGIS.convert( obj ) ) ]
+        return [ Object.assign( { type: 'polyline' }, geojsonToArcGIS( obj ) ) ]
     },
     MultiLineString( obj ) {
-        return [ Object.assign( { type: 'polyline' }, Terraformer.ArcGIS.convert( obj ) ) ]
+        return [ Object.assign( { type: 'polyline' }, geojsonToArcGIS( obj ) ) ]
     },
     Polygon( obj ) {
-        return [ Object.assign( { type: 'polygon' }, Terraformer.ArcGIS.convert( obj ) ) ]
+        return [ Object.assign( { type: 'polygon' }, geojsonToArcGIS( obj ) ) ]
     },
     MultiPolygon( obj ) {
-        return [ Object.assign( { type: 'polygon' }, Terraformer.ArcGIS.convert( obj ) ) ]
+        return [ Object.assign( { type: 'polygon' }, geojsonToArcGIS( obj ) ) ]
     },
     GeometryCollection( obj ) {
         return obj.geometries.reduce( ( acc: any[], g: any ) => acc.concat( convertGeojson( g ) ), [] )

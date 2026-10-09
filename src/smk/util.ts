@@ -5,12 +5,9 @@
  * Original used include.module() and Object.assign(window.SMK.UTIL, {...}).
  * Now exported directly. Backward compat: the UTIL object is merged into
  * window.SMK.UTIL so unconverted modules using SMK.UTIL.xxx still work.
- *
- * Migration note: getProjection() previously relied on include('projections')
- * to lazy-load the proj4 setup. It now assumes proj4 is available as a global
- * (loaded earlier in the entry point). When projections.ts is migrated this
- * can be converted to a direct import.
  */
+
+import proj4 from 'proj4'
 
 // ---------------------------------------------------------------------------
 // metersPerUnit — declared up front (was a var at the bottom of util.js,
@@ -338,15 +335,11 @@ export function extractCRS( obj: any ): string {
 }
 
 // ---------------------------------------------------------------------------
-// Projection (depends on proj4 global; see migration note at top)
+// Projection
 // ---------------------------------------------------------------------------
 
 export function getProjection( name: string ): Promise<( pt: number[] ) => number[]> {
-    // TODO (Step 2 follow-up): when projections.ts is migrated, import directly
-    // and remove the assumption that proj4 is a pre-loaded global.
     return Promise.resolve().then( function () {
-        const proj4 = ( window as any ).proj4
-        if ( !proj4 ) throw new Error( 'proj4 is not loaded' )
         const proj = proj4( name )
         if ( !proj ) throw new Error( 'Projection "' + name + '" is not understood' )
         return function ( pt: number[] ) { return proj.inverse( pt ) }

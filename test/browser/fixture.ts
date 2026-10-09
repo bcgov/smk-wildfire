@@ -4,18 +4,17 @@
  */
 import '../../src/styles'
 
-// SMK mounts over HTML strings, so it needs Vue WITH the compiler - see D5.
-import Vue from 'vue/dist/vue.esm.browser.js'
-
+// The frame is a template made here, so the tests run Vue with its compiler:
+// vite.config.js resolves 'vue' to the full build for the dev server and tests.
+import { mountRoot, component, componentNames, appHandlers, nextTick, reactive } from '../../src/smk/vue'
+import { version } from 'vue'
 import { frameWith, type FrameOptions } from './frame'
 
 import sidepanelHtml from '../../src/smk/sidepanel/sidepanel.html?raw'
 import toolbarHtml   from '../../src/smk/tool/toolbar/toolbar.html?raw'
 import actionbarHtml from '../../src/smk/tool/actionbar/actionbar.html?raw'
 
-// The components read a global `Vue` and register on SMK.COMPONENT, so both
-// must exist before their modules evaluate. Same order as main.ts.
-;( globalThis as any ).Vue = Vue
+// The components register on SMK.COMPONENT, so it must exist first. Same order as main.ts.
 await import( '../../src/smk/smk-global' )
 await import( '../../src/smk/vue-config' )
 await import( '../../src/smk/component/component' )
@@ -39,7 +38,14 @@ await import( '../../src/smk/mixin/tool-panel/tool-panel' )
 await import( '../../src/smk/mixin/tool-widget/tool-widget' )
 await import( '../../src/smk/api/geocoder' )
 
-export { Vue }
+/** What the tests and the Gallery used of Vue 2's global. */
+export const Vue = {
+    version,
+    nextTick,
+    config: appHandlers,
+    component: ( name: string, options?: any ) => component( name, options ),
+    options: { get components() { return Object.fromEntries( componentNames().map( n => [ n, true ] ) ) } },
+}
 export type { FrameOptions }
 
 /** One entry of the list sidepanel.html, toolbar.html and actionbar.html iterate. */
@@ -48,7 +54,8 @@ export interface Mounted { component: string, prop: any }
 const mounted: any[] = []
 
 function frame( chrome: string, data: any, opt: FrameOptions ) {
-    const vm = frameWith( Vue, chrome, data, opt )
+    // Reactive, so a test that changes its data after the mount sees it redraw.
+    const vm = frameWith( ( o, host ) => mountRoot( host, o ), chrome, reactive( data ), opt )
     mounted.push( vm )
     return vm
 }
@@ -87,8 +94,8 @@ export function mountStatus( template: string, data: any = {}, opt: FrameOptions
 export function unmount( vm: any ) {
     const i = mounted.indexOf( vm )
     if ( i >= 0 ) mounted.splice( i, 1 )
-    try { vm.$destroy() } catch { /* already gone */ }
-    vm.$el?.remove()
+    try { vm.$smkUnmount() } catch { /* already gone */ }
+    vm.$el?.remove?.()
 }
 
 export function cleanup() {

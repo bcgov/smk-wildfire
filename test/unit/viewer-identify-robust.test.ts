@@ -1,10 +1,9 @@
 /**
  * One layer must not be able to end the identify for the others.
  *
- * The ESRI layer types read `window.Terraformer` before they make a promise,
- * so a missing global throws inside the forEach rather than rejecting. On the
- * BC Wildfire map that single throw ended identifyFeatures for every layer,
- * and the Preview panel never opened for an Incident.
+ * A layer type that throws before it makes a promise throws inside the
+ * forEach rather than rejecting. On the BC Wildfire map that single throw
+ * ended identifyFeatures for every layer.
  */
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 
@@ -13,14 +12,17 @@ import { describe, it, expect, beforeAll, vi } from 'vitest'
 }
 
 let Viewer: any
+let SMKEvent: any
 
 beforeAll( async () => {
     ( { Viewer } = await import( '../../src/smk/viewer' ) )
+    ;( { SMKEvent } = await import( '../../src/smk/event' ) )
 } )
 
 function fakeViewer( layers: Record<string, any> ) {
     const added: { id: string; features: any[] }[] = []
     const v: any = Object.create( Viewer.prototype )
+    v.dispatcher = new SMKEvent().dispatcher
     v.layerIds  = Object.keys( layers )
     v.layerId   = layers
     v.visibleLayer = {}
@@ -74,5 +76,37 @@ describe( 'identifyFeatures', () => {
         await v.identifyFeatures( AT, AREA )
 
         expect( v.added[ 0 ].features[ 0 ]._identifyPoint ).toEqual( AT.map )
+    } )
+} )
+
+// A Host opened its panels by wrapping identifyFeatures; these events replace that.
+describe( 'identify events', () => {
+    function listen( v: any ) {
+        const seen: string[] = []
+        v.startedIdentify( ( ev: any ) => seen.push( 'started:' + !!ev.location ) )
+        v.finishedIdentify( ( ev: any ) => seen.push( 'finished:' + !!ev.location + ':' + v.added.length ) )
+        return seen
+    }
+
+    it( 'fires started, then finished after the results are in', async () => {
+        const v = fakeViewer( { good: layer( 'good', () => Promise.resolve( [ { properties: { name: 'a fire' } } ] ) ) } )
+        const seen = listen( v )
+        await v.identifyFeatures( AT, AREA )
+        expect( seen ).toEqual( [ 'started:true', 'finished:true:1' ] )
+    } )
+
+    it( 'fires both for a clear, which has no location', async () => {
+        const v = fakeViewer( {} )
+        const seen = listen( v )
+        await v.identifyFeatures()
+        expect( seen ).toEqual( [ 'started:false', 'finished:false:0' ] )
+    } )
+
+    it( 'does not fire finished for an identify a newer one discarded', async () => {
+        const v = fakeViewer( { good: layer( 'good', () => Promise.resolve( [] ) ) } )
+        v.acquireIdentifyMutex = () => ( { held: () => false } )
+        const seen = listen( v )
+        await v.identifyFeatures( AT, AREA ).catch( () => {} )
+        expect( seen ).toEqual( [ 'started:true' ] )
     } )
 } )

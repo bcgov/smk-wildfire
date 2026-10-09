@@ -6,21 +6,21 @@
 import Tool from '../../tool'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { panelDefaults } from '../../mixin/tool-panel/tool-panel'
-import panelBaseMapsHtml from './panel-base-maps.html?raw'
+import panelBaseMapsRender from './panel-base-maps.html?vue'
 import { SMK } from '../../smk-ref'
+import { component, nextTick } from '../../vue'
 
-declare const Vue: any
 declare const L: any
 
 const smkRef = SMK
 
-Vue.component( 'baseMaps-widget', {
+component( 'baseMaps-widget', {
     extends: smkRef.COMPONENT.ToolWidgetBase,
 } )
 
-Vue.component( 'baseMaps-panel', {
+component( 'baseMaps-panel', {
     extends: smkRef.COMPONENT.ToolPanelBase,
-    template: panelBaseMapsHtml,
+    render: panelBaseMapsRender,
     props: [ 'current', 'basemaps', 'mapStyle' ],
 } )
 
@@ -36,6 +36,11 @@ const factory = Tool.define( 'BaseMapsTool',
     },
     function ( this: any, smk: any ) {
         const self = this
+
+        // The picker still shows the current Basemap, so the user can see it is on.
+        const current = ( smk.viewer.baseMap || '' ).toLowerCase()
+        if ( self.choices?.length && current && !self.choices.some( ( c: string ) => c.toLowerCase() === current ) )
+            console.warn( `base map "${ smk.viewer.baseMap }" is not in the baseMaps tool choices, so the picker adds it` )
 
         this.basemaps = smk.$viewer.getBasemapIds()
             .map( function ( id: string ) {
@@ -93,7 +98,7 @@ const factory = Tool.define( 'BaseMapsTool',
                     smkRef.HANDLER.get( self.id, 'triggered' )( smk, self )
                 } else {
                     smkRef.HANDLER.get( self.id, 'activated' )( smk, self )
-                    Vue.nextTick( function () {
+                    nextTick( function () {
                         self.basemaps.forEach( ( bm: any ) => bm.update() )
                     } )
                 }

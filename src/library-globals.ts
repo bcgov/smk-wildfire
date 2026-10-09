@@ -1,36 +1,20 @@
 /**
- * Exposes the libraries the legacy SMK code reads off `window`, except Leaflet.
+ * Exposes the libraries a Host must share with SMK, except Leaflet.
  * Both bundled builds import this first; standalone-globals.ts adds Leaflet.
  *
- * This is a separate module because ESM hoists every import in a file above
- * that file's own statements. Putting the assignments beside `import './main'`
- * in one file therefore ran them too late: component.ts builds its formatter
- * table at module scope and calls `Vue.extend` there, before any assignment.
- * A module runs when it is imported, so importing this one first is what makes
- * the globals visible in time.
+ * Only a shared instance is a global (D26): a Host registers components on
+ * SMK's Vue and adds markers to SMK's map. turf, proj4, Terraformer and jQuery
+ * are imported where SMK uses them, so a bundle keeps only what it calls.
+ *
+ * A separate module, because ESM hoists imports above a file's own statements:
+ * importing this one first is what sets the globals before SMK's modules run.
  */
-import $ from 'jquery'
-import Vue from 'vue'
 import maplibregl from 'maplibre-gl'
+import { VUE_API } from './smk/vue-api'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import proj4 from 'proj4'
-import * as turf from '@turf/turf'
-import { arcgisToGeoJSON, geojsonToArcGIS } from '@terraformer/arcgis'
 
 const w = window as any
-// jQuery is part of the 1.0 contract: host plugin scripts use $.extend.
-w.$          = $
-w.jQuery     = $
-w.Vue        = Vue
-
-// window.Terraformer was part of the 1.0 contract: the ESRI layer types read
-// ArcGIS.parse and ArcGIS.convert off it to identify features. Without it every
-// ESRI identify throws, and the throw kills the whole identify.
-w.Terraformer = Object.assign( {}, w.Terraformer, {
-    ArcGIS: { parse: arcgisToGeoJSON, convert: geojsonToArcGIS },
-} )
+w.Vue        = VUE_API
 w.maplibregl = maplibregl
-w.proj4      = proj4
-w.turf       = turf
 
 export {}
