@@ -12,11 +12,11 @@
 
 import { Viewer } from '../viewer'
 import { readEsriTileInfo, tileSourceFromInfo } from './esri-tile-info'
+import { esriBasemapTileUrl } from './esri-basemap-tiles'
 import { SMK } from '../smk-ref'
 
 declare const maplibregl: any
 declare const turf:       any
-declare const L:          any   // optional — used only to read esri-leaflet basemap URL templates
 
 // ---------------------------------------------------------------------------
 // ViewerMapLibre constructor
@@ -61,6 +61,10 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
     const self = this
 
     Viewer.prototype.initialize.apply( this, arguments )
+
+    this.mark = function ( step: string ) {
+        try { performance.mark( 'smk:' + smk.$option.id + ':' + step ) } catch { /* no timeline */ }
+    }
 
     this.deadViewerLayer  = {}
     this.basemapSourceIds = []      // tracks current basemap source ids
@@ -227,60 +231,6 @@ ViewerMapLibre.prototype.destroy = function () {
 }
 
 // ---------------------------------------------------------------------------
-// initializeBasemaps — register Leaflet factories (so the baseMaps tool can
-// build its Leaflet thumbnail mini-maps), then build MapLibre specs ourselves
-// in setBasemap() using the stored config.
-// ---------------------------------------------------------------------------
-
-ViewerMapLibre.prototype.initializeBasemaps = function (
-    defineBaseMap:     ( id: string, config?: any ) => any,
-    defineBaseMapType: ( type: string, fn?: Function ) => any,
-    viewerCfg?:        any,
-) {
-    defineBaseMapType( 'tile', function ( cfg: any ) {
-        return [ L.tileLayer( cfg.url, Object.assign( { attribution: cfg.attribution }, cfg.option ) ) ]
-    } )
-
-    defineBaseMapType( 'esri-basemap', function ( cfg: any ) {
-        const opt  = Object.assign( { detectRetina: true }, cfg.option )
-        const orig = JSON.parse( JSON.stringify( L.esri.BasemapLayer.TILES[ cfg.key ].options ) )
-        const ly   = L.esri.basemapLayer( cfg.key, JSON.parse( JSON.stringify( opt ) ) )
-        L.esri.BasemapLayer.TILES[ cfg.key ].options = orig
-        return [ ly ]
-    } )
-
-    defineBaseMapType( 'esri-tiled-map', function ( cfg: any ) {
-        return [ L.esri.tiledMapLayer( Object.assign( { url: cfg.url, maxZoom: 30 }, cfg.option ) ) ]
-    } )
-
-    defineBaseMapType( 'esri-vector-basemap', function ( cfg: any ) {
-        if ( L.esri?.Vector?.vectorBasemapLayer )
-            return [ L.esri.Vector.vectorBasemapLayer( cfg.key, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
-        return []
-    } )
-
-    defineBaseMapType( 'esri-vector-tile', function ( cfg: any ) {
-        if ( L.esri?.Vector?.vectorTileLayer )
-            return [ L.esri.Vector.vectorTileLayer( cfg.url, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
-        return []
-    } )
-
-    defineBaseMapType( 'esri-static-basemap-tile', function ( cfg: any ) {
-        if ( L.esri?.Static?.staticBasemapTileLayer )
-            return [ L.esri.Static.staticBasemapTileLayer( cfg.style, Object.assign( { maxZoom: 30 }, cfg.option ) ) ]
-        return []
-    } )
-
-    // Vector-only basemap types — no Leaflet equivalent for the thumbnail
-    // mini-map; return [] so the basemap is registered but the preview is
-    // simply blank in the baseMaps tool.
-    defineBaseMapType( 'vector-tile',     function () { return [] } )
-    defineBaseMapType( 'maplibre-style',  function () { return [] } )
-
-    Viewer.prototype.initializeBasemaps.call( this, defineBaseMap, defineBaseMapType, viewerCfg )
-}
-
-// ---------------------------------------------------------------------------
 // MapLibre style spec builders used by setBasemap()
 // ---------------------------------------------------------------------------
 
@@ -328,7 +278,7 @@ function specForConfig( cfg: any, _map?: any, lookup?: ( id: string ) => any ): 
             return [ rasterSpec( cfg.id, [ resolveTileUrl( cfg.url ) ], cfg ) ]
 
         case 'esri-basemap': {
-            const url = lookupEsriBasemapUrl( cfg.key )
+            const url = esriBasemapTileUrl( cfg.key )
             if ( !url ) {
                 console.warn( 'maplibre viewer: no URL for esri-basemap key "' + cfg.key + '"' )
                 return []
@@ -644,16 +594,129 @@ function resolveTileUrl( url: string ): string {
     return out
 }
 
-function lookupEsriBasemapUrl( key: string ): string | null {
-    if ( typeof L === 'undefined' || !L.esri || !L.esri.BasemapLayer ) return null
-    const def = L.esri.BasemapLayer.TILES?.[ key ]
-    if ( !def?.urlTemplate ) return null
-    return resolveTileUrl( def.urlTemplate )
-}
-
 // ---------------------------------------------------------------------------
 // setBasemap / setView / getView / screenToMap / getScale
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Load fade: a layer is added at opacity 0 and MapLibre's own paint transition
+// brings it to its styled opacity when its data is on the map, so the map fills
+// in smoothly instead of tile by tile.
+// ---------------------------------------------------------------------------
+
+const FADE_MS         = 300
+const FADE_WAIT_MS    = 1000    // after a source's first tile, stop waiting for the rest
+const FADE_GIVE_UP_MS = 4000    // a source that never reports is shown anyway
+
+const FADE_PROPS: Record<string, string[]> = {
+    'background':     [ 'background-opacity' ],
+    'fill':           [ 'fill-opacity' ],
+    'line':           [ 'line-opacity' ],
+    'circle':         [ 'circle-opacity', 'circle-stroke-opacity' ],
+    'symbol':         [ 'icon-opacity', 'text-opacity' ],
+    'raster':         [ 'raster-opacity' ],
+    'fill-extrusion': [ 'fill-extrusion-opacity' ],
+    'heatmap':        [ 'heatmap-opacity' ],
+}
+
+function fadeEnabled(): boolean {
+    try { return !window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches } catch { return true }
+}
+
+/** A copy of a layer spec at opacity 0. The spec keeps the styled values for fadeIn. */
+function atZeroOpacity( ly: any ): any {
+    const props = FADE_PROPS[ ly.type ]
+    if ( !props || !fadeEnabled() ) return ly
+    const paint = Object.assign( {}, ly.paint )
+    props.forEach( ( p: string ) => {
+        paint[ p ] = 0
+        paint[ p + '-transition' ] = { duration: FADE_MS, delay: 0 }
+    } )
+    return Object.assign( {}, ly, { paint } )
+}
+
+/** isSourceLoaded reports a missing source as a map error, so ask only about one that exists. */
+function sourceLoaded( map: any, sid: string ): boolean {
+    return !map.getSource( sid ) || !!map.isSourceLoaded( sid )
+}
+
+function fadeIn( map: any, layers: any[] ) {
+    layers.forEach( ( ly: any ) => {
+        ( FADE_PROPS[ ly.type ] || [] ).forEach( ( p: string ) => {
+            // Anything but our 0 means someone set the opacity since; leave it.
+            if ( !map.getLayer( ly.id ) || map.getPaintProperty( ly.id, p ) !== 0 ) return
+            try { map.setPaintProperty( ly.id, p, ly.paint?.[ p ], { validate: false } ) } catch { /* removed */ }
+        } )
+    } )
+}
+
+/**
+ * Fade the layers in when their tiled or GeoJSON sources are loaded, or a second after the
+ * first tile. An image source cannot say (WMS starts on a blank image), so its adapter calls
+ * the returned function when the real image is on the map.
+ */
+function fadeInWhenLoaded( map: any, layers: any[], sources: Array<[ string, any ]> ): () => void {
+    let done = false
+    let waitTimer: any = null
+    const pending: Record<string, boolean> = {}
+    sources.forEach( ( [ sid, src ] ) => { if ( src?.type !== 'image' ) pending[ sid ] = true } )
+
+    const finish = function () {
+        if ( done ) return
+        done = true
+        map.off( 'sourcedata', onData )
+        clearTimeout( waitTimer )
+        clearTimeout( giveUp )
+        fadeIn( map, layers )
+    }
+    const onData = function ( e: any ) {
+        if ( !pending[ e.sourceId ] ) return
+        if ( e.tile && !waitTimer ) waitTimer = setTimeout( finish, FADE_WAIT_MS )
+        if ( !sourceLoaded( map, e.sourceId ) ) return
+        delete pending[ e.sourceId ]
+        if ( !Object.keys( pending ).length ) finish()
+    }
+    const giveUp = setTimeout( finish, FADE_GIVE_UP_MS )
+    if ( Object.keys( pending ).length ) map.on( 'sourcedata', onData )
+    // A source another layer already loaded sends no more events.
+    Promise.resolve().then( () => {
+        try {
+            if ( Object.keys( pending ).length && Object.keys( pending ).every( sid => sourceLoaded( map, sid ) ) ) finish()
+        } catch { /* removed */ }
+    } )
+    return finish
+}
+
+/**
+ * Map.addLayer checks each layer against a serialised copy of the whole style, so a
+ * 255-layer basemap cost 255 serialisations. The last goes through Map.addLayer to mark the redraw.
+ */
+function addBasemapLayers( map: any, layers: any[], before: string | undefined ) {
+    const fresh = layers.filter( ( ly: any ) => !map.getLayer( ly.id ) ).map( atZeroOpacity )
+    fresh.forEach( ( ly: any, i: number ) => {
+        try {
+            if ( i < fresh.length - 1 && map.style?.addLayer ) map.style.addLayer( ly, before, { validate: false } )
+            else map.addLayer( ly, before )
+        } catch ( e ) {
+            console.warn( 'maplibre viewer: basemap layer "' + ly.id + '" skipped:', e )
+        }
+    } )
+}
+
+/** Mark the first time every basemap source has its tiles, so a Host can time the first picture. */
+function markBasemapDrawn( self: any ) {
+    if ( self.basemapDrawnMarked ) return
+    self.basemapDrawnMarked = true
+    // A frame drawn with every basemap source loaded is the first whole picture.
+    const check = function () {
+        try {
+            if ( !self.basemapSourceIds.every( ( sid: string ) => sourceLoaded( self.map, sid ) ) ) return
+        } catch { /* the basemap changed; its sources are gone */ }
+        self.map.off( 'render', check )
+        self.mark?.( 'basemap-drawn' )
+    }
+    self.map.on( 'render', check )
+}
 
 ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
     const self = this
@@ -679,16 +742,14 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
             self.map.setGlyphs( EMPTY_STYLE.glyphs )
     } catch { /* ignore — older versions */ }
 
-    // NOTE: do NOT use this.createBasemapLayer() here. That returns Leaflet
-    // layers (registered for the baseMaps tool's thumbnail mini-maps).  We
-    // build MapLibre style fragments from the stored config instead.
-    const cfg     = this.getBasemapConfig( basemapId )
+    const cfg    = this.getBasemapConfig( basemapId )
     const builder = specForConfig( cfg, self.map, function ( id: string ) {
         return self.getBasemapConfig( id )
     } )
 
     Promise.resolve( builder ).then( ( specs: MapLibreBasemapSpec[] ) => {
         if ( token !== self.basemapTracker ) return         // superseded
+        self.mark?.( 'basemap-style' )
         if ( !specs || specs.length === 0 ) {
             console.warn( 'maplibre viewer: no basemap spec produced for "' + basemapId + '"' )
             self.changedBaseMap( { baseMap: basemapId } )
@@ -713,12 +774,19 @@ ViewerMapLibre.prototype.setBasemap = function ( basemapId: string ) {
                 self.basemapSourceIds.push( sid )
             } )
             const layers = spec.layers || ( spec.layer ? [ spec.layer ] : [] )
-            layers.forEach( ( ly: any ) => {
-                if ( !self.map.getLayer( ly.id ) ) self.map.addLayer( ly, firstId )
-                self.basemapLayerIds.push( ly.id )
+            addBasemapLayers( self.map, layers, firstId )
+            layers.forEach( ( ly: any ) => { self.basemapLayerIds.push( ly.id ) } )
+
+            // Each source fades in on its own data; a background with no source goes with the first.
+            if ( !sources.length ) fadeIn( self.map, layers )
+            sources.forEach( ( entry: any, i: number ) => {
+                const own = layers.filter( ( ly: any ) => ly.source === entry[ 0 ] || ( i === 0 && !ly.source ) )
+                fadeInWhenLoaded( self.map, own, [ entry ] )
             } )
         } )
 
+        self.mark?.( 'basemap-added' )
+        markBasemapDrawn( self )
         self.changedBaseMap( { baseMap: basemapId } )
     } ).catch( ( e: any ) => {
         if ( token !== self.basemapTracker ) return
@@ -835,8 +903,10 @@ ViewerMapLibre.prototype.addViewerLayer = function ( viewerLayer: any ) {
             if ( !self.map.getSource( sid ) ) self.map.addSource( sid, src )
         } )
         layers.forEach( ( ly: any ) => {
-            if ( !self.map.getLayer( ly.id ) ) self.map.addLayer( ly )
+            if ( !self.map.getLayer( ly.id ) ) self.map.addLayer( atZeroOpacity( ly ) )
         } )
+        // Set before onAdd: an image adapter calls it when its first real image is shown.
+        viewerLayer._smk_ready = fadeInWhenLoaded( self.map, layers, sources )
         if ( typeof viewerLayer._smk_onAdd === 'function' ) {
             viewerLayer._smk_cleanup = viewerLayer._smk_onAdd( self.map )
         }
@@ -845,7 +915,9 @@ ViewerMapLibre.prototype.addViewerLayer = function ( viewerLayer: any ) {
     }
 
     if ( viewerLayer.id && viewerLayer.type && !self.map.getLayer( viewerLayer.id ) ) {
-        self.map.addLayer( viewerLayer )
+        self.map.addLayer( atZeroOpacity( viewerLayer ) )
+        const src = typeof viewerLayer.source === 'string' ? self.map.getSource( viewerLayer.source ) : null
+        fadeInWhenLoaded( self.map, [ viewerLayer ], src ? [ [ viewerLayer.source, src ] ] : [] )
         self.viewerLayers[ viewerLayer._smk_id || viewerLayer.id ] = viewerLayer
     }
 }
@@ -882,11 +954,28 @@ ViewerMapLibre.prototype.positionViewerLayer = function ( viewerLayer: any, zOrd
         }
     } )
 
+    // With no Host layer above, stay under what SMK did not place: the acetate and the tool layers.
+    if ( beforeId === undefined ) beforeId = lowestUnplacedLayerId( self )
+
     // moveLayer is a no-op if the layer is already in the right position
     ids.forEach( ( id: string ) => {
         if ( !self_hasLayer( self, id ) ) return
         try { self.map.moveLayer( id, beforeId ) } catch ( e ) { /* ignore */ }
     } )
+}
+
+/** The lowest style layer that is neither a basemap layer nor part of a viewer layer. */
+function lowestUnplacedLayerId( self: any ): string | undefined {
+    const placed = new Set<string>( self.basemapLayerIds )
+    Object.keys( self.viewerLayers ).forEach( ( key: string ) => {
+        const vl = self.viewerLayers[ key ]
+        specLayers( vl ).forEach( ( l: any ) => placed.add( l.id ) )
+        if ( vl.id ) placed.add( vl.id )
+    } )
+    const order: string[] = typeof self.map.getLayersOrder === 'function'
+        ? self.map.getLayersOrder()
+        : ( self.map.getStyle()?.layers || [] ).map( ( l: any ) => l.id )
+    return order.find( ( id: string ) => !placed.has( id ) )
 }
 
 function self_hasLayer( self: any, id: string ): boolean {

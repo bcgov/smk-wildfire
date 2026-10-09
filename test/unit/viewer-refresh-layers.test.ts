@@ -41,7 +41,6 @@ describe( 'refreshLayers', () => {
         const v = fakeViewer( { passMs: 500 } )
 
         const p = v.refreshLayers( 0 )
-        // A delay of 0 falls back to the 200ms coalescing window.
         await vi.advanceTimersByTimeAsync( 250 )    // the first pass is running
         expect( v.passes ).toBe( 1 )
 
@@ -58,6 +57,27 @@ describe( 'refreshLayers', () => {
         v.refreshLayers( 200 )
         v.refreshLayers( 200 )
         v.refreshLayers( 200 )
+        await vi.advanceTimersByTimeAsync( 2000 )
+
+        expect( v.passes ).toBe( 1 )
+    } )
+
+    // SMK 1.0 waited 200ms first, at every boot and every layer toggle.
+    it( 'starts the pass without a fixed wait', async () => {
+        const v = fakeViewer()
+
+        v.refreshLayers()
+        await vi.advanceTimersByTimeAsync( 1 )
+
+        expect( v.passes ).toBe( 1 )
+    } )
+
+    it( 'coalesces changes made in one task', async () => {
+        const v = fakeViewer()
+
+        v.refreshLayers()
+        v.refreshLayers()
+        v.refreshLayers()
         await vi.advanceTimersByTimeAsync( 2000 )
 
         expect( v.passes ).toBe( 1 )

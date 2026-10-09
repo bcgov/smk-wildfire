@@ -1,6 +1,20 @@
 [
     {
         "axis": "A",
+        "field": "configTools",
+        "match": "dropdown",
+        "reason": "dropdown has no code in 1.0 or v2. v2 keeps a Tool type's defaults with its code, so a type with no code has no defaults.",
+        "date": "2026-10-05"
+    },
+    {
+        "axis": "A",
+        "field": "configToolKeys",
+        "match": "dropdown",
+        "reason": "dropdown has no code in 1.0 or v2. v2 keeps a Tool type's defaults with its code, so a type with no code has no defaults.",
+        "date": "2026-10-05"
+    },
+    {
+        "axis": "A",
         "field": "hasInclude",
         "reason": "2.0 removes the include loader. SMK does not use it, and a Host loads its plugin scripts itself and registers them on SMK.TYPE. host-contract.test.ts holds this.",
         "date": "2026-10-05"
@@ -140,13 +154,6 @@
     {
         "axis": "A",
         "field": "warnings",
-        "match": "QueryTool not defined",
-        "reason": "v2 registers tool-query-place before the QueryTool it extends, and says so. Informational, and v2-only because 1.0 loaded its tools through the AMD graph. Worth tidying, but it changes nothing a Host can see.",
-        "date": "2026-09-07"
-    },
-    {
-        "axis": "A",
-        "field": "warnings",
         "match": "mature support",
         "reason": "esri-leaflet's own notice that L.esri.BasemapLayer is in mature support. SMK 1.0 opens on that basemap; v2 opens on the Canada Topography composite and never builds one.",
         "date": "2026-09-07"
@@ -197,7 +204,7 @@
         "axis": "A",
         "field": "domClasses",
         "match": "smk-tool-status-basemap",
-        "reason": "The basemap status class carries the basemap id, and the default changed by decision - Topographic in 1.0, bc-roads in v2. See D11.",
+        "reason": "The basemap status class carries the basemap id, and the default changed by decision - Topographic in 1.0, topographic-v2 in v2. See D22.",
         "date": "2026-09-08"
     },
     {
@@ -205,20 +212,6 @@
         "field": "domClasses",
         "match": "smk-minimap",
         "reason": "Added. Both viewer halves now render a neutral smk-minimap so a Theme need not know which Viewer is running; 1.0 had only the spacer, which v2 still renders too.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "built",
-        "match": "DropdownTool",
-        "reason": "v2 builds a dropdown tool that SMK 1.0 did not have. Added, nothing lost.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "builtTypes",
-        "match": "dropdown",
-        "reason": "The type behind DropdownTool. Added.",
         "date": "2026-09-08"
     },
     {
@@ -287,13 +280,6 @@
     {
         "axis": "A",
         "field": "warnings",
-        "match": "tool-dropdown",
-        "reason": "SMK 1.0 has no dropdown tool, so asking it to build one fails on its own side. The REFERENCE, not the rewrite.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "warnings",
         "match": "navMode",
         "reason": "A 1.0 warning about props declared in its pan widget that its own tool does not have. The REFERENCE side.",
         "date": "2026-09-08"
@@ -316,14 +302,7 @@
         "axis": "A",
         "field": "toolState",
         "match": "BaseMapsTool",
-        "reason": "The tool reports the basemap it is on, and the default changed by decision - Topographic in 1.0, bc-roads in v2. See D11.",
-        "date": "2026-09-08"
-    },
-    {
-        "axis": "A",
-        "field": "toolState",
-        "match": "DropdownTool",
-        "reason": "v2 builds a dropdown tool SMK 1.0 did not have, so 1.0 has no state for it. Added.",
+        "reason": "The tool reports the basemap it is on, and the default changed by decision - Topographic in 1.0, topographic-v2 in v2. See D22.",
         "date": "2026-09-08"
     },
     {
@@ -332,5 +311,114 @@
         "match": "MarkupTool",
         "reason": "v2 gives the markup tool a showWidget prop that 1.0 did not declare. Added; every flag 1.0 had is still there with the same value.",
         "date": "2026-09-08"
+    },
+    {
+        "axis": "A",
+        "field": "console",
+        "match": "makeWidgetComponent",
+        "reason": "SMK 1.0 throws this when shortcut-menu is built: its addTool calls makeWidgetComponent on the two directions sub-tools, which have no widget, and both initializers die. The REFERENCE side. v2 guards it, as its toolbar always did.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "initializer #0 failed",
+        "reason": "The same 1.0 fault as the makeWidgetComponent entry, reported as a warning. The REFERENCE side.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "attributeModeOptions",
+        "reason": "v2's tool-panel-feature has an attributeModeOptions computed, and getComponentProps reports every computed as a prop the tool lacks - the same notice as customLabel. Candidate side, harmless.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
+        "field": "console",
+        "match": "reading 'id'",
+        "reason": "SMK 1.0 throws this on a $emit when the whole catalogue is built. The REFERENCE side, recorded in CONTEXT.md 8.1; it says nothing about the rewrite.",
+        "date": "2026-09-19"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "World_Hillshade",
+        "reason": "The default Basemap - decision D22, 2026-09-23. v2 opens on topographic-v2 as SMK 1.0.39 defined it: Esri World_Hillshade under the Esri World Topographic vector item. SMK 1.0 opens on the older Esri Topographic. This is the hillshade half.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "7dc6cea0b1764a1f9af2e679f642f0f5",
+        "reason": "Decision D22. The style, sprite and item description of the Esri World Topographic Map item, the vector half of topographic-v2.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "A",
+        "field": "requests",
+        "match": "World_Basemap_v2",
+        "reason": "Decision D22. The tiles, fonts and service description of the vector half of topographic-v2.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "A",
+        "field": "warnings",
+        "match": "Max vertices per segment",
+        "reason": "Decision D22. MapLibre, alone or inside esri-leaflet-vector, notes a large bucket in one Esri World Topographic tile. It draws. Informational.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "World_Basemap_v2",
+        "reason": "Decision D22, and wire behaviour (D9). esri-leaflet-vector reads the VectorTileServer description first; the MapLibre viewer reads the item style from cdn.arcgis.com and takes the tiles straight from it.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "requests",
+        "match": "7dc6cea0b1764a1f9af2e679f642f0f5",
+        "reason": "Decision D22, wire behaviour (D9). esri-leaflet-vector reads the item description from www.arcgis.com; the MapLibre viewer does not need it.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "warnings",
+        "match": "Max vertices per segment",
+        "reason": "Decision D22. The MapLibre inside esri-leaflet-vector notes a large bucket in one Esri World Topographic tile. It draws. Informational.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-mode-tool",
+        "onlyAdded": true,
+        "reason": "The mode widget, a MapLibre-only tool (see the ModeTool toolState ruling). Leaflet drew a disabled 2D button that did nothing; it now sets showWidget false and draws none.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-ModeTool",
+        "onlyAdded": true,
+        "reason": "The same mode widget as smk-mode-tool, by its tool id.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-mode-label",
+        "onlyAdded": true,
+        "reason": "The 2D/3D label inside the mode widget, as smk-mode-tool.",
+        "date": "2026-09-23"
+    },
+    {
+        "axis": "B",
+        "field": "domClasses",
+        "match": "smk-tool-status-2d",
+        "onlyAdded": true,
+        "reason": "The mode widget's status class, as smk-mode-tool. No other tool has a 2d status.",
+        "date": "2026-09-23"
     }
 ]

@@ -12,8 +12,6 @@
     border-radius: 8px;
     font-size: 12px;
     user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
     -webkit-user-select: none;
 }
 
@@ -25,6 +23,11 @@
     width: var( --control-size );
     height: var( --control-size );
     font-size: var( --icon-size );
+    /* smk-icon is on the wrapper here, so the command.css centring never matches. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 .smk-command-button .smk-command:hover {

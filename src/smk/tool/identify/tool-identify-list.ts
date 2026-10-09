@@ -6,8 +6,6 @@
 import Tool from '../../tool'
 import panelIdentifyHtml from './panel-identify.html?raw'
 import { SMK } from '../../smk-ref'
-import { highlightLayers } from '../../mixin/tool-feature-list/highlight-layers'
-import crosshairPng from './config/crosshair.png'
 
 declare const Vue: any
 declare const turf: any
@@ -55,30 +53,13 @@ const factory = Tool.define( 'IdentifyListTool',
         this.autoIdentify = false
 
         // Internal layers required by ToolFeatureList (highlight) and identify (search area etc.)
-        this.internalLayers.push(
-            ...highlightLayers(),
-            { id: 'search-area',       style: { stroke: false, fill: true, fillColor: 'white', fillOpacity: 0.5 } },
-            { id: 'search-border-1',   style: { strokeWidth: 6, strokeColor: 'black', strokeOpacity: 1, strokeCap: 'butt' } },
-            { id: 'search-border-2',   style: { strokeWidth: 6, strokeColor: 'white', strokeOpacity: 1, strokeCap: 'butt' } },
-            { id: 'location',          title: 'Identify Location', style: { markerUrl: crosshairPng, markerSize: [ 40, 40 ], markerOffset: [ 20, 20 ] }, legend: { point: true } },
-            { id: 'edit-search-area',  style: { strokeWidth: 3, strokeColor: 'red', strokeOpacity: 1 } },
-        )
     },
     function ( this: any, smk: any ) {
         const self = this
 
-        // Register the display context so setInternalLayerVisible can use it.
-        // In the old AMD build this was done by tool-identify-config.js pushing
-        // to SMK.CONFIG.viewer.displayContext; in the Vite/TS build we do it here.
-        smk.$viewer.setDisplayContextItems( this.type, [ {
-            id:         this.id,
-            type:       'group',
-            title:      this.title,
-            isVisible:  false,
-            isInternal: true,
-            showItem:   false,
-            items:      this.internalLayers.map( ( ly: any ) => ( { id: ly.id } ) ),
-        } ] )
+        // Which tool types this map built. The panel reads tool.select to show
+        // "Add all to selection"; without it the command never rendered.
+        this.tool = smk.getToolTypesAvailable()
 
         // --- radius helpers ---------------------------------------------------
 

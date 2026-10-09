@@ -222,7 +222,19 @@ SMK.TYPE.MeasureTool.addInitializer( function ( this: any, smk: any ) {
             clearTimeout( smk.$viewer.clickTimeout )
             smk.$viewer.clickTimeout = null
         }
+        // Both clicks of the double click landed in onClick. Keep the spot once,
+        // as Leaflet does, or it counts an edge of zero length.
+        const last = pointAt( ev )
+        while ( points.length > 1 && samePoint( points[ points.length - 1 ], last ) && samePoint( points[ points.length - 2 ], last ) )
+            points.pop()
         finish()
+    }
+
+    function pointAt( ev: any ) { return [ ev.lngLat.lng, ev.lngLat.lat ] }
+
+    function samePoint( a: number[], b: number[] ) {
+        const pa = map.project( a ), pb = map.project( b )
+        return Math.abs( pa.x - pb.x ) < 3 && Math.abs( pa.y - pb.y ) < 3
     }
 
     function finish() {

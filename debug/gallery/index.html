@@ -13,6 +13,20 @@
         <strong>SMK Gallery</strong>
         <span class="g-muted">One component, no map</span>
         <span class="g-spacer"></span>
+        <label>Build
+            <select id="g-build">
+                <option value="v2">v2</option>
+                <option value="both">v2 + 1.0</option>
+                <option value="1.0">1.0 only</option>
+            </select>
+        </label>
+        <label data-when="both">Layout
+            <select id="g-layout">
+                <option value="side">Side by side</option>
+                <option value="overlay">Overlay</option>
+            </select>
+        </label>
+        <label data-when="overlay">1.0 <input type="range" id="g-fade" min="0" max="100" value="50" aria-label="SMK 1.0 opacity"></label>
         <label>Theme <select id="g-theme"></select></label>
         <label><input type="checkbox" id="g-mobile"> Mobile</label>
     </header>
@@ -27,7 +41,8 @@
             </div>
             <p class="g-muted"><span id="g-kind"></span> <span id="g-note"></span></p>
             <p id="g-mobile-note" class="g-muted" hidden>SMK's orientation media queries read the window, not this frame.</p>
-            <div id="g-stage" class="g-stage"></div>
+            <div id="g-panes" class="g-panes"></div>
+            <section id="g-diff" class="g-diff" aria-live="polite" hidden></section>
         </section>
 
         <aside class="g-inspector">

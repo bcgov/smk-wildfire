@@ -29,7 +29,10 @@ const factory = Tool.define( 'ShortcutMenuTool',
     {
         addTool( this: any, tool: any, smk: any ) {
             smk.getSidepanel().addTool( tool, smk )
-            this.model.widgets.push( tool.makeWidgetComponent() )
+            // A composite child carries its parent's position and has no
+            // widget, so the call threw and killed the child's initializer.
+            if ( tool.makeWidgetComponent )
+                this.model.widgets.push( tool.makeWidgetComponent() )
             return true
         },
     }

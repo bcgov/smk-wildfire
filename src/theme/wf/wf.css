@@ -51,8 +51,6 @@
     border-color: transparent;
     border-radius: 5px;
     user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
     -webkit-user-select: none;
 
     color: black;
@@ -227,6 +225,20 @@
     order: 70;
 }
 
+/* Title reads as a muted label and value as the data. Colour and weight only: a theme must not move layout. */
+.smk-theme-wf .smk-attributes .smk-attribute:nth-child( 2n ) {
+    background-color: #f2f2f2;
+}
+
+.smk-theme-wf .smk-attributes .smk-attribute .smk-attribute-title {
+    color: #5f5f5f;
+}
+
+.smk-theme-wf .smk-attributes .smk-attribute > :not( .smk-attribute-title ) {
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
 .smk-theme-wf .smk-layers-panel .smk-legend-item {
     display: flex;
     align-items: center;
@@ -308,15 +320,16 @@
 /* component-command-button.css */
 
 /* A wf command button is white with black text, not the black pill a bare
-   command wears. Three classes, so file order cannot decide it. */
-.smk-theme-wf .smk-command-button .smk-command {
+   command wears. Three classes, so file order cannot decide it.
+   The glyph-only button is bare in 1.0, so it is held out. */
+.smk-theme-wf .smk-command-button:not(.smk-icon) .smk-command {
     color: black;
     background-color: white;
     font-weight: bold;
     border-color: #bbb;
 }
 
-.smk-theme-wf .smk-command-button.smk-disabled .smk-command {
+.smk-theme-wf .smk-command-button.smk-disabled:not(.smk-icon) .smk-command {
     color: #bbb;
     background-color: white;
 }

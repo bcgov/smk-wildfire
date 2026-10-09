@@ -8,8 +8,6 @@
     font-size: var( --font-sm );
     line-height: var( --line-height );
     user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
     -webkit-user-select: none;
 }
 

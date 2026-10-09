@@ -33,12 +33,14 @@ function files( path ) {
         .map( e => e.name )
 }
 
-export function scanSupport( root ) {
+// only: the viewers a build holds. A build that leaves a viewer out must not claim it.
+export function scanSupport( root, only ) {
     const smk = join( root, 'src', 'smk' )
 
     const viewers = dirs( smk )
         .filter( d => d.indexOf( 'viewer-' ) === 0 )
         .map( d => d.slice( 'viewer-'.length ) )
+        .filter( v => !only || only.includes( v ) )
         .sort()
 
     // Every tool with a shared half. A tool with no viewer half runs everywhere.

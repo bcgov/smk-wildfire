@@ -46,5 +46,7 @@ export function overviewZoom( mainZoom: number, mainPx: number, miniPx: number )
 
 const factory = Tool.define( 'MinimapTool' )
 
-Tool.register( 'minimap', factory, { order: 1 } )
+// The status column is column-reverse, so a higher order sits higher:
+// legend 4, minimap 3, coordinate 2, scale 1.
+Tool.register( 'minimap', factory, { order: 3, baseMap: null, option: {} } )
 export default factory

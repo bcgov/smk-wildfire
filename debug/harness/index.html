@@ -51,6 +51,7 @@
 <header id="bar">
     <strong>SMK Harness</strong>
 
+
     <label>Story
         <select id="story"></select>
     </label>
@@ -116,20 +117,13 @@
                     <input id="tool-filter" placeholder="filter tools…">
                     <button data-all="enabled:1">enable all</button>
                     <button data-all="enabled:0">disable all</button>
-                    <span class="hint">Read from <code>smk.$tool</code>, <code>SMK.CONFIG.tools</code> and <code>SMK.BUILD</code>'s support manifest, so none of it can go stale. A row with an <em>example</em> button shows nothing until a host writes code for it - press it to load a working one.</span>
                 </div>
 
-                <h4 class="section">Built <small>live flags — these take effect at once</small></h4>
-                <dl class="legend">
-                    <dt>showWidget</dt><dd>Is the button in the page at all? <code>v-if</code> on the widget template.</dd>
-                    <dt>enabled</dt><dd>Does clicking the button do anything? The activate handler returns early when this is false. In a <em>config</em> the same word means something else — see the second list.</dd>
-                    <dt>active</dt><dd>Is the tool operating now — its panel open, its mode engaged? Clicking the widget toggles this. The sidepanel shows itself when any panel is active.</dd>
-                    <dt>visible</dt><dd>Is the tool's own output showing? Most tools drive this themselves — Select List raises it when there is a selection — so setting it by hand is often overwritten.</dd>
-                </dl>
-                <div id="tools"></div>
+                <h4 class="section">Built <small>changes apply at once. Hover a column label for what it means.</small></h4>
+                <div id="tools" class="tool-grid built-grid"></div>
 
-                <h4 class="section">Bundled, not built <small>SMK constructs only the tools a config enables, so ticking one restarts the map</small></h4>
-                <div id="catalogue"></div>
+                <h4 class="section">Not built <small>ticking one restarts the map</small></h4>
+                <div id="catalogue" class="tool-grid build-grid"></div>
             </section>
 
             <section data-panel="layers">

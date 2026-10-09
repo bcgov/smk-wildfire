@@ -163,7 +163,7 @@ const factory = Tool.define( 'LayersTool',
 
 Tool.register( 'layers', factory, widgetDefaults( panelDefaults( {
     order: 3, position: [ 'shortcut-menu', 'list-menu' ], icon: 'layers', title: 'Layers',
-    command: { allVisibility: true, filter: true, legend: true },
+    command: { allVisibility: true, filter: true, legend: true, themes: false },
     glyph:   { visible: 'visibility', hidden: 'visibility_off' },
 } ) ) )
 export default factory

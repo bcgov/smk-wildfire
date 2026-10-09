@@ -11,8 +11,6 @@
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
     pointer-events: auto;
     user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
     -webkit-user-select: none;
 
     display: flex;
@@ -28,6 +26,12 @@
    beside them. display:contents takes the wrapper out of the layout. */
 .smk-actionbar > div:not( [class] ) {
     display: contents;
+}
+
+/* pan in a 2D viewer has no control, so its widget renders nothing. With no
+   other widget the padding and shadow drew an empty box; 1.0 drew none. */
+.smk-actionbar:not( :has( > * ) ) {
+    display: none;
 }
 
 /* .smk-toolbar.smk-hidden  {

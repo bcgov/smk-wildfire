@@ -13,9 +13,10 @@
   ],
   "scripts": {
     "start": "concurrently --kill-others \"npm:build:watch\" \"npm:serve\"",
-    "build": "vite build && vite build --config vite.config.standalone.js",
+    "build": "vite build && vite build --config vite.config.standalone.js && vite build --config vite.config.maplibre.js",
     "build:lite": "vite build",
     "build:standalone": "vite build --config vite.config.standalone.js",
+    "build:maplibre": "vite build --config vite.config.maplibre.js",
     "build:watch": "vite build --watch",
     "release": "npm run build",
     "serve": "live-server . --open=debug --wait=100 --watch=dist/smk.umd.js,debug,test",
@@ -29,6 +30,7 @@
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser",
     "test:harness": "npm run build:lite && node build/run-harness.js",
+    "ref:v1": "node build/fetch-ref.js",
     "coverage": "vitest run --project unit --coverage",
     "coverage:harness": "npm run build:lite && node build/run-harness.js --coverage && node build/coverage-report.js",
     "coverage:all": "npm run coverage && npm run coverage:harness"

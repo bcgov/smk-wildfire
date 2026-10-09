@@ -7,6 +7,8 @@ import '../../src/styles'
 // SMK mounts over HTML strings, so it needs Vue WITH the compiler - see D5.
 import Vue from 'vue/dist/vue.esm.browser.js'
 
+import { frameWith, type FrameOptions } from './frame'
+
 import sidepanelHtml from '../../src/smk/sidepanel/sidepanel.html?raw'
 import toolbarHtml   from '../../src/smk/tool/toolbar/toolbar.html?raw'
 import actionbarHtml from '../../src/smk/tool/actionbar/actionbar.html?raw'
@@ -38,18 +40,7 @@ await import( '../../src/smk/mixin/tool-widget/tool-widget' )
 await import( '../../src/smk/api/geocoder' )
 
 export { Vue }
-
-export interface FrameOptions {
-    host?:    HTMLElement
-    theme?:   string
-    mobile?:  boolean
-    width?:   number
-    height?:  number
-    // Receives every `$$emit`, the way SmkMap.emit would.
-    trigger?: ( toolId: string, event: string, arg: any ) => void
-    // A status template can call its tool's own methods, as coordinate.html does.
-    methods?: Record<string, ( ...args: any[] ) => any>
-}
+export type { FrameOptions }
 
 /** One entry of the list sidepanel.html, toolbar.html and actionbar.html iterate. */
 export interface Mounted { component: string, prop: any }
@@ -57,28 +48,7 @@ export interface Mounted { component: string, prop: any }
 const mounted: any[] = []
 
 function frame( chrome: string, data: any, opt: FrameOptions ) {
-    const host = opt.host ?? document.body.appendChild( document.createElement( 'div' ) )
-    const { theme = 'wf', mobile = false, width = 1200, height = 800 } = opt
-    const trigger = ( id: string, event: string, arg: any ) => opt.trigger?.( id, event, arg )
-
-    const vm = new Vue( {
-        data() { return data },
-        methods: {
-            trigger,
-            previousPanel: ( id: string ) => trigger( id, 'previous-panel', null ),
-            closePanel:    ( id: string ) => trigger( id, 'close-panel', null ),
-            beforeShow() {}, afterShow() {}, beforeHide() {}, afterHide() {},
-            ...opt.methods,
-        },
-        // The sidepanel is absolutely positioned, so the frame needs a box.
-        template: `
-            <div class="smk-map-frame smk-theme-base smk-theme-${ theme } smk-device-${ mobile ? 'mobile' : 'desktop' }"
-                style="position:relative;width:${ width }px;height:${ height }px">
-                <div class="smk-overlay">${ chrome }</div>
-            </div>`,
-    } )
-
-    vm.$mount( host )
+    const vm = frameWith( Vue, chrome, data, opt )
     mounted.push( vm )
     return vm
 }

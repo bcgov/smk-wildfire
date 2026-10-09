@@ -71,9 +71,12 @@ describe( 'the layers panel legend', () => {
                 items:   document.querySelectorAll( '.smk-legend-item' ).length,
                 titles:  document.querySelectorAll( '.smk-legend-title' ).length,
             } ) )
-            expect( dom.legends ).toBe( 4 )
-            expect( dom.items ).toBe( 4 )
-            expect( dom.titles ).toBe( 4 )
+            // Four Story layers and the picked-location group. This said 4
+            // while v2 had lost the internal display contexts; SMK 1.0 renders
+            // 5 here, measured 2026-09-19. See D8.
+            expect( dom.legends ).toBe( 5 )
+            expect( dom.items ).toBe( 5 )
+            expect( dom.titles ).toBe( 5 )
         } )
 
         it( 'asks once, not again when the toggle is pressed', () => {

@@ -1,0 +1,49 @@
+{
+    "layers": [
+        {
+            "type": "vector",
+            "id": "cluster-provincial-parks",
+            "title": "Provincial Parks - clustered",
+            "isVisible": true,
+            "attribution": "BC Parks, Government of British Columbia",
+            "dataUrl": "/debug/data/provincial-parks.json",
+
+            "useClustering": true,
+            "cluster": {
+                "radius": 60,
+                "maxZoom": 11,
+                "minPoints": 3,
+                "color": "#2d6a4f",
+                "steps": [ [ 10, "#e9a13b" ], [ 50, "#c9453f" ] ],
+                "textColor": "#ffffff",
+                "textSize": 13
+            },
+
+            "style": {
+                "radius": 6,
+                "strokeColor": "#1b4332",
+                "strokeWidth": 2,
+                "fillColor": "#2d6a4f",
+                "fillOpacity": 0.9
+            },
+            "legend": { "title": "Provincial Park", "point": true }
+        },
+        {
+            "type": "vector",
+            "id": "plain-provincial-parks",
+            "title": "Provincial Parks - one dot each",
+            "isVisible": false,
+            "attribution": "BC Parks, Government of British Columbia",
+            "dataUrl": "/debug/data/provincial-parks.json",
+
+            "style": {
+                "radius": 6,
+                "strokeColor": "#1b4332",
+                "strokeWidth": 2,
+                "fillColor": "#74c69d",
+                "fillOpacity": 0.9
+            },
+            "legend": { "title": "Provincial Park", "point": true }
+        }
+    ]
+}

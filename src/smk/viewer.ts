@@ -388,6 +388,7 @@ export class Viewer {
             } )
         }
 
+        // Changes made in one task still share one pass. A longer wait only slows each map and toggle.
         this.refreshLayersTimer = setTimeout( () => {
             self.refreshLayersTimer = undefined
             self.updateLayersVisible()
@@ -414,7 +415,7 @@ export class Viewer {
                         self.refreshLayers( 0 )
                     }
                 } )
-        }, delay || 200 )
+        }, delay ?? 0 )
 
         return this.refreshLayersPromise
     }

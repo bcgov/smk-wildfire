@@ -18,6 +18,10 @@ let shared: string[] = []
 let onlyIn10: string[] = []
 let ref: Run, now: Run
 
+// 1.0 states these in its defaults but never built them (D19). axis-a.test.ts
+// holds the default entry; there is no tool behind it in either build.
+const NEVER_BUILT_IN_10 = [ 'dropdown' ]
+
 beforeAll( async () => {
     await up()
 
@@ -29,7 +33,7 @@ beforeAll( async () => {
 
     const newTypes = buildableTools()
     shared   = oldTypes.filter( t => newTypes.indexOf( t ) >= 0 ).sort()
-    onlyIn10 = oldTypes.filter( t => newTypes.indexOf( t ) < 0 ).sort()
+    onlyIn10 = oldTypes.filter( t => newTypes.indexOf( t ) < 0 && NEVER_BUILT_IN_10.indexOf( t ) < 0 ).sort()
 
     ref = await open( { build: '1.0',                   tools: shared } )
     now = await open( { build: 'v2', viewer: 'leaflet', tools: shared } )

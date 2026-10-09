@@ -94,11 +94,11 @@ describe( 'every form control wears the frame font', () => {
     }
 } )
 
-// The Gallery page is dark when the machine is. Nothing of its chrome may
-// inherit into the stage, or the page lies about what SMK renders.
+// The stage sets the Host page defaults, so a dark page cannot inherit into
+// SMK and make the Gallery lie about what it renders.
 describe( 'the Gallery stage takes no colour from the page', () => {
     it( 'keeps the panel text black under dark page chrome', async () => {
-        await import( '../../debug/gallery/gallery.css' )
+        await import( '../../debug/gallery/stage.css' )
 
         const stage = document.body.appendChild( document.createElement( 'div' ) )
         stage.className = 'g-stage'

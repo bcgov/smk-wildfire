@@ -70,8 +70,6 @@
 
 .smk-feature-panel .smk-commands {
     user-select: none;
-    -ms-user-select: none;
-    -moz-user-select: none;
     -webkit-user-select: none;
 }
 

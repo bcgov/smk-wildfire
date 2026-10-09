@@ -99,6 +99,23 @@ export function defineBaseMaps(
     // Current basemaps
     // -----------------------------------------------------------------------
 
+    // The default, and its ids, as SMK 1.0.39 defined them. Esri's vector style is made to lie over the hillshade.
+    defineBaseMap( 'topographic-v2', {
+        type: 'composite', order: 10, title: 'Topographic',
+        layers: [ '--topographic-v2-hillshade', '--topographic-v2-vector' ],
+    } )
+
+    defineBaseMap( '--topographic-v2-hillshade', {
+        internal: true, type: 'esri-tiled-map', order: 10, title: 'Topographic',
+        url: 'https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer',
+    } )
+
+    defineBaseMap( '--topographic-v2-vector', {
+        internal: true, type: 'esri-vector-tile', order: 10, title: 'Topographic',
+        itemId: '7dc6cea0b1764a1f9af2e679f642f0f5',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
     // GeoBC's standard BC Basemap, with hillshade, as published on the item.
     // The service's own style is another one, with no hillshade.
     defineBaseMap( 'bc-roads', {
@@ -126,7 +143,7 @@ export function defineBaseMaps(
     } )
 
     defineBaseMap( 'topography-hillshade', {
-        type: 'esri-tiled-map', order: 13, title: 'Imagery',
+        type: 'esri-tiled-map', order: 13, title: 'Canada Hillshade',
         attribution: 'Copyright 117 DataBC, Government of British Columbia',
         // It sits on top of the vector map in the topography composite, so it
         // must shade the relief, not cover it.

@@ -97,15 +97,6 @@ h4.section {
 h4.section small { text-transform: none; letter-spacing: 0; font-weight: 400; color: #888; margin-left: 8px }
 h4.section:first-of-type { margin-top: 0 }
 
-dl.legend {
-    display: grid; grid-template-columns: 110px 1fr; gap: 2px 10px;
-    margin: 0 0 10px; padding: 8px 10px;
-    background: #fafaff; border: 1px solid #e2e2e8; border-radius: 4px;
-    font-size: 12px; color: #555;
-}
-dl.legend dt { font-weight: 600; color: #333; font-family: ui-monospace, Consolas, monospace }
-dl.legend dd { margin: 0 }
-
 /* --- rows --------------------------------------------------------------- */
 
 /*
@@ -150,6 +141,10 @@ dl.legend dd { margin: 0 }
 .args textarea { min-height: 46px }
 .args .ro { color: #999; font-style: italic }
 
+/* An edited arg is now config, so it comes back after a Restart. Mark it, or
+   the panel cannot be told from a fresh tool. */
+.args input.edited, .args textarea.edited { border: 1px solid #5b8def; background: #f4f8ff }
+
 /* What the WMS service says about this layer's scale range. Full width, so it
    lands on its own line under the row it belongs to. */
 .scale-range { order: 4; flex: 1 1 100%; color: #666; font-size: 12px; min-width: 0 }
@@ -183,9 +178,49 @@ dl.legend dd { margin: 0 }
    never reached the bundle, or the reverse. */
 .support.disagree { outline: 2px solid #e0004d; outline-offset: 1px }
 
-/* The chips lead the second line; the live flags follow on the same line while
-   there is room, and wrap under them when there is not. */
-.flags.support-row { order: 2; flex: 0 0 auto; gap: 4px; min-width: 0 }
+/* --- tool grids ---------------------------------------------------------- */
+
+/*
+ * One header and fixed columns, so every mark and checkbox sits under its label
+ * and nothing wraps: name, example, one column per viewer, then the flags.
+ */
+.tool-grid .grid-head, .tool-grid .row {
+    display: grid; align-items: center; column-gap: 6px;
+    padding: 3px 6px;
+}
+.built-grid .grid-head, .built-grid .row {
+    grid-template-columns: minmax( 0, 1fr ) 64px repeat( 3, 22px ) repeat( 4, 22px ) 36px 22px;
+}
+.build-grid .grid-head, .build-grid .row {
+    grid-template-columns: minmax( 0, 1fr ) 64px repeat( 3, 22px ) 22px;
+}
+.tool-grid .row > * { order: 0; margin: 0; flex: none }
+
+.tool-grid .grid-head {
+    position: sticky; top: 0; z-index: 1; background: #fff;
+    border-bottom: 1px solid #e2e2e8; color: #666; font-size: 11px;
+}
+/* Vertical labels keep the columns narrow; the tooltip says what each means. */
+.tool-grid .grid-head .v {
+    writing-mode: vertical-rl; transform: rotate( 180deg );
+    justify-self: center; white-space: nowrap; line-height: 1; cursor: help;
+}
+
+.tool-grid .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.tool-grid .name small { display: inline; margin-left: 6px; color: #888; font-weight: 400 }
+.tool-grid .cell { justify-self: center; display: flex }
+.tool-grid .cell input { margin: 0 }
+.tool-grid .mark { font-size: 12px; line-height: 1; cursor: default }
+.tool-grid .mark.yes { color: #2b7a2b }
+.tool-grid .mark.no  { color: #b73a3a }
+.tool-grid .example { justify-self: start; padding: 0 7px }
+.tool-grid .more { justify-self: end }
+/* Takes one built tool out and restarts; everything else added is kept. */
+.tool-grid .remove {
+    justify-self: center; padding: 0 4px; line-height: 1.2;
+    font: inherit; font-size: 15px; color: #999; background: none; border: 0; cursor: pointer;
+}
+.tool-grid .remove:hover { color: #b73a3a }
 
 /* --- log, inspect, config ---------------------------------------------- */
 

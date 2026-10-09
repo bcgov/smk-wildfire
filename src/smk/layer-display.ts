@@ -268,10 +268,17 @@ export namespace LayerDisplay {
         constructor(
             option:       LayerDisplayOption,
             layerCatalog: LayerCatalog,
-            _forceVisible?: boolean,
+            forceVisible?: boolean,
         ) {
-            // groups force all children visible
-            super( Object.assign( option, { isExpanded: true } ), layerCatalog, true )
+            super( Object.assign( option, { isExpanded: true } ), layerCatalog, forceVisible )
+
+            // A group forces its CHILDREN visible, and takes its own
+            // visibility from the config. Passing true to the folder forced
+            // the group too, so an internal group configured hidden - the
+            // search results, the identify highlights - came up visible.
+            this.items = ( option.items || [] ).map(
+                item => createLayerDisplay( item, layerCatalog, true )
+            )
         }
     }
 }

@@ -32,6 +32,8 @@ smkRef.TYPE.SelectListTool.addInitializer( function ( this: any, smk: any ) {
     if ( smk.$viewer.type !== 'leaflet' ) return
 
     const self = this
+    // SMK 1.0 wrote into this without making it, so every add threw.
+    self.highlight = {}
 
     self.featureSet.addedFeatures( function ( ev: any ) {
         ev.features.forEach( function ( f: any ) {

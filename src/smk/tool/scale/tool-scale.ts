@@ -78,5 +78,7 @@ const factory = Tool.define( 'ScaleTool',
     }
 )
 
-Tool.register( 'scale', factory, { order: 2, showFactor: true, showBar: true, showZoom: false } )
+// The status column is column-reverse, so a higher order sits higher:
+// legend 4, minimap 3, coordinate 2, scale 1.
+Tool.register( 'scale', factory, { order: 1, showFactor: true, showBar: true, showZoom: false } )
 export default factory

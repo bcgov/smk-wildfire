@@ -44,6 +44,46 @@ describe( 'the panel is one solid card', () => {
     }
 } )
 
+describe( 'an icon command-button centres its glyph', () => {
+    const buttons = STORIES.find( s => s.name === 'command-button' )!
+
+    for ( const theme of THEMES ) {
+        it( theme, async () => {
+            const vm = mountStory( buttons, initialModel( buttons ), { theme } )
+            // Before the font loads, the glyph is the word "autorenew".
+            await document.fonts.load( '24px "Material Icons"' )
+            await Vue.nextTick()
+
+            const button = vm.$el.querySelector( '.smk-command-button.smk-icon .smk-command' ) as HTMLElement
+            const b = button.getBoundingClientRect()
+            const g = button.querySelector( '.material-icons' )!.getBoundingClientRect()
+            expect( Math.abs( ( g.left + g.width / 2 ) - ( b.left + b.width / 2 ) ), 'glyph sits left' )
+                .toBeLessThanOrEqual( 0.5 )
+            expect( Math.abs( ( g.top + g.height / 2 ) - ( b.top + b.height / 2 ) ), 'glyph sits high' )
+                .toBeLessThanOrEqual( 0.5 )
+        } )
+    }
+} )
+
+// The user ruled 2026-09-18 to keep the 1.0 spread.
+describe( 'the command row spreads to its edges, as in 1.0', () => {
+    const buttons = STORIES.find( s => s.name === 'command-button' )!
+
+    for ( const theme of THEMES ) {
+        it( theme, async () => {
+            const vm = mountStory( buttons, initialModel( buttons ), { theme } )
+            await Vue.nextTick()
+
+            const row = vm.$el.querySelector( '.smk-panel .smk-commands' ) as HTMLElement
+            const kids = [ ...row.children ] as HTMLElement[]
+            expect( kids.length ).toBe( 3 )
+            const r = row.getBoundingClientRect()
+            expect( Math.abs( kids[ 0 ].getBoundingClientRect().left - r.left ), 'first command' ).toBeLessThanOrEqual( 1 )
+            expect( Math.abs( kids[ 2 ].getBoundingClientRect().right - r.right ), 'last command' ).toBeLessThanOrEqual( 1 )
+        } )
+    }
+} )
+
 describe( 'the header commands line up with the title', () => {
     for ( const theme of THEMES ) {
         it( theme, async () => {

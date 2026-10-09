@@ -1,0 +1,29 @@
+/* The stage document. It holds one SMK build and nothing of the Gallery's
+   chrome, so no page rule can change what the build renders. */
+
+body { margin: 0; }
+
+/* Stands in for the map under the overlay. The colour and the scheme are the
+   Host page defaults: without them a dark page inherits into the panel. */
+.g-stage > .smk-map-frame {
+    color: black;
+    color-scheme: light;
+    background-color: #dfe6e2;
+    background-image:
+        linear-gradient( #cfd8d3 1px, transparent 1px ),
+        linear-gradient( 90deg, #cfd8d3 1px, transparent 1px );
+    background-size: 32px 32px;
+    border: 1px solid #dde1e7;
+    border-radius: 4px;
+}
+
+.g-absent, .g-missing {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed #c9a24a;
+    border-radius: 4px;
+    background: #fff7e6;
+    color: #6b4a00;
+    font: 13px/1.4 system-ui, sans-serif;
+}
+.g-missing code { background: #0001; padding: 1px 4px; border-radius: 3px; }

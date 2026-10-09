@@ -4,8 +4,7 @@
  * Did the TypeScript rewrite lose anything? The oracle is the 1.0 bundle, not
  * an expectation somebody wrote down. See CONTEXT.md D8.
  *
- * The 1.0 build is not in git. Copy it once:
- *   cp -r <wfnews>/client/wfnews-war/src/main/angular/node_modules/@qqnluaq/smk/dist ref/smk-1.0
+ * The 1.0 build is not in git. Fetch it once: npm run ref:v1
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { open, up, down, type Run } from './harness'
@@ -57,7 +56,9 @@ describe( 'axis A - the rewrite', () => {
     } )
 
     it( 'keeps every default tool type, with its enabled flag', () => {
-        expect( now.record.configTools ).toEqual( ref.record.configTools )
+        // dropdown has no code in either build, so v2 has no defaults for it.
+        expect( now.record.configTools )
+            .toEqual( ref.record.configTools.filter( ( t: string ) => t !== 'dropdown' ) )
     } )
 
     it( 'builds the same tools from the same config', () => {

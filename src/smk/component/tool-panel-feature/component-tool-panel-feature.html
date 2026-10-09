@@ -40,21 +40,11 @@
             v-on:click="$$emit( 'select', { instance: instance } )"
         >Add to selection</command-button>
 
-        <select class="smk-command smk-attribute-mode" 
+        <select-dropdown class="smk-attribute-mode"
             v-if="layer && command.attributeMode"
             v-model="attributeMode"
-        >
-            <option value="default">Default View</option>        
-            <option v-bind:value="'feature-template-' + layer.id"
-                v-if="attributeComponent == 'feature-template-' + layer.id"
-            >Template View</option>        
-            <option value="feature-description"
-                v-if="attributeComponent == 'feature-description'"
-            >Description View</option>        
-            <option value="feature-attributes">Attributes View</option>        
-            <option value="feature-properties">Properties View</option>        
-            <option value="feature-formatted">Formatted View</option>        
-        </select>
+            v-bind:options="attributeModeOptions"
+        ></select-dropdown>
     </template>
 
     <component class="smk-feature"

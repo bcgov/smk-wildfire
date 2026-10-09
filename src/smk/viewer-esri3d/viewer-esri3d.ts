@@ -4,7 +4,7 @@
  */
 
 import { Viewer } from '../viewer'
-import { Esri3dReady } from './types-esri3d'
+import { loadEsri3d } from './types-esri3d'
 import { SMK } from '../smk-ref'
 
 declare const turf: any
@@ -32,7 +32,7 @@ ViewerEsri3d.prototype.initialize = function ( smk: any ) {
 
     Viewer.prototype.initialize.apply( this, arguments )
 
-    return Esri3dReady.then( function ( E: any ) {
+    return loadEsri3d().then( function ( E: any ) {
 
     const el = smk.addToContainer( '<div class="smk-viewer">' )
 

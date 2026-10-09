@@ -47,10 +47,9 @@ function setReady( state, why ) {
 // ---------------------------------------------------------------------------
 // Stories — the starting configs
 //
-// A story adds data and nothing else. None of them names a tool, an icon, a
-// title, a position or an order, so what you see is what SMK does with its own
-// defaults. To change a tool, use the Tools panel, or paste a config into the
-// Config tab.
+// A story adds data and nothing else, so what you see is what SMK does with its
+// own defaults. To change a tool, use the Tools panel, or paste a config into
+// the Config tab.
 // ---------------------------------------------------------------------------
 
 var L = '../layer/'
@@ -69,6 +68,13 @@ var STORIES = {
             L + 'forest-tenure-ften-recreation-poly.json',
             L + 'wms-imagery-and-base-maps-gsr-schools-k-to-12.json'
         ]
+    },
+
+    // 764 BC parks from one GeoJSON. Both 2D viewers cluster them from
+    // `useClustering`.
+    'cluster': {
+        title: 'Clustered points',
+        config: [ L + 'cluster-provincial-parks.json' ]
     },
 
     'defaults': {
@@ -95,30 +101,6 @@ function bespokePanel( id, title, html ) {
     SMK.HANDLER.set( id, 'activated', function ( smk, tool, el ) {
         if ( !el ) return
         el.innerHTML = '<h3 style="margin-top:0">' + title + '</h3>' + html
-    } )
-}
-
-/** The three route markers, as SMK 1.0 shipped them. */
-function waypointMarkers() {
-    var base = '../../dist/assets/src/smk/tool/directions/config/'
-    return [
-        [ '@waypoint-start',  'Starting Route Location', 'green' ],
-        [ '@waypoint-end',    'Ending Route Location',   'red'   ],
-        [ '@waypoint-middle', 'Waypoint on Route',       'blue'  ]
-    ].map( function ( m ) {
-        return {
-            id: m[ 0 ], title: m[ 1 ],
-            style: {
-                markerUrl:    base + 'marker-icon-' + m[ 2 ] + '.png',
-                markerSize:   [ 25, 41 ],
-                markerOffset: [ 12, 41 ],
-                shadowUrl:    base + 'marker-shadow.png',
-                shadowSize:   [ 41, 41 ],
-                popupOffset:  [ 1, -34 ]
-            },
-            legend: { title: m[ 1 ], point: true },
-            isDraggable: true, isQueryable: false
-        }
     } )
 }
 
@@ -159,12 +141,12 @@ var EXAMPLES = {
     },
 
     'directions': {
-        note: 'Directions wired to the BC Route Planner, with the layers it cannot run without',
+        note: 'Directions wired to the BC Route Planner and the BC Geocoder',
         config: [ { tools: [ {
             type: 'directions', enabled: true, position: 'toolbar', order: 93,
             // See Route Details is disabled until the service answers with a
-            // route, so the tool needs a key. Same keys as
-            // debug/config/tool/directions.json.
+            // route, so the tool needs a key. The route layers are in the
+            // defaults. Same keys as debug/config/tool/directions.json.
             routePlannerService: {
                 url:    'https://router.api.gov.bc.ca/',
                 apiKey: '11dd756f680c47b5aef5093d95543738'
@@ -172,18 +154,55 @@ var EXAMPLES = {
             geocoderService: {
                 url: 'https://geocoder.api.gov.bc.ca/',
                 parameter: { maxDistance: 50, locationMode: 'input' }
-            },
-            // displayWaypoints() reads this.layer['@waypoint-start'] straight
-            // off, and this.layer is built only from these two lists. SMK 1.0
-            // shipped them in its defaults; this build does not, so the tool
-            // throws on the first waypoint without them. See CONTEXT.md 8.1.
-            segmentLayers: [
-                { id: '@segments', title: 'Segments',
-                  style: { strokeColor: 'blue', strokeWidth: 8, strokeOpacity: 0.8 },
-                  legend: { line: true } }
-            ],
-            waypointLayers: waypointMarkers()
+            }
         } ] } ]
+    },
+
+    // markup and query build only with a named instance, so neither has a
+    // Catalogue row. Their examples sit in the footnote under the list.
+    'markup': {
+        note: 'A drawing tool in the toolbar. SMK hands each shape to a handler',
+        config: [ { tools: [
+            { type: 'markup', instance: 'draw', enabled: true, position: 'toolbar', title: 'Markup', icon: 'edit', order: 96 }
+        ] } ],
+        handlers: function () {
+            var id = 'MarkupTool--draw'
+            SMK.HANDLER.set( id, 'initialized', function () {} )
+            SMK.HANDLER.set( id, 'activated',   function () {} )
+            SMK.HANDLER.set( id, 'deactivated', function () {} )
+            SMK.HANDLER.set( id, 'markup-created', function ( smk, tool, geojson ) {
+                log( 'markup', ( geojson && geojson.geometry && geojson.geometry.type ) || 'shape' )
+            } )
+        }
+    },
+
+    'query': {
+        note: 'A query on BC survey parcels, run through WFS',
+        config: [ {
+            layers: [ {
+                id: 'survey-parcels', type: 'wms', isVisible: true,
+                title: 'Land Act Survey Parcels',
+                // /ows answers WMS and WFS. /wms refuses WFS: "No service: ( WFS )".
+                serviceUrl: 'https://openmaps.gov.bc.ca/geo/pub/ows',
+                layerName: 'WHSE_TANTALIS.TA_SURVEY_PARCELS_SVW',
+                styleName: 'Land_Act_Survey_Parcels_Tantalis_Outlined',
+                titleAttribute: 'PARCEL_SHORT_DESCRIPTION', geometryAttribute: 'SHAPE',
+                queries: [ {
+                    id: 'by-type', title: 'Find parcels', description: 'Survey parcels by type and description',
+                    parameters: [
+                        { id: 'type', type: 'select', title: 'Parcel type is',
+                          choices: [ { title: 'Primary', value: 'Primary' }, { title: 'Subdivision', value: 'Subdivision' } ] },
+                        { id: 'text', type: 'input', title: 'description contains', value: '' }
+                    ],
+                    predicate: { operator: 'and', arguments: [
+                        { operator: 'equals',   arguments: [ { operand: 'attribute', name: 'PARCEL_TYPE' }, { operand: 'parameter', id: 'type' } ] },
+                        { operator: 'contains', arguments: [ { operand: 'attribute', name: 'PARCEL_SHORT_DESCRIPTION' }, { operand: 'parameter', id: 'text' } ] }
+                    ] }
+                } ]
+            } ],
+            // The default query entry is enabled: false, so the instance must say true.
+            tools: [ { type: 'query', instance: 'survey-parcels--by-type', enabled: true, position: 'toolbar', icon: 'manage_search', order: 97 } ]
+        } ]
     },
 
     'list-menu': {
@@ -239,6 +258,8 @@ var smk     = null            // the map the panels drive
 var driving = null            // its viewer name
 var dropped = null            // config from a dropped file or the textarea
 var extraTools = {}           // catalogue types switched on, applied at the next start
+var removedTools = {}         // built tools taken out ("type" or "type--instance"), applied at the next start
+var argEdit = {}              // tool args edited in the Tools panel, applied at the next start
 var logView = false
 var refReady    = Promise.resolve()   // settles when the 1.0 pane has answered
 var refSettled  = null                // its resolve function, or null when there is no ref pane
@@ -280,18 +301,90 @@ function currentConfig( viewerType ) {
 
     // SMK builds only the tools a config enables, so a catalogue tick has to
     // become config and wait for a restart. See buildCatalogue.
-    // position: 'toolbar' is not decoration. tool-base skips the whole adopt
-    // step when position is empty, so a tool with none builds, sits in $tool
-    // and never renders a widget.
+    var defaults = {}
+    startTools().forEach( function ( d ) { defaults[ d.type ] = d } )
+
+    // Only a tool with no default position gets one. tool-base skips the whole
+    // adopt step when position is empty, so such a tool builds, sits in $tool
+    // and never renders a widget. Forcing it on the rest is a lie: it moved the
+    // actionbar tools into the toolbar, and gave a tool that deliberately has
+    // no position - location - a second panel in the sidepanel.
     var extra = Object.keys( extraTools )
     var tail  = extra.length ? [ { tools: extra.map( function ( t ) {
-        return { type: t, enabled: true, position: 'toolbar' }
+        var d = defaults[ t ]
+        var e = { type: t, enabled: true }
+        if ( !d || !d.position ) e.position = 'toolbar'
+        return e
     } ) } ] : []
 
-    if ( dropped && !$( '#merge' ).checked )
-        return [ head ].concat( dropped, tail )
+    var args = argEditConfig().concat( removedToolConfig() )
 
-    return [ head ].concat( story.config, dropped || [], tail )
+    if ( dropped && !$( '#merge' ).checked )
+        return [ head ].concat( dropped, tail, args )
+
+    return [ head ].concat( story.config, dropped || [], tail, args )
+}
+
+/** The tools taken out with a remove button, as one fragment that turns each off. */
+function removedToolConfig() {
+    var keys = Object.keys( removedTools )
+    if ( !keys.length ) return []
+    return [ { tools: keys.map( function ( k ) {
+        var part = k.split( '--' )
+        var e = { type: part[ 0 ], enabled: false }
+        if ( part[ 1 ] ) e.instance = part[ 1 ]
+        return e
+    } ) } ]
+}
+
+/** Take one built tool out. SMK builds tools only at start, so this restarts, and keeps the rest. */
+function removeTool( tool, id ) {
+    var key = argEditKey( tool )
+    if ( extraTools[ tool.type ] && !tool.instance ) delete extraTools[ tool.type ]
+    else removedTools[ key ] = true
+    log( 'remove', id + ' - restarting' )
+    writeQuery()
+    restart()
+}
+
+/** The merge key of one built tool. Bespoke tools repeat a type per instance. */
+function argEditKey( tool ) {
+    return tool.type + ( tool.instance ? '--' + tool.instance : '' )
+}
+
+/**
+ * The args edited in the Tools panel, as config fragments.
+ *
+ * fillArgs writes to the live tool, and restart() destroys it. Config is the
+ * only thing a restart re-reads, so every edit is kept here and merged last.
+ * Tools match on type and instance - see updateToolSet in merge-config.
+ *
+ * An array or an object arg needs two fragments. merge-config concats an array
+ * and deep-merges an object, so one fragment would append to the story value
+ * instead of replacing it. A null deletes, so clear first, then set.
+ */
+function argEditConfig() {
+    var keys = Object.keys( argEdit )
+    if ( !keys.length ) return []
+
+    var clear = [], set = []
+
+    keys.forEach( function ( k ) {
+        var o = argEdit[ k ]
+        var c = { type: o.type }, s = { type: o.type }
+        if ( o.instance ) c.instance = s.instance = o.instance
+
+        Object.keys( o.args ).forEach( function ( a ) {
+            var v = o.args[ a ]
+            if ( v !== null && typeof v === 'object' ) c[ a ] = null
+            s[ a ] = v
+        } )
+
+        if ( Object.keys( c ).length > ( c.instance ? 2 : 1 ) ) clear.push( c )
+        set.push( s )
+    } )
+
+    return ( clear.length ? [ { tools: clear } ] : [] ).concat( [ { tools: set } ] )
 }
 
 function setState( s ) {
@@ -714,11 +807,55 @@ function resizeAll() {
 // enabled greys it and blocks activation, active opens the panel.
 var LIVE = { showWidget: 1, enabled: 1, visible: 1, active: 1 }
 
+// What each live flag means, shown as the column label's tooltip.
+var FLAG_HELP = {
+    showWidget: 'showWidget: is the button in the page at all? (v-if on the widget template)',
+    enabled:    'enabled: does clicking the button do anything? In a config the same word means "build this tool".',
+    visible:    "visible: is the tool's own output showing? Most tools set this themselves.",
+    active:     'active: is the tool operating now - its panel open, its mode engaged?'
+}
+
+function viewerNames() {
+    return ( window.SMK.SUPPORT || {} ).viewers || VIEWERS
+}
+
+/** One header for a tool grid. The labels are short; the tooltips say what they mean. */
+function toolGridHead( lastCols ) {
+    var head = el( 'div', 'grid-head' )
+    head.appendChild( el( 'span', 'name', 'tool' ) )
+    head.appendChild( el( 'span' ) )    // the example column
+    viewerNames().forEach( function ( v ) {
+        var s = el( 'span', 'v', v )
+        s.title = 'Does ' + v + ' have an implementation?'
+        head.appendChild( s )
+    } )
+    lastCols.forEach( function ( c ) {
+        var s = el( 'span', 'v', c[ 0 ] )
+        s.title = c[ 1 ]
+        head.appendChild( s )
+    } )
+    return head
+}
+
+/** One cell per viewer, a tick or a cross, from SMK.SUPPORT. Empty when it knows nothing. */
+function supportCells( type ) {
+    var t = ( ( window.SMK.SUPPORT || {} ).tools || {} )[ type ]
+    return viewerNames().map( function ( v ) {
+        if ( !t ) return el( 'span', 'cell' )
+        var has = ( t.shared && !t.viewers.length ) || t.viewers.indexOf( v ) >= 0
+        var c = el( 'span', 'cell mark ' + ( has ? 'yes' : 'no' ), has ? '\u2713' : '\u2715' )
+        c.title = v + ( has ? ' has an implementation' : ' has NO implementation' )
+        return c
+    } )
+}
+
 function buildTools() {
     var host = $( '#tools' )
     host.innerHTML = ''
 
     if ( !smk ) { host.appendChild( el( 'div', 'ro', 'no map is driving' ) ); buildCatalogue(); return }
+
+    host.appendChild( toolGridHead( Object.keys( LIVE ).map( function ( f ) { return [ f, FLAG_HELP[ f ] ] } ) ) )
 
     Object.keys( smk.$tool ).sort().forEach( function ( id ) {
         var tool = smk.$tool[ id ]
@@ -728,30 +865,28 @@ function buildTools() {
 
         var name = el( 'div', 'name', id )
         name.appendChild( el( 'small', '', tool.type || '' ) )
+        name.title = id + ' (' + tool.type + ')'
         row.appendChild( name )
 
-        var sup = toolSupport( tool.type )
-        if ( sup ) { sup.classList.add( 'support-row' ); row.appendChild( sup ) }
+        row.appendChild( exampleButton( tool.type ) || el( 'span' ) )
+        supportCells( tool.type ).forEach( function ( c ) { row.appendChild( c ) } )
 
-        var ex = exampleButton( tool.type )
-        if ( ex ) row.appendChild( ex )
-
-        var flags = el( 'div', 'flags' )
+        // Every flag has its own column, so a tool without one leaves the cell empty.
         Object.keys( LIVE ).forEach( function ( f ) {
-            if ( !( f in tool.$prop ) ) return
-            var lab = el( 'label' )
-            var box = document.createElement( 'input' )
-            box.type = 'checkbox'
-            box.checked = !!tool[ f ]
-            box.onchange = function () {
-                tool[ f ] = box.checked
-                log( 'set', id + '.' + f + ' = ' + box.checked )
+            var cell = el( 'span', 'cell' )
+            if ( f in tool.$prop ) {
+                var box = document.createElement( 'input' )
+                box.type    = 'checkbox'
+                box.title   = FLAG_HELP[ f ]
+                box.checked = !!tool[ f ]
+                box.onchange = function () {
+                    tool[ f ] = box.checked
+                    log( 'set', id + '.' + f + ' = ' + box.checked )
+                }
+                cell.appendChild( box )
             }
-            lab.appendChild( box )
-            lab.appendChild( document.createTextNode( f ) )
-            flags.appendChild( lab )
+            row.appendChild( cell )
         } )
-        row.appendChild( flags )
 
         var args = el( 'div', 'args' )
         var more = el( 'button', 'more', 'args' )
@@ -760,6 +895,11 @@ function buildTools() {
             if ( args.classList.contains( 'on' ) && !args.childElementCount ) fillArgs( args, tool, id )
         }
         row.appendChild( more )
+
+        var rm = el( 'button', 'remove', '\u00d7' )
+        rm.title = 'Remove ' + id + ' and restart. Tick it under Not built to bring it back.'
+        rm.onclick = function () { removeTool( tool, id ) }
+        row.appendChild( rm )
 
         host.appendChild( row )
         host.appendChild( args )
@@ -771,7 +911,8 @@ function buildTools() {
 // The tool list a map starts from: each type's own defaults, with the default
 // tool set in SMK.CONFIG.tools switched on.
 function startTools() {
-    return window.SMK.TYPE.mergeConfigs( [] ).tools
+    var T = window.SMK && window.SMK.TYPE
+    return T && T.mergeConfigs ? T.mergeConfigs( [] ).tools : []
 }
 
 /**
@@ -830,10 +971,19 @@ function buildCatalogue() {
      * names an instance for it, so `enabled: true` alone does nothing. A
      * checkbox on either is a lie, so neither gets a row. They are named under
      * the list instead.
+     *
+     * A helper can register as tool-<name> too, and a default can have no code.
+     * A real factory has addInitializer, or is a composite; every composite has
+     * a default entry.
      */
     var rows = []
     var byParent = {}     // parent -> its unbuilt children
     var instanceOnly = []
+
+    function hasFactory( t ) {
+        var f = smkGlobal.TYPE[ 'tool-' + t ]
+        return !!f && ( !!f.addInitializer || !!inDefaults[ t ] )
+    }
 
     Object.keys( types ).sort().forEach( function ( t ) {
         if ( isBuilt( t ) ) return
@@ -845,51 +995,50 @@ function buildCatalogue() {
             if ( !byParent[ pa ] ) byParent[ pa ] = []
             return byParent[ pa ].push( t )
         }
+        if ( !hasFactory( t ) ) return
         if ( d && d.instance === true ) return instanceOnly.push( t )
 
         rows.push( t )
     } )
 
     if ( !rows.length ) host.appendChild( el( 'div', 'ro', 'every bundled tool you can switch on is built' ) )
+    else host.appendChild( toolGridHead( [ [ 'build', 'build: turns it on in the config and restarts' ] ] ) )
 
     rows.forEach( function ( type ) {
-        var d   = inDefaults[ type ]
-        var why = !d ? 'registered type, no defaults'
-                     : 'has defaults, enabled: false'
+        var d = inDefaults[ type ]
 
-        if ( children[ type ] ) why += ' - also builds ' + children[ type ].join( ', ' )
-        why += '. Built with position: toolbar'
+        // Most rows "have defaults, are off, and have their own position"; say only what differs.
+        var notes = []
+        if ( !d ) notes.push( 'no default config' )
+        if ( children[ type ] ) notes.push( 'also builds ' + children[ type ].join( ', ' ) )
+        if ( !d || !d.position ) notes.push( 'goes in the toolbar' )
 
         var row = el( 'div', 'row' )
         row.dataset.name = type.toLowerCase()
 
         var name = el( 'div', 'name', type )
-        name.appendChild( el( 'small', '', why ) )
+        if ( notes.length ) name.appendChild( el( 'small', '', notes.join( '; ' ) ) )
+        name.title = type + ( notes.length ? ' - ' + notes.join( '; ' ) : '' )
         row.appendChild( name )
 
-        var sup = toolSupport( type )
-        if ( sup ) { sup.classList.add( 'support-row' ); row.appendChild( sup ) }
+        row.appendChild( exampleButton( type ) || el( 'span' ) )
+        supportCells( type ).forEach( function ( c ) { row.appendChild( c ) } )
 
-        var ex = exampleButton( type )
-        if ( ex ) row.appendChild( ex )
-
-        var lab = el( 'label' )
+        var lab = el( 'span', 'cell' )
         var box = document.createElement( 'input' )
         box.type    = 'checkbox'
+        box.title   = 'Build ' + type + ' and restart'
         box.checked = !!extraTools[ type ]
         box.onchange = function () {
-            if ( box.checked ) extraTools[ type ] = true
-            else               delete extraTools[ type ]
+            if ( !box.checked )          delete extraTools[ type ]
+            else if ( removedTools[ type ] ) delete removedTools[ type ]
+            else                         extraTools[ type ] = true
             log( 'catalogue', type + ( box.checked ? ' on' : ' off' ) + ' - restarting' )
             writeQuery()
             restart()
         }
         lab.appendChild( box )
-        lab.appendChild( document.createTextNode( 'build it' ) )
-
-        var flags = el( 'div', 'flags' )
-        flags.appendChild( lab )
-        row.appendChild( flags )
+        row.appendChild( lab )
         host.appendChild( row )
     } )
 
@@ -904,8 +1053,15 @@ function buildCatalogue() {
             dl.appendChild( el( 'dd', '', byParent[ pa ].sort().join( ', ' ) ) )
         } )
         if ( instanceOnly.length ) {
-            dl.appendChild( el( 'dt', '', 'named by a layer query' ) )
-            dl.appendChild( el( 'dd', '', instanceOnly.sort().join( ', ' ) ) )
+            dl.appendChild( el( 'dt', '', 'need a named instance in the config' ) )
+            var dd = el( 'dd', '' )
+            instanceOnly.sort().forEach( function ( t, i ) {
+                if ( i ) dd.appendChild( document.createTextNode( ', ' ) )
+                dd.appendChild( el( 'span', '', t + ' ' ) )
+                var b = exampleButton( t )
+                if ( b ) { b.dataset.type = t; dd.appendChild( b ) }
+            } )
+            dl.appendChild( dd )
         }
         note.appendChild( dl )
         host.appendChild( note )
@@ -914,6 +1070,8 @@ function buildCatalogue() {
 
 /** Every prop the tool declared, editable where the type allows. */
 function fillArgs( host, tool, id ) {
+    var kept = argEdit[ argEditKey( tool ) ]
+
     Object.keys( tool.$prop ).sort().forEach( function ( key ) {
         if ( key in LIVE ) return
 
@@ -929,6 +1087,7 @@ function fillArgs( host, tool, id ) {
         var input = document.createElement( isObj ? 'textarea' : 'input' )
         input.value = isObj ? safeJson( val )
                     : ( val === null || val === undefined ? '' : String( val ) )
+        if ( kept && key in kept.args ) input.classList.add( 'edited' )
 
         input.onchange = function () {
             var text = input.value.trim(), next
@@ -942,6 +1101,14 @@ function fillArgs( host, tool, id ) {
             } catch ( e ) { log( 'error', key + ': ' + e.message ); return }
 
             tool[ key ] = next
+
+            // Kept by type, not by tool id: the id is the factory name, and
+            // only the type matches a config entry.
+            var k = argEditKey( tool )
+            if ( !kept ) kept = argEdit[ k ] = { type: tool.type, instance: tool.instance, args: {} }
+            kept.args[ key ] = next
+            input.classList.add( 'edited' )
+
             log( 'set', id + '.' + key + ' = ' + text.slice( 0, 60 ) )
         }
         host.appendChild( input )
@@ -949,9 +1116,20 @@ function fillArgs( host, tool, id ) {
 
     if ( !host.childElementCount ) host.appendChild( el( 'div', 'ro', 'no props' ) )
     else {
-        var note = el( 'div', 'ro', 'These write to the live tool. SMK reads most of them only when it builds the tool, so press Restart to be sure a change took.' )
+        var note = el( 'div', 'ro', 'An edit writes to the live tool and is kept as config, so it survives Restart. SMK reads most args only when it builds the tool, so press Restart to be sure a change took.' )
         note.style.gridColumn = '1 / -1'
         host.appendChild( note )
+
+        var drop = el( 'button', 'more', 'drop edits' )
+        drop.title = 'Forget every arg edited on this tool, then restart on the story value'
+        drop.onclick = function () {
+            delete argEdit[ argEditKey( tool ) ]
+            log( 'args', tool.type + ' - edits dropped, restarting' )
+            restart()
+        }
+        drop.style.gridColumn = '1 / -1'
+        drop.style.justifySelf = 'start'
+        host.appendChild( drop )
     }
 }
 
@@ -974,13 +1152,6 @@ function supportChips( viewersWithIt, sharedEverywhere ) {
         flags.appendChild( t )
     } )
     return flags
-}
-
-/** What SMK.SUPPORT says about one tool type, or null when it knows nothing. */
-function toolSupport( type ) {
-    var t = ( ( window.SMK.SUPPORT || {} ).tools || {} )[ type ]
-    if ( !t ) return null
-    return supportChips( t.viewers, t.shared && !t.viewers.length )
 }
 
 // ---------------------------------------------------------------------------
@@ -1032,8 +1203,12 @@ function layerRow( host, dc, id, isInternal ) {
     var row = el( 'div', 'row' )
     row.dataset.name = ( id + ' ' + ( cfg.type || '' ) ).toLowerCase()
 
+    // The title as well as the id: a config names a layer by title, and the
+    // two rarely match, so an id alone sends you looking for the wrong string.
     var name = el( 'div', 'name', id )
-    name.appendChild( el( 'small', '', ( cfg.type || 'unknown type' ) + ( isInternal ? ' - internal, made by a tool' : '' ) ) )
+    name.appendChild( el( 'small', '', ( cfg.type || 'unknown type' ) +
+        ( cfg.title && cfg.title !== id ? ' - ' + cfg.title : '' ) +
+        ( isInternal ? ' - internal, made by a tool' : '' ) ) )
     row.appendChild( name )
 
     var flags = el( 'div', 'flags' )
@@ -1471,9 +1646,18 @@ function readQuery() {
         var v = QUERY.get( pair[ 1 ] )
         if ( v === null ) return
         var node = $( pair[ 0 ] )
-        if ( node.type === 'checkbox' ) node.checked = v !== '0' && v !== 'false'
-        else if ( [].some.call( node.options, function ( o ) { return o.value === v } ) ) node.value = v
+        if ( node.type === 'checkbox' ) { node.checked = v !== '0' && v !== 'false'; return }
+
+        // A value no option carries used to be dropped in silence, so the page
+        // ran the first Story and the link looked as if it had worked. A stale
+        // cached harness.js does exactly this.
+        if ( [].some.call( node.options, function ( o ) { return o.value === v } ) ) node.value = v
+        else console.warn( 'harness: ?' + pair[ 1 ] + '=' + v + ' is not an option here - using "' +
+                           node.value + '". A cached harness.js does this.' )
     } )
+
+    ;( QUERY.get( 'remove' ) || '' ).split( ',' ).filter( Boolean )
+        .forEach( function ( t ) { removedTools[ t ] = true } )
 
     ;( QUERY.get( 'tools' ) || '' ).split( ',' ).filter( Boolean )
         .forEach( function ( t ) { extraTools[ t ] = true } )
@@ -1495,6 +1679,8 @@ function writeQuery() {
     } )
     var extra = Object.keys( extraTools )
     if ( extra.length ) q.set( 'tools', extra.join( ',' ) )
+    var removed = Object.keys( removedTools )
+    if ( removed.length ) q.set( 'remove', removed.join( ',' ) )
 
     history.replaceState( null, '', location.pathname + '?' + q )
 }

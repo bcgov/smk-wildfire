@@ -66,11 +66,13 @@
     left: -20px;
 }
 
+/* As tall as the check box and centred in it, so the two share a centre line
+   while the row stays top-aligned for the legend line. */
 .smk-layers-panel .smk-display .smk-item .smk-layer-title {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    min-height: var( --control-size );
     margin-left: var( --space-2 );
-    margin-top: var( --space-2 );
-    margin-bottom: var( --space-2 );
     flex-grow: 1;
 }
 

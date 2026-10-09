@@ -112,11 +112,15 @@ export class WmsMapLibreLayer extends WmsLayer {}
             // Attached by viewer-maplibre.addViewerLayer after the source has
             // been registered with the map.  Returns a cleanup function that
             // viewer-maplibre.removeViewerLayer will invoke.
-            _smk_onAdd: function ( map: any ) {
+            _smk_onAdd: function ( this: any, map: any ) {
+                const spec = this
                 let raf:       number | null = null
                 let fetchToken = 0
                 let objectUrl: string | null = null
                 let cancelled  = false
+                // The image shown or in flight. A resize or move that keeps the view asks for it again.
+                let currentUrl: string | null = null
+                let forceNext  = false
 
                 function buildUrlAndCoords() {
                     const bounds = map.getBounds()
@@ -174,6 +178,9 @@ export class WmsMapLibreLayer extends WmsLayer {}
                         if ( !src ) return
 
                         const { url, coordinates } = buildUrlAndCoords()
+                        if ( url === currentUrl && !forceNext ) return
+                        currentUrl = url
+                        forceNext  = false
 
                         // Fetch ONCE and hand updateImage a blob url. Giving it
                         // the WMS url instead made maplibre download the same
@@ -201,6 +208,8 @@ export class WmsMapLibreLayer extends WmsLayer {}
 
                                 const next = URL.createObjectURL( blob )
                                 s.updateImage( { url: next, coordinates } )
+                                // The viewer fades the layer in; the blank seed image must not count.
+                                spec._smk_ready?.()
 
                                 // Revoke the one it replaces, never the new one.
                                 if ( objectUrl ) URL.revokeObjectURL( objectUrl )
@@ -208,6 +217,7 @@ export class WmsMapLibreLayer extends WmsLayer {}
                             } )
                             .catch( ( err: any ) => {
                                 if ( stale() ) return
+                                currentUrl = null    // let the next move try again
                                 console.warn( 'WMS image fetch failed:', url, err )
                             } )
                             .then( () => { if ( !stale() ) setLoading( false ) } )
@@ -219,14 +229,15 @@ export class WmsMapLibreLayer extends WmsLayer {}
 
                 // The image is only re-requested on move. A time-aware subclass
                 // changes the URL without moving, so give it a way to ask.
-                cfg0._smkRefresh = update
+                const refresh = function () { forceNext = true; update() }
+                cfg0._smkRefresh = refresh
 
                 // First request once the map is idle.
                 update()
 
                 return function cleanup() {
                     cancelled = true
-                    if ( cfg0._smkRefresh === update ) delete cfg0._smkRefresh
+                    if ( cfg0._smkRefresh === refresh ) delete cfg0._smkRefresh
                     map.off( 'moveend', update )
                     map.off( 'resize',  update )
                     if ( raf != null ) {

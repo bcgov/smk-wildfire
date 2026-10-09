@@ -23,8 +23,8 @@
 <div id="missing">
     <div>
         <strong>The SMK 1.0 reference build is not here.</strong>
-        <p>Copy it from the WFNEWS Angular tree, then reload:</p>
-        <p><code>cp -r &lt;wfnews&gt;/client/wfnews-war/src/main/angular/node_modules/@qqnluaq/smk/dist ref/smk-1.0</code></p>
+        <p>Fetch it from npm, then reload:</p>
+        <p><code>npm run ref:v1</code></p>
         <p>It is excluded from git, so every clone does this once.</p>
     </div>
 </div>
@@ -68,12 +68,26 @@ tag.onerror = function () {
 tag.onload = function () {
     if ( !window.SMK || !window.SMK.INIT ) return fail( 'the build loaded but set no SMK.INIT' )
 
-    // Same shape as the harness Catalogue: a type becomes an enabled entry in
-    // the toolbar. tool-base skips the adopt step when position is empty, so a
-    // tool with none builds and never renders a widget.
+    // images/ holds the Leaflet MiniMap toggle. SMK 1.0 injects its CSS into
+    // this page, so url( images/toggle.svg ) resolves against this directory
+    // and 404s. v2 inlines it, so only the reference pane needs the copy.
+
+    // Same shape as the harness Catalogue: a type becomes an enabled entry,
+    // and only one with no default position is given the toolbar. tool-base
+    // skips the adopt step when position is empty, so such a tool builds and
+    // never renders a widget. Giving one to the rest moved them out of the
+    // menus they belong in.
+    //
+    // 1.0 fills SMK.CONFIG.tools inside INIT, so it cannot be read here. The
+    // list is fixed: it is every entry in 1.0.39 with no `position`.
+    var NO_POSITION = [ 'actionbar', 'bespoke', 'coordinate', 'dropdown', 'legend',
+        'location', 'minimap', 'query', 'scale', 'shortcut-menu', 'toolbar' ]
+
     var tools = ( q.get( 'tools' ) || '' ).split( ',' ).filter( Boolean )
     var extra = tools.length ? [ { tools: tools.map( function ( t ) {
-        return { type: t, enabled: true, position: 'toolbar' }
+        var e = { type: t, enabled: true }
+        if ( NO_POSITION.indexOf( t ) >= 0 ) e.position = 'toolbar'
+        return e
     } ) } ] : []
 
     window.SMK.INIT( {

@@ -78,7 +78,6 @@ describe( 'the support matrix is real', () => {
             'feature-list-clustering-leaflet/maplibre',
             'feature-list-clustering/maplibre',
             'mode/leaflet',
-            'query-place/maplibre',
             'query/maplibre',
             'search/leaflet',
             'search/maplibre',

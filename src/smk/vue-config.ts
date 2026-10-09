@@ -41,10 +41,14 @@ function formatDate( value: any ): string {
     return isNaN( d.getTime() ) ? String( value ) : d.toLocaleDateString()
 }
 
-function formatTime( value: any ): string {
-    if ( !value ) return ''
-    var d = new Date( value )
-    return isNaN( d.getTime() ) ? String( value ) : d.toLocaleTimeString()
+/** A duration in seconds, as SMK 1.0 wrote it: mm:ss, or hh:mm:ss past an hour. */
+export function formatTime( value: any ): string {
+    if ( value == null || value === '' ) return ''
+    var t = Math.round( Number( value ) )
+    if ( !isFinite( t ) ) return String( value )
+    var pad = function ( n: number ) { return ( '0' + n ).slice( -2 ) }
+    var s = t % 60, m = Math.floor( t / 60 ) % 60, h = Math.floor( t / 3600 )
+    return ( h ? pad( h ) + ':' : '' ) + pad( m ) + ':' + pad( s )
 }
 
 /** A fixed decimal count leaves ".00000" on a whole number. Drop it. */

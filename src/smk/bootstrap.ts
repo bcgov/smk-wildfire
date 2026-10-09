@@ -95,6 +95,35 @@ function onFailure( err: Error, el?: Element | null ): void {
 // setupGlobalSMK — initialise window.SMK with all defaults
 // ---------------------------------------------------------------------------
 
+/**
+ * The internal-layer groups the Layers panel shows.
+ *
+ * 1.0 pushed one of these from each tool's config module, so a Host could
+ * merge into them by id - merge-config.ts still names the path. A tool that is
+ * not built is skipped by initializeDisplayContext.
+ */
+function defaultDisplayContext(): Record<string, any>[] {
+    // The context id is the tool TYPE, and the group id is the tool ID.
+    const group = ( type: string, id: string, title: string, items: string[] ) => ( {
+        id: type,
+        items: [ {
+            id, type: 'group', title, class: 'smk-inline-legend',
+            isVisible: false, isInternal: true, showItem: false,
+            items: items.map( i => ( { id: id + '--' + i } ) ),
+        } ],
+    } )
+
+    return [
+        group( 'current-location', 'CurrentLocationTool', 'Current Location', [ 'current-location' ] ),
+        group( 'identify', 'IdentifyListTool', 'Identify Features', [
+            'highlight-point', 'highlight-line', 'highlight-polygon', 'search-area',
+            'search-border-1', 'search-border-2', 'location', 'edit-search-area' ] ),
+        group( 'location', 'LocationTool', 'Picked Location', [ 'location' ] ),
+        group( 'search', 'SearchListTool', 'Search for Location', [
+            'result-selected', 'result-highlight', 'results' ] ),
+    ]
+}
+
 function setupGlobalSMK(): void {
     const smk = window.SMK as any
 
@@ -112,19 +141,21 @@ function setupGlobalSMK(): void {
         smk.CONFIG = {
             name: 'SMK Default Map',
             viewer: {
-                type:                 'leaflet',
+                // The MapLibre build has no Leaflet viewer to default to.
+                type:                 __SMK_SUPPORT__.viewers.includes( 'leaflet' ) ? 'leaflet' : __SMK_SUPPORT__.viewers[ 0 ],
                 device:               'auto',
                 deviceAutoBreakpoint: 500,
+                waitForLayers:        true,
                 themes:               [],
                 location: {
                     extent: [ -139.1782, 47.6039, -110.3533, 60.5939 ],
                 },
                 // SMK 1.0 opened on 'Topographic', an id the picker now hides.
-                // Ruled 2026-09-08: open on the BC basemap.
-                baseMap:        'bc-roads',
+                // Ruled 2026-09-23 (D22): open on topographic-v2; bc-roads took ~5 s to draw.
+                baseMap:        'topographic-v2',
                 clusterOption:  { showCoverageOnHover: false },
                 zoomSnap:       1,
-                displayContext: [],
+                displayContext: defaultDisplayContext(),
                 baseMapConfig:  [],
             },
             // The Tools a map builds when its Config names none. Each Tool
@@ -181,54 +212,6 @@ function setupGlobalSMK(): void {
 
     if ( !smk.TYPE.Viewer ) smk.TYPE.Viewer = {}
     if ( !smk.TYPE.Layer )  smk.TYPE.Layer  = {}
-}
-
-// ---------------------------------------------------------------------------
-// IE11 guard — must run before setupGlobalSMK so the error is surfaced early
-// ---------------------------------------------------------------------------
-
-if ( navigator.userAgent.indexOf( 'MSIE ' ) > -1 || navigator.userAgent.indexOf( 'Trident/' ) > -1 ) {
-    const ie11Err = new Error( 'SMK will not function in Internet Explorer 11.' )
-
-    const scripts = document.getElementsByTagName( 'script' )
-    let scriptEl: HTMLScriptElement | null = null
-
-    let stack: string | undefined
-    try {
-        // Intentional reference error to capture the current stack and
-        // locate this script element among document.scripts.
-        // @ts-expect-error  omgwtf is intentionally undefined
-        omgwtf  // eslint-disable-line no-undef
-    } catch ( e: any ) {
-        stack = e.stack
-    }
-
-    if ( stack ) {
-        const entries = stack.split( /\s+at\s+/ )
-        const last    = entries[ entries.length - 1 ]
-        const m       = last.match( /[(](.+?)(?:[:]\d+)+[)]/ )
-        if ( m ) {
-            for ( let i = 0; i < scripts.length; i++ ) {
-                if ( scripts[ i ].src !== m[ 1 ] ) continue
-                scriptEl = scripts[ i ]
-                break
-            }
-        }
-    }
-
-    ;( window.SMK as any ).INIT = function ( option: Record<string, any> ) {
-        const containerSelector = option.containerSel || option[ 'smk-container-sel' ]
-        setTimeout( () => {
-            onFailure( ie11Err, resolveContainer( containerSelector ) )
-        }, 2000 )
-    }
-
-    if ( scriptEl && scriptEl.attributes.getNamedItem( 'smk-container-sel' ) ) {
-        ;( window.SMK as any ).INIT( { containerSel: scriptEl.attributes.getNamedItem( 'smk-container-sel' )!.value } )
-    }
-
-    ;( window.SMK as any ).FAILURE = ie11Err
-    throw ie11Err
 }
 
 // ---------------------------------------------------------------------------
@@ -346,6 +329,8 @@ function SmkInit(
     console.groupCollapsed( timer )
 
     smk.BOOT = ( smk.BOOT || Promise.resolve() )
+        // The last map's failure went to its own caller. This map must still start.
+        .catch( () => {} )
         .then( () => ( attr as any ).config )
         .then( ( config: string[] ) => parseConfig( config ) )
         .then( ( parsedConfig: any[] ) => {

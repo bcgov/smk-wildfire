@@ -10,6 +10,12 @@
     min-width: 0;
 }
 
+/* A select keeps the width of its longest option; without this it ran past
+   its shrunk box and was clipped. */
+.smk-measure-panel .smk-panel .smk-commands .smk-select-dropdown select {
+    max-width: 100%;
+}
+
 .smk-measure-panel .smk-result {
     display: flex;
     justify-content: space-between;

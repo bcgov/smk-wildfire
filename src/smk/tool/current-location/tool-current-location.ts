@@ -4,10 +4,10 @@
  */
 
 import Tool from '../../tool'
+import myLocationPng from './config/my-location.png'
 import { widgetDefaults } from '../../mixin/tool-widget/tool-widget'
 import { internalLayersDefaults } from '../../mixin/tool-internal-layers/tool-internal-layers'
 import widgetCurrentLocationHtml from './widget-current-location.html?raw'
-import myLocationPng from './config/my-location.png'
 import { SMK } from '../../smk-ref'
 
 declare const Vue: any
@@ -25,30 +25,9 @@ const factory = Tool.define( 'CurrentLocationTool',
         smkRef.TYPE.ToolWidget.call( this, 'current-location-widget' )
         smkRef.TYPE.ToolInternalLayers.call( this )
 
-        this.internalLayers.push(
-            {
-                id: 'current-location', title: 'Current Location',
-                style: { markerUrl: myLocationPng, markerSize: [ 26, 26 ], markerOffset: [ 13, 13 ] },
-                geometryType: 'point', legend: { point: true },
-            },
-        )
     },
     function ( this: any, smk: any ) {
         const self = this
-
-        // Register the display context so setInternalLayerVisible can use it.
-        // In the old AMD build tool-current-location-config.js pushed this to
-        // SMK.CONFIG.viewer.displayContext; here the tool does it, as identify does.
-        smk.$viewer.setDisplayContextItems( this.type, [ {
-            id:         this.id,
-            type:       'group',
-            title:      this.title,
-            class:      'smk-inline-legend',
-            isVisible:  false,
-            isInternal: true,
-            showItem:   false,
-            items:      this.internalLayers.map( ( ly: any ) => ( { id: ly.id } ) ),
-        } ] )
 
         smk.$viewer.displayContextInitialized.then( function () {
             self.setInternalLayerVisible( true )
@@ -95,5 +74,10 @@ const factory = Tool.define( 'CurrentLocationTool',
 
 Tool.register( 'current-location', factory, widgetDefaults( internalLayersDefaults( {
     position: 'actionbar', order: 11, icon: 'my_location', title: 'Current Location', zoom: 17,
+    internalLayers: [
+        { id: 'current-location', title: 'Current Location',
+          style: { markerUrl: myLocationPng, markerSize: [ 26, 26 ], markerOffset: [ 13, 13 ] },
+          geometryType: 'point', legend: { point: true } },
+    ],
 } ) ) )
 export default factory
