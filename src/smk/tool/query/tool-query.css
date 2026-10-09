@@ -1,8 +1,8 @@
 .smk-sidepanel .smk-query-panel .smk-description {
     font-size: 14px;
     font-style: italic;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: var( --space-2 );
+    margin-bottom: var( --space-2 );
     text-align: center;
 }
 

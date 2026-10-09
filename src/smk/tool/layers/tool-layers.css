@@ -27,11 +27,30 @@
     font-size: 14px;
 }
 
-.smk-layers-panel .smk-display .smk-display {
-    padding-left: 12px;
+/* A child row and a legend both start under the parent's title, so the tree
+   has one step: the check box plus the gap before the title. */
+.smk-layers-panel {
+    --layer-indent: calc( var( --control-size ) + var( --space-2 ) );
 }
 
-.smk-layers-panel .smk-display-group .smk-display {
+/* The Host's box-sizing made the check box 28px or 30px wide, and the indent
+   must match it in every Host. */
+.smk-layers-panel .smk-display .smk-visibility {
+    box-sizing: border-box;
+}
+
+/* The root row is hidden, so the top level is not a tree step. It keeps
+   room for the folder arrow only. */
+.smk-layers-panel .smk-display .smk-display {
+    padding-left: var( --space-3 );
+}
+
+.smk-layers-panel .smk-display .smk-display .smk-display {
+    padding-left: var( --layer-indent );
+}
+
+/* As specific as the rule above, and later, so it wins at any depth. */
+.smk-layers-panel .smk-display .smk-display-group .smk-display {
     padding-left: 0;
 }
 
@@ -39,6 +58,7 @@
     display: flex;
     align-items: center;
     position: relative;
+    padding-left: var( --space-2 );
 }
 
 .smk-layers-panel .smk-display .smk-item .smk-folder-expand {
@@ -48,9 +68,9 @@
 
 .smk-layers-panel .smk-display .smk-item .smk-layer-title {
     display: inline-block;
-    margin-left: 5px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-left: var( --space-2 );
+    margin-top: var( --space-2 );
+    margin-bottom: var( --space-2 );
     flex-grow: 1;
 }
 
@@ -84,9 +104,36 @@
     border: 1px solid transparent;
 }
 
+/* The legend went beside the title in a nowrap row, so each row took its
+   height from the legend, no two titles started at the same y, and a wide
+   graphic pushed past the panel. Give the legend its own line instead. */
+/* The child combinators matter: as a descendant selector :not() still matches
+   an inline-legend row through its outer .smk-display, which put that row's
+   swatch on a line of its own. */
+.smk-layers-panel .smk-display:not( .smk-inline-legend ) > .smk-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.smk-layers-panel .smk-display:not( .smk-inline-legend ) > .smk-item > .smk-legend {
+    flex: 1 0 100%;
+    padding-left: var( --layer-indent );
+    margin-top: var( --space-1 );
+}
+
+/* basis auto is the title's own text width, so a long one took a whole line
+   of its own once the row could wrap. Basis 0 keeps it beside the icon. */
+.smk-layers-panel .smk-display:not( .smk-inline-legend ) > .smk-item > .smk-layer-title {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 .smk-layers-panel .smk-legend {
-    padding-left: 12px;
+    padding-left: var( --space-3 );
     flex-grow: 0;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .smk-layers-panel .smk-legend .smk-legend-item {
@@ -100,8 +147,8 @@
 }
 
 .smk-layers-panel .smk-legend .smk-legend-title {
-    font-size: 11px;
-    padding-left: 8px;
+    font-size: var( --font-sm );
+    padding-left: var( --space-2 );
 }
 
 .smk-layers-panel .smk-display .smk-folder-expand:hover {

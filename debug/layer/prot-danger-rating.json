@@ -1,0 +1,27 @@
+{
+    "layers": [
+        {
+            "type": "wms",
+            "id": "prot-danger-rating",
+            "title": "BC Wildfire Danger Rating",
+            "isVisible": true,
+            "isQueryable": true,
+            "attribution": "Copyright 117 DataBC, Government of British Columbia",
+            "metadataUrl": "",
+            "opacity": 0.65,
+            "serviceUrl": "https://openmaps.gov.bc.ca/geo/pub/ows",
+            "layerName": "pub:WHSE_LAND_AND_NATURAL_RESOURCE.PROT_DANGER_RATING_SP",
+            "styleName": "7734",
+            "titleAttribute": "DANGER_RATING_DESC",
+            "geometryAttribute": "SHAPE",
+            "attributes": [
+                {
+                    "id": "DANGER_RATING_DESC",
+                    "name": "DANGER_RATING_DESC",
+                    "title": "Danger Rating",
+                    "visible": true
+                }
+            ]
+        }
+    ]
+}

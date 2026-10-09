@@ -1,4 +1,7 @@
 .smk-overlay .smk-shortcut-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     pointer-events: auto;
     user-select: none;
     -ms-user-select: none;
@@ -8,11 +11,19 @@
 
 .smk-overlay .smk-shortcut-menu .smk-tool {
     background-color: white;
-    border-radius: 26px;
+    border-radius: 50%;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
     margin: 0;
-    padding: 2px;
-    height: 26px;
-    margin-left: 5px;
-    text-align: center;
+    margin-left: var( --space-2 );
+
+    /* A 24px material icon fills a 26px box. height:26 with 2px padding gave
+       the content 30px in a 26px box, so the icon sat 6px low and the circle
+       came out a pill. Centre it instead of packing it. */
+    box-sizing: border-box;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

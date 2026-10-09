@@ -1,0 +1,22 @@
+{
+    "layers": [
+        {
+            "type": "vector",
+            "id": "scenario-vector",
+            "title": "Scenario Vector",
+            "isVisible": true,
+            "opacity": 0.9,
+            "dataUrl": "/debug/data/4-points.json",
+            "style": {
+                "strokeColor": "#003366",
+                "strokeWidth": 2,
+                "fillColor": "#003366",
+                "fillOpacity": 0.5,
+                "markerSize": [
+                    8,
+                    8
+                ]
+            }
+        }
+    ]
+}

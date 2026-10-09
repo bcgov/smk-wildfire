@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SMK Harness</title>
+
+    <!-- Host libraries. SMK expects these as globals. They must load before the
+         ArcGIS API below, so they see no Dojo `define` and register normally. -->
+    <script src="../../src/lib/vue-2.7.16.min.js"></script>
+    <link rel="stylesheet" href="../../src/lib/leaflet/leaflet-1.7.1.css"/>
+    <script src="../../src/lib/leaflet/leaflet-1.7.1.js"></script>
+    <script src="../../src/lib/leaflet/esri-leaflet-3.0.19.min.js"></script>
+    <link rel="stylesheet" href="../../src/lib/leaflet/maplibre-gl-5.24.0.css"/>
+    <script src="../../src/lib/leaflet/maplibre-gl-5.24.0.min.js"></script>
+    <script src="../../src/lib/leaflet/esri-leaflet-vector-4.3.1.min.js"></script>
+    <script src="../../src/lib/leaflet/esri-leaflet-static-basemap-tile-1.0.0.min.js"></script>
+    <script src="../../src/lib/proj4-2.4.4.min.js"></script>
+    <script src="../../src/lib/turf-5.1.6.min.js"></script>
+    <script src="../../src/lib/terraformer/terraformer-1.0.7.js"></script>
+    <script src="../../src/lib/terraformer/terraformer-arcgis-parser-1.0.5.js"></script>
+
+    <!-- Dojo AMD config must be set before the ArcGIS API script runs. The
+         'fcl' package is the local FlareClusterLayer the esri3d viewer needs. -->
+    <script>
+        var dojoConfig = {
+            packages: [ {
+                name:     'fcl',
+                location: new URL( '../../src/lib/esri3d', document.baseURI ).href
+            } ],
+            has: { 'esri-promise-compatibility': 1 }
+        };
+    </script>
+
+    <!-- ArcGIS JS API 4.x — the esri3d viewer needs its Dojo `require`. It is
+         the only remote script here, so with no network the other two viewers
+         still work and esri3d reports itself disabled. -->
+    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/css/main.css"/>
+    <script src="https://js.arcgis.com/4.18/"></script>
+
+    <!-- The ES build, not the UMD one. The UMD wrapper sees Dojo's window.define
+         and registers as an AMD module, so window.SMK is never set. Module
+         scripts are deferred, so this runs after ArcGIS and before
+         DOMContentLoaded, which is when harness.js starts. -->
+    <script type="module" src="../../dist/smk.es.js"></script>
+    <link rel="stylesheet" href="../../dist/smk.css"/>
+    <link rel="stylesheet" href="harness.css"/>
+</head>
+<body>
+
+<header id="bar">
+    <strong>SMK Harness</strong>
+
+    <label>Story
+        <select id="story"></select>
+    </label>
+
+    <label>Viewer
+        <select id="viewer">
+            <option value="maplibre">maplibre</option>
+            <option value="leaflet">leaflet</option>
+            <option value="esri3d">esri3d</option>
+            <option value="all">all three</option>
+        </select>
+    </label>
+
+    <label title="SMK 1.0 is the axis A reference. It runs in its own document, because it and v2 both claim window.SMK. It is Leaflet only, and the panels do not drive it.">Build
+        <select id="build">
+            <option value="v2">v2</option>
+            <option value="both">v2 + 1.0</option>
+            <option value="1.0">1.0 only</option>
+        </select>
+    </label>
+
+    <label>Theme
+        <select id="theme">
+            <option value="wf">wf</option>
+            <option value="modern">modern</option>
+            <option value="base">base</option>
+        </select>
+    </label>
+
+    <label title="Adds smk-device-mobile, which many theme rules select on">
+        <input type="checkbox" id="mobile"> mobile
+    </label>
+
+    <label title="Off by default, so each pane shows what SMK does with the config on its own. Turn it on to give every pane the driving pane's extent: the three viewers fit one config to scales 6x apart, and a scale-dependent layer then looks like it failed to load.">
+        <input type="checkbox" id="sync"> sync views
+    </label>
+
+    <label id="height-control">Map height
+        <input type="range" id="height" min="240" max="900" value="480">
+    </label>
+
+    <button id="restart">Restart</button>
+    <span id="pending" hidden></span>
+    <span id="state">starting…</span>
+</header>
+
+<div id="work">
+    <!-- One pane per viewer. harness.js builds them. -->
+    <div id="maps"></div>
+
+    <div id="console">
+        <nav id="tabs">
+            <button data-panel="tools"   class="on">Tools</button>
+            <button data-panel="layers">Layers</button>
+            <button data-panel="actions">Actions</button>
+            <button data-panel="inspect">Inspect</button>
+            <button data-panel="config">Config</button>
+        </nav>
+
+        <main id="panels">
+            <section data-panel="tools" class="on">
+                <div class="head">
+                    <input id="tool-filter" placeholder="filter tools…">
+                    <button data-all="enabled:1">enable all</button>
+                    <button data-all="enabled:0">disable all</button>
+                    <span class="hint">Read from <code>smk.$tool</code>, <code>SMK.CONFIG.tools</code> and <code>SMK.BUILD</code>'s support manifest, so none of it can go stale. A row with an <em>example</em> button shows nothing until a host writes code for it - press it to load a working one.</span>
+                </div>
+
+                <h4 class="section">Built <small>live flags — these take effect at once</small></h4>
+                <dl class="legend">
+                    <dt>showWidget</dt><dd>Is the button in the page at all? <code>v-if</code> on the widget template.</dd>
+                    <dt>enabled</dt><dd>Does clicking the button do anything? The activate handler returns early when this is false. In a <em>config</em> the same word means something else — see the second list.</dd>
+                    <dt>active</dt><dd>Is the tool operating now — its panel open, its mode engaged? Clicking the widget toggles this. The sidepanel shows itself when any panel is active.</dd>
+                    <dt>visible</dt><dd>Is the tool's own output showing? Most tools drive this themselves — Select List raises it when there is a selection — so setting it by hand is often overwritten.</dd>
+                </dl>
+                <div id="tools"></div>
+
+                <h4 class="section">Bundled, not built <small>SMK constructs only the tools a config enables, so ticking one restarts the map</small></h4>
+                <div id="catalogue"></div>
+            </section>
+
+            <section data-panel="layers">
+                <div class="head">
+                    <input id="layer-filter" placeholder="filter layers…">
+                    <button data-layers="1">show all</button>
+                    <button data-layers="0">hide all</button>
+                    <span class="hint">Read from the display context, from <code>SMK.TYPE.Layer</code> and from the build's support manifest. A chip ringed in red means those last two disagree.</span>
+                </div>
+
+                <h4 class="section">In this map <small>press <em>config</em> on a row to read what it was built from</small></h4>
+                <div id="layers"></div>
+
+                <h4 class="section">Layer types SMK bundles <small>an adapter registers as <code>Layer[type][viewer]</code> — the three viewers do not agree</small></h4>
+                <div id="layer-types"></div>
+            </section>
+
+            <section data-panel="actions">
+                <div class="head">
+                    <button id="clear-log">clear</button>
+                    <label><input type="checkbox" id="log-view"> include changedView (noisy)</label>
+                    <span class="hint">Every pane logs here. The viewer name comes first when more than one is running.</span>
+                </div>
+                <div id="log"></div>
+            </section>
+
+            <section data-panel="inspect">
+                <div class="head">
+                    <button id="pick">Pick an element</button>
+                    <input id="sel" placeholder="or a CSS selector, e.g. .smk-measure-panel .smk-commands">
+                    <button id="measure">Measure</button>
+                </div>
+                <div id="inspect"></div>
+            </section>
+
+            <section data-panel="config">
+                <div class="head">
+                    <button id="dump">Dump running config</button>
+                    <button id="pick-file">Load a file…</button>
+                    <input type="file" id="file" accept=".json,application/json" multiple hidden>
+                    <label><input type="checkbox" id="merge"> merge with the story, do not replace</label>
+                    <span class="hint">Edit, then press Restart. The bar says when a restart is owed.</span>
+                </div>
+                <div id="drop">Drop a config file here — one or more JSON files, or a whole map config.</div>
+                <textarea id="config"></textarea>
+            </section>
+        </main>
+    </div>
+</div>
+
+<script src="harness.js"></script>
+</body>
+</html>

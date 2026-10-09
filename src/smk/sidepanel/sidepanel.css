@@ -8,7 +8,7 @@
 
 .smk-sidepanel {
     position: absolute;
-    top: calc( var( --toolbar-height ) + 10px );
+    top: calc( var( --toolbar-height ) + var( --space-2 ) );
     left: 0;
     width: var( --panel-width );
     bottom: var( --panel-bottom );
@@ -34,6 +34,11 @@
     align-items: stretch;
     height: 100%;
     min-height: 0;
+
+    /* One gutter for every row. Putting it on the header and the body alone
+       left the commands row hard against the edge. */
+    padding-left: var( --panel-gutter );
+    padding-right: var( --panel-gutter );
 }
 
 .smk-panel .smk-header {
@@ -44,24 +49,22 @@
     align-content: flex-start;
 
     position: relative;
+    gap: var( --space-1 );
+    /* Reserved so a theme can colour a border without moving the box. */
+    border: 1px solid transparent;
     border-bottom: 1px solid gray;
-    margin-left: 1px;
-    margin-right: 1px;
-    margin-bottom: 5px;
+    margin-bottom: var( --space-2 );
     flex-shrink: 0;
 }
 
 .smk-panel .smk-commands {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     align-content: flex-start;
-    margin-bottom: 5px;
-}
-
-.smk-panel .smk-commands > * {
-    margin: 0px 4px;
+    gap: var( --space-1 );
+    margin-bottom: var( --space-2 );
 }
 
 .smk-panel .smk-panel-go-back {
@@ -71,12 +74,13 @@
 .smk-panel .smk-panel-title {
     order: 20;
     flex-grow: 1;
-    min-height: 26px;
+    min-height: var( --control-size );
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 3px 0;
+    padding: var( --space-1 ) 0;
+    font-size: var( --font-md );
 }
 
 .smk-panel .smk-panel-close {
@@ -95,10 +99,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1px;
-    margin-left: 1px;
-    margin-right: 1px;
-    padding-bottom: 1px;
+    margin-top: var( --space-1 );
+    margin-left: var( --space-1 );
+    margin-right: var( --space-1 );
+    padding-bottom: var( --space-1 );
 
     border-bottom: 1px solid gray;
 }
@@ -114,13 +118,13 @@
 
 .smk-device-mobile .smk-panel .smk-header .smk-swipe-handle {
     position: absolute;
-    top: 2px;
+    top: var( --space-1 );
     left: 50%;
     right: 50%;
-    margin-left: -15px;
-    margin-right: -15px;
-    width: 30px;
-    height: 4px;
+    margin-left: -16px;
+    margin-right: -16px;
+    width: 32px;
+    height: var( --space-1 );
 
     background-color: #ccc;
     border-radius: 3px;
@@ -128,10 +132,9 @@
 
 .smk-panel .smk-body {
     position: relative;
-    /* flex: 1 0; */
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-bottom: 5px;
+    /* Reserved so a theme can colour a border without moving the box. */
+    border: 1px solid transparent;
+    padding-bottom: var( --panel-gutter );
     overflow-x: hidden;
     overflow-y: auto;
     height: 100%;

@@ -18,6 +18,8 @@ const factory = Tool.define( 'ActionBarTool',
         }
     },
     function ( this: any, smk: any ) {
+        const self = this
+
         this.vm = new Vue( {
             el:   smk.addToOverlay( actionbarHtml ),
             data: this.model,
@@ -27,6 +29,20 @@ const factory = Tool.define( 'ActionBarTool',
                 },
             },
         } )
+
+        // The status column is right-aligned and starts at the frame top, so
+        // without this the scale and the legend draw under these buttons.
+        const el = self.vm.$el as HTMLElement
+        const publishHeight = function () {
+            const h = self.model.widgets.length ? el.offsetHeight : 0
+            smk.$container.style.setProperty( '--status-top', h + 'px' )
+        }
+
+        self.vm.$watch( 'widgets', () => self.vm.$nextTick( publishHeight ), { deep: true } )
+        self.vm.$nextTick( publishHeight )
+
+        if ( typeof ResizeObserver === 'function' )
+            new ResizeObserver( publishHeight ).observe( el )
     },
     {
         addTool( this: any, tool: any, smk: any ) {

@@ -84,17 +84,6 @@ Vue.component( 'search-widget', {
     watch: {
         initialSearch( val: string ) { ( this as any ).search = val },
     },
-    computed: {
-        classes( this: any ) {
-            const c: Record<string, boolean> = {}
-            c[ 'smk-' + this.type + '-tool' ] = true
-            return Object.assign( c, {
-                'smk-tool-active':   this.active,
-                'smk-tool-visible':  this.visible,
-                'smk-tool-enabled':  this.enabled,
-            } )
-        },
-    },
     methods: {
         widgetWidth( this: any ) { return this.$refs.widget.clientWidth },
         focus( this: any ) {

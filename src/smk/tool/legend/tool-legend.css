@@ -1,5 +1,19 @@
+.smk-legend-header {
+    font-weight: bold;
+    font-size: var( --font-md );
+    padding: var( --panel-gutter ) var( --panel-gutter ) var( --space-1 );
+    border-bottom: 1px solid #ddd;
+}
+
+/* The pane floats over the map with its rows flush to the edge. */
+.smk-legend-status .smk-elastic-body {
+    padding: var( --space-1 ) var( --panel-gutter ) var( --panel-gutter );
+}
+
 .smk-legend-status {
-    max-width: 200px;
+    /* 200px is SMK 1.0's. A standard WMS legend graphic is about 200px wide on
+       its own, so with a gutter it no longer fits and the pane scrolled. */
+    max-width: 240px;
 }
 
 .smk-legend-status .smk-display .smk-legend-item {
@@ -12,9 +26,25 @@
     display: inline-block;
 }
 
+/* Same as the layers panel: its own line, so nothing has to scroll. */
+.smk-legend-status .smk-display:not( .smk-inline-legend ) > .smk-item {
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.smk-legend-status .smk-display:not( .smk-inline-legend ) > .smk-item > .smk-legend {
+    flex: 1 0 100%;
+}
+
+.smk-legend-status .smk-legend {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 .smk-legend-status .smk-legend .smk-legend-title {
-    font-size: 11px;
-    padding-left: 8px;
+    font-size: var( --font-sm );
+    padding-left: var( --space-2 );
 }
 
 .smk-legend-status .smk-display .smk-item {
@@ -22,6 +52,36 @@
     align-items: center;
     position: relative;
     margin: 0;
+    padding: var( --space-1 ) 0;
+}
+
+/* One layer's block needs to read as one block, with air before the next. */
+.smk-legend-status .smk-display-layer {
+    margin-bottom: var( --space-2 );
+}
+
+.smk-legend-status .smk-legend .smk-legend-item {
+    padding: var( --space-1 ) 0;
+}
+
+.smk-legend-status .smk-item > .smk-legend-title {
+    font-size: var( --font-sm );
+    font-weight: bold;
+    padding-bottom: var( --space-1 );
+}
+
+/* With several swatches stacked, a centred name lines up with none of them.
+   Put it against the first row instead. */
+.smk-legend-status .smk-display.smk-inline-legend > .smk-item {
+    align-items: flex-start;
+}
+
+.smk-legend-status .smk-display.smk-inline-legend > .smk-item > .smk-legend-title {
+    display: flex;
+    align-items: center;
+    min-height: var( --control-size );
+    /* The same gap a swatch caption keeps, so both labels start on one line. */
+    padding: 0 0 0 var( --space-2 );
 }
 
 .smk-legend-status .smk-display .smk-folder-expand:hover {

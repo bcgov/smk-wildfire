@@ -1,0 +1,5 @@
+
+/* The dropdown sits in a command row, so it wears the command text size. */
+.smk-select-dropdown select {
+    font-size: var( --font-sm );
+}

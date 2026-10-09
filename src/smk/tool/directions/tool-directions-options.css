@@ -1,6 +1,6 @@
 .smk-directions-options-panel .smk-select-option,
 .smk-directions-options-panel .smk-enter-input {
-    padding: 3px;
+    padding: var( --space-1 );
 }
 
 .smk-directions-options-panel .smk-truck-parameters {

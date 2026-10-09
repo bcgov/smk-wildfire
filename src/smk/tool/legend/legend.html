@@ -1,5 +1,7 @@
 <div class="smk-elastic-frame smk-legend-status">
     <div class="smk-elastic-content">
+        <div class="smk-legend-header" v-if="title">{{ title }}</div>
+
         <div class="smk-elastic-body">
             <legend-display 
                 v-for="c, i in contexts"

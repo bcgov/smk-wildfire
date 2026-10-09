@@ -1,0 +1,192 @@
+/* The Gallery's own chrome. Nothing here may select an smk- class except the
+   stage backdrop, or the page would change what it is there to show. */
+
+:root {
+    --g-bg: #f6f7f9;
+    --g-panel: #ffffff;
+    --g-text: #1d2330;
+    --g-muted: #5d6675;
+    --g-line: #dde1e7;
+    --g-accent: #1f5fbf;
+    --g-accent-soft: #e6eefb;
+    --g-warn: #8a5a00;
+    --g-warn-soft: #fff4dc;
+    --g-error: #b3261e;
+    --g-error-soft: #fdeceb;
+    --g-map: #dfe6e2;
+    --g-map-line: #cfd8d3;
+    color-scheme: light;
+}
+
+@media ( prefers-color-scheme: dark ) {
+    :root {
+        --g-bg: #14171c;
+        --g-panel: #1c2027;
+        --g-text: #e4e7ec;
+        --g-muted: #9aa3b1;
+        --g-line: #2e343d;
+        --g-accent: #7fb0ff;
+        --g-accent-soft: #1f2d44;
+        --g-warn: #f0c36a;
+        --g-warn-soft: #3a2f16;
+        --g-error: #ff9a93;
+        --g-error-soft: #3d1d1b;
+        color-scheme: dark;
+    }
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    background: var( --g-bg );
+    color: var( --g-text );
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.g-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 16px;
+    background: var( --g-panel );
+    border-bottom: 1px solid var( --g-line );
+}
+.g-bar label { display: flex; align-items: center; gap: 6px; }
+.g-spacer { flex: 1; }
+.g-muted { color: var( --g-muted ); }
+
+#g-nav {
+    overflow-y: auto;
+    padding: 8px 0 24px;
+    background: var( --g-panel );
+    border-right: 1px solid var( --g-line );
+}
+#g-nav h2 {
+    margin: 16px 16px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var( --g-muted );
+}
+#g-nav ul { list-style: none; margin: 0; padding: 0; }
+#g-nav a {
+    display: block;
+    padding: 4px 16px;
+    color: inherit;
+    text-decoration: none;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 13px;
+}
+#g-nav a:hover { background: var( --g-accent-soft ); }
+#g-nav a[aria-current] {
+    background: var( --g-accent-soft );
+    color: var( --g-accent );
+    box-shadow: inset 3px 0 var( --g-accent );
+}
+
+.g-main {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    min-height: 0;
+}
+
+.g-view { overflow: auto; padding: 16px 24px; }
+.g-title { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.g-title h1 { margin: 0; font-size: 20px; font-family: ui-monospace, Consolas, monospace; }
+.g-view p { margin: 4px 0 16px; }
+.g-view p + p { margin-top: -12px; }
+
+/* Stands in for the map under the overlay. The colour and the scheme are the
+   Host page defaults: without them the dark chrome inherits into the panel. */
+.g-stage > .smk-map-frame {
+    color: black;
+    color-scheme: light;
+    background-color: var( --g-map );
+    background-image:
+        linear-gradient( var( --g-map-line ) 1px, transparent 1px ),
+        linear-gradient( 90deg, var( --g-map-line ) 1px, transparent 1px );
+    background-size: 32px 32px;
+    border: 1px solid var( --g-line );
+    border-radius: 4px;
+}
+
+.g-inspector {
+    display: grid;
+    grid-template-rows: minmax( 0, 1fr ) minmax( 0, 1fr );
+    min-height: 0;
+    background: var( --g-panel );
+    border-left: 1px solid var( --g-line );
+}
+.g-inspector section { display: flex; flex-direction: column; min-height: 0; padding: 12px 16px; }
+.g-inspector section + section { border-top: 1px solid var( --g-line ); }
+.g-section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.g-section-head h2 { flex: 1; margin: 0; font-size: 13px; }
+
+.g-inspector button {
+    padding: 3px 10px;
+    border: 1px solid var( --g-line );
+    border-radius: 4px;
+    background: var( --g-bg );
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.g-inspector button:hover { border-color: var( --g-accent ); }
+
+#g-props {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    resize: none;
+    padding: 8px;
+    border: 1px solid var( --g-line );
+    border-radius: 4px;
+    background: var( --g-bg );
+    color: inherit;
+    font: 12px/1.45 ui-monospace, Consolas, monospace;
+}
+.g-error { margin: 4px 0 0; color: var( --g-error ); }
+.g-error:empty { display: none; }
+
+.g-log {
+    flex: 1;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 12px;
+}
+.g-log li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 8px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var( --g-line );
+}
+.g-log time { color: var( --g-muted ); font-variant-numeric: tabular-nums; }
+.g-log code {
+    grid-column: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: ui-monospace, Consolas, monospace;
+    color: var( --g-muted );
+}
+.g-log code:empty { display: none; }
+.g-log-warn  { background: var( --g-warn-soft ); }
+.g-log-warn b  { color: var( --g-warn ); }
+.g-log-error { background: var( --g-error-soft ); }
+.g-log-error b { color: var( --g-error ); }
+
+@media ( max-width: 1000px ) {
+    body { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; height: auto; }
+    #g-nav { max-height: 200px; border-right: 0; border-bottom: 1px solid var( --g-line ); }
+    .g-main { grid-template-columns: 1fr; }
+    .g-inspector { grid-template-rows: 320px 280px; border-left: 0; border-top: 1px solid var( --g-line ); }
+}

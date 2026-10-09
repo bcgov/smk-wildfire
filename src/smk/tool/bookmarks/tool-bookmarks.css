@@ -1,5 +1,5 @@
 .smk-bookmarks-panel .smk-bookmark {
-    padding: 5px 5px;
+    padding: var( --space-2 ) var( --space-2 );
     border-radius: 5px;
     border: 1px solid transparent;
     cursor: pointer;

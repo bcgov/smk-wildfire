@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "2.0.0",
   "name": "@qqnluaq/smk",
   "title": "Simple Map Kit",
   "description": "A simple way to add a map your application.",
@@ -20,6 +20,7 @@
     "release": "npm run build",
     "serve": "live-server . --open=debug --wait=100 --watch=dist/smk.umd.js,debug,test",
     "vite:dev": "vite",
+    "gallery": "vite --open /debug/gallery/",
     "vite:build": "vite build",
     "vite:preview": "vite preview",
     "typecheck": "tsc --noEmit",
@@ -27,7 +28,10 @@
     "test:watch": "vitest",
     "test:unit": "vitest run --project unit",
     "test:browser": "vitest run --project browser",
-    "coverage": "vitest run --project unit --coverage"
+    "test:harness": "npm run build:lite && node build/run-harness.js",
+    "coverage": "vitest run --project unit --coverage",
+    "coverage:harness": "npm run build:lite && node build/run-harness.js --coverage && node build/coverage-report.js",
+    "coverage:all": "npm run coverage && npm run coverage:harness"
   },
   "devDependencies": {
     "@terraformer/arcgis": "2.1.2",

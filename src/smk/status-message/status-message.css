@@ -9,6 +9,11 @@
     justify-content: center;
 }
 
+.smk-status-message {
+    /* Reserved so a theme can colour a border without moving the box. */
+    border: 1px solid transparent;
+}
+
 .smk-status-message-container .smk-status-message {
     display: flex;
     align-items: center;
@@ -16,11 +21,11 @@
     background-color: white;
     border-radius: 3px;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
-    padding: 5px;
+    padding: var( --space-2 );
 }
 
 .smk-status-message .smk-spinner {
-    margin-right: 5px;
+    margin-right: var( --space-2 );
 }
 
 .smk-status-message .smk-message {

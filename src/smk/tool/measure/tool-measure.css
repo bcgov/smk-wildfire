@@ -1,11 +1,23 @@
+/* Area, Distance, Cancel and the units belong on one line. Three classes,
+   because a two-class tie with sidepanel.css is decided by file order. */
+.smk-measure-panel .smk-panel .smk-commands {
+    flex-wrap: nowrap;
+}
+
+/* The select gives up its width first, so no label is ever truncated. */
+.smk-measure-panel .smk-panel .smk-commands .smk-select-dropdown {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .smk-measure-panel .smk-result {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: 0px;
-    margin-left: 10px;
-    margin-right: 10px;
-    margin-bottom: 5px;
+    margin-left: var( --space-3 );
+    margin-right: var( --space-3 );
+    margin-bottom: var( --space-2 );
 }
 
 .smk-measure-panel .smk-result .smk-measure-title {

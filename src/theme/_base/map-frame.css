@@ -1,5 +1,9 @@
 .smk-map-frame {
     font-family: Helvetica,Arial,sans-serif;
+    /* Without these the frame inherits the Host page, so every box that has
+       no size of its own is 16px in one Host and something else in the next. */
+    font-size: var( --font-md );
+    line-height: var( --line-height );
     position: relative;
 }
 
@@ -35,8 +39,8 @@
 .smk-map-frame .smk-overlay .smk-status {
     position: absolute;
     right: 0;
-    bottom: 10px;
-    top: 0;
+    bottom: var( --status-bottom );
+    top: var( --status-top );
 
     display: flex;
     flex-direction: column-reverse;
@@ -47,8 +51,10 @@
 
 .smk-map-frame .smk-coordinate {
     color: black;
-    font-size: 12px;
+    font-size: var( --font-sm );
     background-color: transparent;
+    /* Reserved so a theme can colour a border without moving the box. */
+    border: 1px solid transparent;
     cursor: default;
 }
 

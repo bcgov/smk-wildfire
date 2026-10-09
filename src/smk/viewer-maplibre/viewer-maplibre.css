@@ -1,0 +1,22 @@
+/**
+ * Chrome that the MapLibre viewer needs from SMK, the way viewer-leaflet.css
+ * does for Leaflet.
+ */
+
+/* MapLibre's attribution control is 24px tall, twice Leaflet's, so the status
+   column needs a deeper lane or the coordinate readout sits on the notice. */
+.smk-map-frame.smk-viewer-maplibre {
+    --status-bottom: 26px;
+}
+
+/* Flatten the white pill to match the Leaflet viewer. Size is left alone: the
+   notice must be able to wrap, and the toggle must stay big enough to press. */
+.smk-map-frame .smk-viewer .maplibregl-ctrl-bottom-right .maplibregl-ctrl.maplibregl-ctrl-attrib {
+    color: #666;
+    margin: 0 5px 5px 0;
+    border-radius: 0;
+    text-shadow: 1px 0 0 #ccc, 0 -1px 0 #ccc, 0 1px 0 #ccc, -1px 0 0 #ccc;
+    text-align: right;
+    background-color: transparent;
+    cursor: default;
+}
