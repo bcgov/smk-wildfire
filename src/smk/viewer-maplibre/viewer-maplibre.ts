@@ -98,6 +98,8 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
         projection:          'mercator',
         minZoom:             smk.viewer.minZoom || 0,
         maxZoom:             smk.viewer.maxZoom || 22,
+        // A Config default the Leaflet viewer obeys. MapLibre turns an undefined snap into a NaN zoom.
+        zoomSnap:            smk.viewer.zoomSnap || 0,
         // A Config extent [ west, south, east, north ].
         maxBounds:           Array.isArray( smk.viewer.maxBounds ) && smk.viewer.maxBounds.length >= 4
             ? [ smk.viewer.maxBounds.slice( 0, 2 ), smk.viewer.maxBounds.slice( 2, 4 ) ]
