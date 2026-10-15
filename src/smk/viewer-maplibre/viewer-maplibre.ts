@@ -114,6 +114,12 @@ ViewerMapLibre.prototype.initialize = function ( smk: any ) {
     self.map.addControl( self.attribution )
     startClosed( self.attribution )
 
+    // Leaflet never turned the map, and a turned 2D map has no control to turn it back.
+    self.map.touchZoomRotate.disableRotation()
+    self.map.keyboard.disableRotation()
+    // MapLibre moves about 0.15 levels for one wheel notch, which feels slow; this moves about 0.45.
+    self.map.scrollZoom.setWheelZoomRate( 1 / 125 )
+
     // Begin with everything off; tool initializers re-enable based on config.
     self.map.scrollZoom.disable()
     self.map.boxZoom.disable()
@@ -1250,6 +1256,8 @@ ViewerMapLibre.prototype.setMode = function ( mode: '2d' | '3d' ) {
             console.warn( 'maplibre viewer: terrain not supported by this version', e )
         }
         this.map.dragRotate.enable()
+        this.map.touchZoomRotate.enableRotation()
+        this.map.keyboard.enableRotation()
         this.map.touchPitch?.enable()
         this.map.easeTo( { pitch: 60, duration: 500 } )
         this.mode = '3d'
@@ -1257,6 +1265,8 @@ ViewerMapLibre.prototype.setMode = function ( mode: '2d' | '3d' ) {
         try { this.map.setTerrain( null ) } catch { /* ignore */ }
         this.map.easeTo( { pitch: 0, bearing: 0, duration: 500 } )
         this.map.dragRotate.disable()
+        this.map.touchZoomRotate.disableRotation()
+        this.map.keyboard.disableRotation()
         this.map.touchPitch?.disable()
         this.mode = '2d'
     }
