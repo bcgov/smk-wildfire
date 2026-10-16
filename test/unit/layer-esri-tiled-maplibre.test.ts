@@ -114,6 +114,13 @@ describe( 'esri-tiled in maplibre', () => {
         expect( ( await create() ).source.attribution ).toBe( 'Government of British Columbia' )
     } )
 
+    it( 'shows the service copyright over the Config attribution, as 1.0 did', async () => {
+        stubFetch( INFO )
+        const spec = await create( { id: 'thing', serviceUrl: URL_, attribution: 'Config text' } )
+        expect( spec.source.attribution ).toBe( 'Government of British Columbia' )
+        expect( spec.esri ).toBe( true )
+    } )
+
     it( 'spreads ArcGIS Online across tiles1-tiles4, which publishes no tileServers', async () => {
         stubFetch( { tileInfo: INFO.tileInfo } )
         const online = 'https://tiles.arcgis.com/tiles/abc/arcgis/rest/services/Thing/MapServer'

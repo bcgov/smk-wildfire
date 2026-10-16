@@ -83,6 +83,41 @@ export class VectorMapLibreLayer extends VectorLayer {}
 
 const EMPTY = { type: 'FeatureCollection' as const, features: [] }
 
+/**
+ * A marker image made for the screen. MapLibre shrinks an icon with one
+ * bilinear lookup and no mipmaps, so a 4x PNG breaks up on a 1x screen.
+ * Leaflet's <img> got the browser's smoothing; this gives MapLibre the same.
+ */
+export function screenSizedIcon( img: any, width: number, screenRatio: number ): { data: any, pixelRatio: number } {
+    const natural = width ? img.width / width : 1
+    if ( !width || natural <= screenRatio ) return { data: img, pixelRatio: natural }
+
+    const w = Math.round( width * screenRatio )
+    const h = Math.round( img.height * w / img.width )
+    try {
+        // One bilinear pass is smooth only down to half size, so halve first.
+        let src: any = img
+        while ( src.width / 2 >= w ) src = shrink( src, Math.round( src.width / 2 ), Math.round( src.height / 2 ) )
+        const out = shrink( src, w, h )
+        return { data: out.getContext( '2d' )!.getImageData( 0, 0, w, h ), pixelRatio: w / width }
+    } catch ( e ) {
+        // No canvas, or a tainted one: MapLibre shrinks it, as before.
+        return { data: img, pixelRatio: natural }
+    }
+}
+
+function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
+    const canvas = document.createElement( 'canvas' )
+    canvas.width  = w
+    canvas.height = h
+    const ctx = canvas.getContext( '2d' )
+    if ( !ctx ) throw new Error( 'no 2d canvas' )
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage( src, 0, 0, w, h )
+    return canvas
+}
+
 ;( VectorMapLibreLayer as any ).create = function ( layers: any[], _zIndex: number ) {
     if ( layers.length !== 1 ) throw new Error( 'only 1 config allowed' )
     const self  = this                   // viewer
@@ -147,12 +182,24 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
     const fillColor     = style.fillColor     || strokeColor
     const fillOpacity   = ( style.fillOpacity != null ? Number( style.fillOpacity ) : 0.3 ) * opacity
 
+    // Leaflet obeys stroke: false and fill: false; identify's search area is a fill with no edge.
+    const lineOpacity   = style.stroke === false ? 0 : strokeOpacity
+    const areaOpacity   = style.fill   === false ? 0 : fillOpacity
+
+    // 1.0 gave a styled point only the colours it named, so a style with none drew nothing.
+    const styled        = cfg.style != null
+    const namesStroke   = !!( style.strokeColor || style.color )
+    const pointLine     = styled && !namesStroke ? 0 : lineOpacity
+    const pointFill     = ( styled && !namesStroke && !style.fillColor ) || style.fill === false ? 0
+                        : ( fillOpacity || strokeOpacity )
+
     // A point takes strokeWidth as its diameter and a fixed 2px ring, which is
     // the rule the Leaflet adapter uses. One style config then draws the same
     // dot in either viewer.
+    // With no strokeWidth, 1.0's Leaflet kept circleMarker's own 10px radius.
     const radius        = style.radius != null ? Number( style.radius )
                         : style.strokeWidth != null ? strokeWidth / 2
-                        : 5
+                        : 10
     const pointStroke   = style.radius != null ? Math.max( 1, strokeWidth - 1 ) : 2
 
     // A marker image replaces the dot, the same as Leaflet's L.icon.
@@ -226,10 +273,10 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
             paint: {
                 'circle-radius':         radius,
                 'circle-color':          fillColor,
-                'circle-opacity':        fillOpacity || strokeOpacity,
+                'circle-opacity':        pointFill,
                 'circle-stroke-color':   strokeColor,
                 'circle-stroke-width':   pointStroke,
-                'circle-stroke-opacity': strokeOpacity,
+                'circle-stroke-opacity': pointLine,
             },
         }
     }
@@ -239,12 +286,26 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
         if ( !markerUrl || !self.map || !self.map.loadImage ) return Promise.resolve()
         if ( self.map.hasImage( iconImageId ) ) return Promise.resolve()
 
+        const screenRatio = () => self.map.getPixelRatio ? self.map.getPixelRatio() : ( window.devicePixelRatio || 1 )
+
         return Promise.resolve( self.map.loadImage( markerUrl ) )
             .then( ( res: any ) => {
                 const img = res && res.data ? res.data : res
                 if ( !img || self.map.hasImage( iconImageId ) ) return
-                self.map.addImage( iconImageId, img, {
-                    pixelRatio: markerSize[ 0 ] ? img.width / markerSize[ 0 ] : 1,
+
+                let madeFor = screenRatio()
+                const add = () => {
+                    const icon = screenSizedIcon( img, markerSize[ 0 ], madeFor )
+                    self.map.addImage( iconImageId, icon.data, { pixelRatio: icon.pixelRatio } )
+                }
+                add()
+
+                // A browser zoom changes the pixel ratio and resizes the map.
+                if ( self.map.on ) self.map.on( 'resize', () => {
+                    if ( screenRatio() === madeFor || !self.map.hasImage( iconImageId ) ) return
+                    madeFor = screenRatio()
+                    self.map.removeImage( iconImageId )
+                    add()
                 } )
             } )
             .catch( ( e: any ) => {
@@ -263,8 +324,8 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
                 filter: [ 'in', [ 'geometry-type' ], [ 'literal', [ 'Polygon', 'MultiPolygon' ] ] ],
                 paint:  {
                     'fill-color':         fillColor,
-                    'fill-opacity':       fillOpacity,
-                    'fill-outline-color': strokeColor,
+                    'fill-opacity':       areaOpacity,
+                    ...( style.stroke === false ? {} : { 'fill-outline-color': strokeColor } ),
                 },
             },
             {
@@ -275,7 +336,7 @@ const EMPTY = { type: 'FeatureCollection' as const, features: [] }
                 paint: {
                     'line-color':   strokeColor,
                     'line-width':   strokeWidth,
-                    'line-opacity': strokeOpacity,
+                    'line-opacity': lineOpacity,
                 },
             },
         ],

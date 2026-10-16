@@ -33,7 +33,6 @@ SMK.TYPE.MeasureTool.addInitializer( function ( this: any, smk: any ) {
     const map  = smk.$viewer.map
 
     self.viewer.maplibre = true
-    self.showStatusMessage( 'Select measurement method' )
 
     // ------------------------------------------------------------------
     // State
@@ -362,11 +361,14 @@ SMK.TYPE.MeasureTool.addInitializer( function ( this: any, smk: any ) {
         self.results         = []
         self.measureDistance = false
         self.measureArea     = false
-        self.showStatusMessage( 'Select measurement method' )
+        // A closed Tool has no method to pick.
+        if ( self.active ) self.showStatusMessage( 'Select measurement method' )
     }
 
     this.changedActive( function () {
-        if ( !self.active ) {
+        if ( self.active ) {
+            self.showStatusMessage( 'Select measurement method' )
+        } else {
             // Tool deactivated — clear visuals and stop capturing.
             cancel()
         }

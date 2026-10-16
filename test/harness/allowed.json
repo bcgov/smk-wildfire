@@ -56,7 +56,7 @@
         "axis": "B",
         "field": "view",
         "open": true,
-        "reason": "MapLibre counts zoom for 512px tiles and Leaflet for 256, and Leaflet's zoomSnap rounds a fit to a whole level. One viewer.location.zoom in a Config means two scales. Normalising it moves every Host config and every saved bookmark, so it needs a ruling, not a patch - CONTEXT.md 8.1.",
+        "reason": "MapLibre counts zoom for 512px tiles and Leaflet for 256, so the same view is MapLibre zoom 3 and Leaflet zoom 4. Since D34 both viewers round a fit down to viewer.zoomSnap, so the scale is the same. One viewer.location.zoom in a Config still means two scales. Normalising it moves every Host config and every saved bookmark, so it needs a ruling, not a patch - CONTEXT.md 8.1.",
         "date": "2026-09-07"
     },
     {

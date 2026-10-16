@@ -124,13 +124,17 @@
 }
 
 /* basis auto is the title's own text width, so a long one took a whole line
-   of its own once the row could wrap. Basis 0 keeps it beside the icon. */
-.smk-layers-panel .smk-display:not( .smk-inline-legend ) > .smk-item > .smk-layer-title {
+   of its own once the row could wrap, or squeezed an inline swatch. Basis 0
+   keeps it beside the icon. */
+.smk-layers-panel .smk-display > .smk-item > .smk-layer-title {
     flex: 1 1 0;
     min-width: 0;
 }
 
+/* A content-box Host added the indent to the 100% basis, and the legend
+   pushed 36px past the row. */
 .smk-layers-panel .smk-legend {
+    box-sizing: border-box;
     padding-left: var( --space-3 );
     flex-grow: 0;
     min-width: 0;

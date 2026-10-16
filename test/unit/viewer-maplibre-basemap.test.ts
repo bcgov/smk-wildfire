@@ -6,7 +6,8 @@
  * default basemap produced an empty spec and the map painted white while
  * everything else looked healthy.
  */
-import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
+import { resetEsriTileInfoCache } from '../../src/smk/viewer-maplibre/esri-tile-info'
 
 const markerInstances: any[] = []
 class FakeMarker {
@@ -23,6 +24,14 @@ let ViewerMapLibre: any
 
 beforeAll( async () => {
     ( { ViewerMapLibre } = await import( '../../src/smk/viewer-maplibre/viewer-maplibre' ) )
+} )
+
+// An esri-basemap reads its service's credit; answer it here, not from the network.
+beforeEach( () => {
+    resetEsriTileInfoCache()
+    ;( globalThis as any ).fetch = vi.fn( () => Promise.resolve( {
+        ok: true, json: () => Promise.resolve( { copyrightText: 'Source: Esri, Vantor' } ),
+    } ) )
 } )
 
 // A registry shaped like the one SMK builds, with a composite over two children.
@@ -139,5 +148,16 @@ describe( 'maplibre basemaps — esri-basemap, with no Leaflet', () => {
         expect( src.tiles ).toEqual( [
             'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         ] )
+    } )
+
+    it( 'carries the service credit, which esri-leaflet gave each key', async () => {
+        const v = viewerWithRegistry()
+        v.setBasemap( 'imagery-esri' )
+        await settle(); await settle()
+
+        expect( ( globalThis as any ).fetch )
+            .toHaveBeenCalledWith( 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer?f=json' )
+        const src = Object.values( v.map.sources )[ 0 ] as any
+        expect( src.attribution ).toBe( 'Source: Esri, Vantor' )
     } )
 } )

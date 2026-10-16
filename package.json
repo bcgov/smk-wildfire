@@ -14,6 +14,7 @@
   "scripts": {
     "start": "concurrently --kill-others \"npm:build:watch\" \"npm:serve\"",
     "build": "vite build && vite build --config vite.config.standalone.js && vite build --config vite.config.maplibre.js",
+    "prepublishOnly": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && npm run build",
     "build:lite": "vite build",
     "build:standalone": "vite build --config vite.config.standalone.js",
     "build:maplibre": "vite build --config vite.config.maplibre.js",

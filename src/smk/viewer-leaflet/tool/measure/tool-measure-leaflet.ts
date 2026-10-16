@@ -14,8 +14,6 @@ SMK.TYPE.MeasureTool.addInitializer( function ( this: any, smk: SmkInstance ) {
 
     smk.$viewer.map.createPane( 'hiddenPane', smk.addToContainer( '<div style="display:none"></div>' ) )
 
-    self.showStatusMessage( 'Select measurement method' )
-
     this.control = L.control.measure( {
         position:            'topright',
         primaryLengthUnit:   'meters',
@@ -142,6 +140,7 @@ SMK.TYPE.MeasureTool.addInitializer( function ( this: any, smk: SmkInstance ) {
 
     this.changedActive( function () {
         if ( self.active ) {
+            self.showStatusMessage( 'Select measurement method' )
             self.control._layer.addTo( smk.$viewer.map )
         }
         else {

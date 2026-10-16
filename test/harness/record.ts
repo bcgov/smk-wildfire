@@ -160,7 +160,9 @@ export function normaliseUrl( raw: string ): string | null {
     const path = u.pathname
         .replace( /\/\d+\/\d+\/\d+(\.\w+)?$/, '/{z}/{y}/{x}$1' )
         .replace( /(.)\/$/, '$1' )
-    return u.hostname + path + ( params.length ? '?' + params.sort().join( '&' ) : '' )
+    // Which of tiles1 to tiles4 a tile goes to depends on its x and y, so it changes with the fit too.
+    const host = u.hostname.replace( /^tiles[1-4]\.arcgis\.com$/, 'tiles{n}.arcgis.com' )
+    return host + path + ( params.length ? '?' + params.sort().join( '&' ) : '' )
 }
 
 /** Drop duplicates and sort, so a record does not depend on request order. */
