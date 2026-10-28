@@ -207,8 +207,9 @@ describe( 'useClustering and useHeatmap', () => {
         // A plain colour: MapLibre rejects a step with no stops.
         expect( paint[ 'circle-color' ] ).toBe( '#5c6671' )
         expect( paint[ 'circle-stroke-color' ] ).toBe( '#5c6671' )
-        expect( paint[ 'circle-stroke-opacity' ] ).toBe( 0.5 )
-        expect( paint[ 'circle-opacity' ] ).toBe( 1 )
+        // The last value is the opacity when no spread hides the cluster.
+        expect( paint[ 'circle-stroke-opacity' ].at( -1 ) ).toBe( 0.5 )
+        expect( paint[ 'circle-opacity' ].at( -1 ) ).toBe( 1 )
         const count = layerById( spec, '_cluster_count' )
         expect( count.paint[ 'text-color' ] ).toBe( '#fff' )
         expect( count.layout[ 'text-font' ] ).toEqual( [ 'Arial Bold' ] )

@@ -19,6 +19,7 @@ import { VectorLayer } from '../../layer/layer-types'
 import { Layer }       from '../../layer/layer'
 import { getProjection, reprojectGeoJSON, makePromise } from '../../util'
 import * as turf from '@turf/turf'
+import { clusterParts, hideable, spreadCluster } from './cluster-spread-maplibre'
 
 export class VectorMapLibreLayer extends VectorLayer {}
 
@@ -370,7 +371,7 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
         // MapLibre rejects a step with no stops, and then the cluster layer is gone.
         const byCount = ( e: any[] ) => e.length > 3 ? e : e[ 2 ]
 
-        spec.layers.push( {
+        const clusterLayer = {
             id:     clusterId,
             type:   'circle',
             source: id,
@@ -383,9 +384,9 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
                 'circle-stroke-width':   5,
                 'circle-stroke-opacity': ( custom ? 0.5 : 1 ) * opacity,
             },
-        } )
+        }
 
-        spec.layers.push( {
+        const countLayer = {
             id:     clusterCountId,
             type:   'symbol',
             source: id,
@@ -399,12 +400,14 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
             paint: {
                 'text-color': clusterCfg.textColor || '#000',
             },
-        } )
+        }
 
-        spec.layers.push( pointLayer( unclusteredId, [ '!', [ 'has', 'point_count' ] ] ) )
+        const unclusteredLayer = pointLayer( unclusteredId, [ '!', [ 'has', 'point_count' ] ] )
+        spec.layers.push( hideable( clusterLayer ), hideable( countLayer ), unclusteredLayer )
 
-        // Click a cluster → zoom to its expansion zoom.
+        // Click a cluster → zoom to its expansion zoom, and spread it as 1.0 did.
         spec._smk_onAdd = function ( map: any ) {
+            let stopSpread = () => {}
             function onClick( e: any ) {
                 const features = map.queryRenderedFeatures( e.point, { layers: [ clusterId ] } )
                 const f = features && features[ 0 ]
@@ -416,14 +419,22 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
                 }
                 const src = map.getSource( id )
                 if ( !src || !src.getClusterExpansionZoom ) return
-                src.getClusterExpansionZoom( f.properties.cluster_id ).then( ( zoom: number ) => {
-                    map.easeTo( { center: f.geometry.coordinates, zoom } )
+                const cid = f.properties.cluster_id
+                const still = window.matchMedia?.( '(prefers-reduced-motion: reduce)' ).matches
+                const parts = still || !src.getClusterChildren ? Promise.resolve( null ) : clusterParts( src, cid )
+                Promise.all( [ src.getClusterExpansionZoom( cid ), parts ] ).then( ( [ zoom, parts ]: any[] ) => {
+                    stopSpread()
+                    if ( !parts ) return map.easeTo( { center: f.geometry.coordinates, zoom } )
+                    stopSpread = spreadCluster( {
+                        map, sourceId: id, layers: [ clusterLayer, countLayer, unclusteredLayer ], cluster: f, parts, zoom,
+                    } )
                 } ).catch( () => { /* ignore */ } )
             }
             map.on( 'click', clusterId, onClick )
             map.on( 'mouseenter', clusterId, () => { map.getCanvas().style.cursor = 'pointer' } )
             map.on( 'mouseleave', clusterId, () => { map.getCanvas().style.cursor = '' } )
             return function () {
+                stopSpread()
                 map.off( 'click', clusterId, onClick )
             }
         }
