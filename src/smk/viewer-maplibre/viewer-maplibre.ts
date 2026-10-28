@@ -13,6 +13,7 @@
 import { Viewer } from '../viewer'
 import { readEsriTileInfo, readLevels, tileSourceFromInfo } from './esri-tile-info'
 import { esriBasemapTileUrl } from './esri-basemap-tiles'
+import { fallbackUrl, registerTileFallback } from './esri-tile-fallback'
 import { SMK } from '../smk-ref'
 import * as turf from '@turf/turf'
 
@@ -349,6 +350,10 @@ function specForConfig( cfg: any, _map?: any, lookup?: ( id: string ) => any ): 
                 // The config may narrow the cache's range. Neither widens it.
                 if ( from.minzoom != null ) src.minzoom = Math.max( src.minzoom ?? 0, from.minzoom )
                 if ( from.maxzoom != null ) src.maxzoom = Math.min( src.maxzoom ?? 22, from.maxzoom )
+
+                // Where the cache stops short, enlarge its deepest level, not a grey "not yet available" tile.
+                if ( /\bTilemap\b/.test( info?.capabilities || '' ) && registerTileFallback() )
+                    src.tiles = src.tiles.map( fallbackUrl )
 
                 return [ Object.assign( spec, { esri: true } ) ]
             } )
