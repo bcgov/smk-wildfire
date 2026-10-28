@@ -12,6 +12,7 @@
  *     every source-layer reference misses, so nothing draws.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { resetEsriTileInfoCache } from '../../src/smk/viewer-maplibre/esri-tile-info'
 
 ;( globalThis as any ).maplibregl = { Marker: class { setLngLat() { return this } addTo() { return this } remove() {} } }
 
@@ -173,6 +174,49 @@ describe( 'esri-vector-tile basemap', () => {
         expect( v.map.sources[ 'smk-bm-bc__hillshade' ].tiles[ 0 ] )
             .toBe( 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/Hillshade/VectorTileServer/tile/{z}/{y}/{x}.pbf' )
         expect( v.map.layers[ 'smk-bm-bc__Shade' ].source ).toBe( 'smk-bm-bc__hillshade' )
+    } )
+
+    it( 'stops each source at the level its service was built for', async () => {
+        const TOPO  = 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/Canada_Topographic/VectorTileServer'
+        const SHADE = 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/Hillshade/VectorTileServer'
+        const info = ( maxLOD: number ) => ( {
+            minLOD: 0, maxLOD,
+            tileInfo: { spatialReference: { wkid: 102100 }, lods: [ { level: 0 }, { level: 23 } ] },
+        } )
+        ;( globalThis as any ).fetch = vi.fn( ( url: string ) => Promise.resolve( { ok: true, json: () => Promise.resolve(
+            url === TOPO + '?f=json'  ? info( 16 ) :
+            url === SHADE + '?f=json' ? info( 13 ) :
+            {
+                version: 8,
+                sources: {
+                    // An item style may claim more levels than the service holds.
+                    esri:      { type: 'vector', url: TOPO, maxzoom: 23 },
+                    hillshade: { type: 'vector', url: SHADE },
+                },
+                layers: [],
+            } ) } ) )
+        resetEsriTileInfoCache()
+        const v = viewerWith( { id: 'hybrid', type: 'esri-vector-tile', itemId: 'abc123', url: TOPO } )
+
+        v.setBasemap( 'hybrid' )
+        await settle()
+
+        expect( v.map.sources[ 'smk-bm-hybrid__esri' ].maxzoom ).toBe( 16 )
+        expect( v.map.sources[ 'smk-bm-hybrid__hillshade' ].maxzoom ).toBe( 13 )
+    } )
+
+    it( 'keeps the style levels when the service will not answer', async () => {
+        stubFetch( ESRI_ROOT_STYLE )
+        resetEsriTileInfoCache()
+        const v = viewerWith( {
+            id: 'topo', type: 'esri-vector-tile',
+            url: 'https://tiles.arcgis.com/tiles/ABC/arcgis/rest/services/Canada_Topographic/VectorTileServer',
+        } )
+
+        v.setBasemap( 'topo' )
+        await settle()
+
+        expect( v.map.sources[ 'smk-bm-topo__esri' ].maxzoom ).toBe( 22 )
     } )
 
     it( 'falls back to the service style when style() throws', async () => {

@@ -11,7 +11,7 @@
  */
 
 import { Viewer } from '../viewer'
-import { readEsriTileInfo, tileSourceFromInfo } from './esri-tile-info'
+import { readEsriTileInfo, readLevels, tileSourceFromInfo } from './esri-tile-info'
 import { esriBasemapTileUrl } from './esri-basemap-tiles'
 import { SMK } from '../smk-ref'
 import * as turf from '@turf/turf'
@@ -540,10 +540,7 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
     const credit = cfg.attribution
         ? Promise.resolve( cfg.attribution )
         : root
-            ? fetch( root + '?f=json', { credentials: 'omit' } )
-                .then( ( r ) => r.ok ? r.json() : null )
-                .then( ( info: any ) => info?.copyrightText || '' )
-                .catch( () => '' )
+            ? readEsriTileInfo( root ).then( ( info: any ) => info?.copyrightText || '' )
             : Promise.resolve( '' )
     return style
         .then( ( r ) => {
@@ -551,21 +548,19 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
             return Promise.all( [ r.json(), credit ] )
         } )
         .then( ( [ fetched, attribution ]: any[] ) => {
-            // esri-leaflet-vector lets the host restyle the service through
-            // option.style( style ). Honour the same hook, or a host's custom
-            // basemap silently renders the raw service style instead — whose
-            // layers start at zoom 16, so the map looks empty.
-            let style = fetched
-            const restyle = cfg.option?.style
-            if ( typeof restyle === 'function' ) {
-                try {
-                    const out = restyle( fetched )
-                    if ( out ) style = ( out as any ).default || out
-                } catch ( e ) {
-                    console.warn( 'maplibre viewer: basemap style() failed for "' + cfg.id + '"', e )
-                }
-            }
-
+            const style = restyled( cfg, fetched )
+            // Each vector source's own service says which levels it was built for.
+            const services = Object.values( style.sources || {} )
+                .filter( ( src: any ) => src.type === 'vector' )
+                .map( ( src: any ) => vectorService( src, root ) )
+            return Promise.all( services.map( ( s ) => s ? readEsriTileInfo( s ) : null ) )
+                .then( ( infos: any[] ) => {
+                    const levels: Record<string, any> = {}
+                    services.forEach( ( s, i ) => { if ( s ) levels[ s ] = readLevels( infos[ i ] ) } )
+                    return [ style, attribution, levels ]
+                } )
+        } )
+        .then( ( [ style, attribution, levels ]: any[] ) => {
             const prefix    = 'smk-bm-' + cfg.id + '__'
             const sources: Record<string, any> = {}
             const sourceMap: Record<string, string> = {}
@@ -581,11 +576,15 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                         && /^https?:\/\//.test( src.tiles[ 0 ] )
 
                     // Otherwise force an explicit tile URL — ESRI's root is not TileJSON.
-                    // An absolute source url names its own service, as tiles do.
-                    const service = /^https?:\/\//.test( src.url || '' ) ? src.url.replace( /\/+$/, '' ) : root
+                    const service = vectorService( src, root )
                     if ( !hasOwnTiles ) src.tiles = [ service + '/tile/{z}/{y}/{x}.pbf' ]
                     delete src.url
                     if ( attribution && !src.attribution ) src.attribution = attribution
+
+                    // Past the levels it was built for, a service sends tiles
+                    // without the labels. MapLibre enlarges the last real level instead.
+                    const built = levels[ service ]
+                    if ( built ) { src.minzoom = built.min; src.maxzoom = built.max }
                     if ( src.minzoom == null ) src.minzoom = 0
                     if ( src.maxzoom == null ) src.maxzoom = 22
                 }
@@ -617,6 +616,28 @@ function loadEsriVectorTileSpec( cfg: any ): Promise<MapLibreBasemapSpec[]> {
                 sprite: style.sprite ? resolveStyleUrl( style.sprite, styleUrl ) : undefined,
             } as MapLibreBasemapSpec ]
         } )
+}
+
+/**
+ * esri-leaflet-vector lets the host restyle the service through
+ * option.style( style ). Honour the same hook, or a host's custom basemap
+ * silently renders the raw service style instead, whose layers start at zoom 16.
+ */
+function restyled( cfg: any, fetched: any ): any {
+    const restyle = cfg.option?.style
+    if ( typeof restyle !== 'function' ) return fetched
+    try {
+        const out = restyle( fetched )
+        return out ? ( out as any ).default || out : fetched
+    } catch ( e ) {
+        console.warn( 'maplibre viewer: basemap style() failed for "' + cfg.id + '"', e )
+        return fetched
+    }
+}
+
+/** An absolute source url names its own service, as tiles do; else the config's. */
+function vectorService( src: any, root: string ): string {
+    return /^https?:\/\//.test( src.url || '' ) ? src.url.replace( /\/+$/, '' ) : root
 }
 
 function resolveStyleUrl( u: string, baseUrl: string ): string {
