@@ -69,7 +69,13 @@ export function readLevels( info: any ): { min: number; max: number } | null {
     if ( !isWebMercator( info.tileInfo.spatialReference || info.spatialReference ) ) return null
 
     const levels = lods.map( ( l: any ) => l.level ).filter( ( n: any ) => typeof n === 'number' )
-    return levels.length ? { min: Math.min( ...levels ), max: Math.max( ...levels ) } : null
+    if ( !levels.length ) return null
+
+    // A cache may list every level and be built for only some: NatGeoStyleBase
+    // lists 0-23 and holds 0-9. esri-leaflet-vector reads these the same way.
+    const min = typeof info.minLOD === 'number' ? info.minLOD : Math.min( ...levels )
+    const max = typeof info.maxLOD === 'number' ? info.maxLOD : Math.max( ...levels )
+    return { min, max }
 }
 
 /**

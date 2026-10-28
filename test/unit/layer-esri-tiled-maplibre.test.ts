@@ -79,6 +79,13 @@ describe( 'esri-tiled in maplibre', () => {
         expect( spec.source.maxzoom ).toBe( 12 )
     } )
 
+    it( 'asks only for the levels the cache was built for, when it lists more', async () => {
+        stubFetch( { ...INFO, minLOD: 6, maxLOD: 9 } )
+        const spec = await create()
+        expect( spec.source.minzoom ).toBe( 6 )
+        expect( spec.source.maxzoom ).toBe( 9 )
+    } )
+
     it( 'asks only inside the extent the cache covers', async () => {
         stubFetch( INFO )
         const [ w, s, e, n ] = ( await create() ).source.bounds
