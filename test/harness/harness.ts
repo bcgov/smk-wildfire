@@ -1,16 +1,14 @@
 /**
  * Open one build in a browser and bring back a Record.
  *
- * v2 loads the harness page with a deep link. SMK 1.0 loads its own reference
- * page directly — the harness holds it in an iframe for a person, but a test
- * has no reason to go through one.
+ * v2 loads the harness page with a deep link.
  */
 import { chromium, type Browser, type Page } from 'playwright'
 import { serveRepo, type Static } from './server'
 import { PAGE_RECORD, normaliseRequests, type Record as SmkRecord } from './record'
 import { startCoverage, stopCoverage } from './coverage'
 
-export type Build  = 'v2' | '1.0' | 'host'
+export type Build  = 'v2' | 'host'
 export type Viewer = 'leaflet' | 'maplibre'
 
 export interface OpenOpts {
@@ -52,30 +50,14 @@ export async function down() {
 /** The harness Map height slider starts here, so a v2 pane frame is this tall. */
 export const PANE_HEIGHT = 480
 
-/** The four Sample layers, as the harness Story loads them. */
-export const STORY_LAYERS = [
-    '/debug/layer/prot-danger-rating.json',
-    '/debug/layer/basemapping-gba-railway-tracks-sp-railway-tracks.json',
-    '/debug/layer/forest-tenure-ften-recreation-poly.json',
-    '/debug/layer/wms-imagery-and-base-maps-gsr-schools-k-to-12.json',
-]
-
 function url( base: string, o: OpenOpts ): string {
     const theme  = o.theme  || 'wf'
-    const config = o.config || STORY_LAYERS
 
     // A Host of our own, doing what WFNEWS does: load a plugin script, add a
     // Layer type and a Tool, set handlers, then INIT with an element. It deliberately does not load the ArcGIS API.
     if ( o.build === 'host' )
         return `${ base }/debug/harness/host.html?viewer=${ o.viewer || 'leaflet' }` +
                `&theme=${ theme }&h=${ PANE_HEIGHT }`
-
-    // The 1.0 pane must be the same box as a v2 pane, or the two fit one
-    // extent to two zooms and the whole view comparison is meaningless.
-    if ( o.build === '1.0' )
-        return `${ base }/debug/harness/ref10.html?theme=${ theme }&h=${ PANE_HEIGHT }` +
-               `&config=${ encodeURIComponent( config.join( ',' ) ) }` +
-               ( o.tools?.length ? `&tools=${ encodeURIComponent( o.tools.join( ',' ) ) }` : '' )
 
     const q = new URLSearchParams( {
         build:  'v2',
@@ -95,7 +77,6 @@ function url( base: string, o: OpenOpts ): string {
 
 /** SMK.MAP is keyed differently on the two pages. */
 function mapId( o: OpenOpts ): string {
-    if ( o.build === '1.0' )  return 'ref'
     if ( o.build === 'host' ) return 'host'
     return 'harness-' + ( o.viewer || 'leaflet' )
 }

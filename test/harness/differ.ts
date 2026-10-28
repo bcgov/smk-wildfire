@@ -23,7 +23,7 @@ export interface Difference {
 }
 
 export interface Ruling {
-    axis:   'A' | 'B' | '*'
+    axis:   'B'
     field:  string
     /** A substring of the item, not a regex. Absent means the whole field. */
     match?: string
@@ -37,8 +37,8 @@ export interface Ruling {
 
 const RULINGS = allowed as unknown as Ruling[]
 
-function rulingsFor( axis: 'A' | 'B', field: string ): Ruling[] {
-    return RULINGS.filter( r => ( r.axis === axis || r.axis === '*' ) && r.field === field )
+function rulingsFor( axis: 'B', field: string ): Ruling[] {
+    return RULINGS.filter( r => r.axis === axis && r.field === field )
 }
 
 function render( d: Difference ): string {
@@ -51,7 +51,7 @@ function render( d: Difference ): string {
 }
 
 /** The ruling that covers one list item, if there is one. */
-function itemRuling( axis: 'A' | 'B', field: string, item: string, lost: boolean ): Ruling | null {
+function itemRuling( axis: 'B', field: string, item: string, lost: boolean ): Ruling | null {
     return rulingsFor( axis, field ).find( r =>
         ( !r.match || item.indexOf( r.match ) >= 0 ) &&
         // "It only added things" stops being true the moment something is lost.
@@ -60,7 +60,7 @@ function itemRuling( axis: 'A' | 'B', field: string, item: string, lost: boolean
 }
 
 /** The ruling that covers a whole object or scalar difference, if there is one. */
-export function isAllowed( axis: 'A' | 'B', d: Difference ): Ruling | null {
+export function isAllowed( axis: 'B', d: Difference ): Ruling | null {
     const text = render( d )
     return rulingsFor( axis, d.field ).find( r =>
         ( !r.match || text.indexOf( r.match ) >= 0 ) &&
@@ -96,7 +96,7 @@ export function diff( ref: SmkRecord, now: SmkRecord ): Difference[] {
 }
 
 /** Split one difference into what is ruled, what is open, and what is neither. */
-function sort( axis: 'A' | 'B', d: Difference ) {
+function sort( axis: 'B', d: Difference ) {
     if ( d.onlyInRef || d.onlyInNew ) {
         const pick = ( items: string[], lost: boolean, want: ( r: Ruling | null ) => boolean ) =>
             items.filter( v => want( itemRuling( axis, d.field, v, lost ) ) )
@@ -118,24 +118,24 @@ function sort( axis: 'A' | 'B', d: Difference ) {
 }
 
 /** The differences nobody has ruled on. These are what a test fails for. */
-export function unruled( axis: 'A' | 'B', ref: SmkRecord, now: SmkRecord ): Difference[] {
+export function unruled( axis: 'B', ref: SmkRecord, now: SmkRecord ): Difference[] {
     return diff( ref, now ).map( d => sort( axis, d ).unruled ).filter( Boolean ) as Difference[]
 }
 
 /** Ruled "open": tracked, reported every run, and not yet decided. */
-export function openItems( axis: 'A' | 'B', ref: SmkRecord, now: SmkRecord ): Difference[] {
+export function openItems( axis: 'B', ref: SmkRecord, now: SmkRecord ): Difference[] {
     return diff( ref, now ).map( d => sort( axis, d ).open ).filter( Boolean ) as Difference[]
 }
 
 export function rulings(): Ruling[] { return RULINGS }
 
 /** Items of one field that no ruling covers. For a list a test checks on its own. */
-export function unruledItems( axis: 'A' | 'B', field: string, items: string[] ): string[] {
+export function unruledItems( axis: 'B', field: string, items: string[] ): string[] {
     return items.filter( v => !itemRuling( axis, field, v, false ) )
 }
 
 /** A message a person can act on without opening the run. */
-export function report( axis: 'A' | 'B', ds: Difference[], what = 'unruled difference' ): string {
+export function report( axis: 'B', ds: Difference[], what = 'unruled difference' ): string {
     if ( !ds.length ) return ''
 
     const lines: string[] = [ `${ ds.length } ${ what }(s) on axis ${ axis }:` ]

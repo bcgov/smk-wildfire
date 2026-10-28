@@ -1,7 +1,7 @@
 /**
  * The layers panel legend.
  *
- * Axis A showed SMK 1.0 asking each WMS service for a legend graphic at start
+ * The Harness showed SMK 1.0 asking each WMS service for a legend graphic at start
  * and v2 asking for none, and 1.0 rendering smk-legend rows that v2 did not.
  * That looked like a loss. It is not: v2 renders the panel and fetches its
  * legends when the panel OPENS, and 1.0 did both at start.

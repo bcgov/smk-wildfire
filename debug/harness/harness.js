@@ -269,7 +269,7 @@ function viewerList() {
     return v === 'all' ? ALL_VIEWERS.slice() : [ v ]
 }
 
-/** Which builds get a pane. 1.0 is the axis A reference. */
+/** Which builds get a pane. 1.0 is there to look at beside v2. */
 function buildHas( which ) {
     var b = $( '#build' ) ? $( '#build' ).value : 'v2'
     return b === which || b === 'both'

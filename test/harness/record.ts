@@ -3,9 +3,8 @@
  *
  * The suite compares Records; it does not assert. See CONTEXT.md D8.
  *
- * PAGE_RECORD runs inside the browser, on SMK 1.0 and on v2 alike, so it must
- * stay plain and defensive: 1.0 publishes less than v2, and a missing branch
- * must give null, not throw.
+ * PAGE_RECORD runs inside the browser, so it must stay plain and defensive: a
+ * missing branch must give null, not throw.
  */
 
 export interface Record {
@@ -39,11 +38,10 @@ export const PAGE_RECORD = ( mapId: string ) => {
     const map = S && S.MAP && S.MAP[ mapId ]
     const keys = ( o: any ) => o ? Object.keys( o ).sort() : []
 
-    // The tool list a map starts from. v2 keeps each type's defaults with the
-    // Tool; 1.0 kept them all in SMK.CONFIG.tools.
+    // The tool list a map starts from. v2 keeps each type's defaults with the Tool.
     const startTools: any[] = S && S.TYPE && S.TYPE.Tool && S.TYPE.Tool.defaults
         ? S.TYPE.mergeConfigs( [] ).tools
-        : ( S && S.CONFIG && S.CONFIG.tools ) || []
+        : []
 
     const rec: any = {
         globals:    keys( S ).filter( ( k: string ) => k === k.toUpperCase() ),
@@ -122,9 +120,8 @@ const NOISE = [ '_', 'cacheBust', 'timestamp', 'token', 'f', 'callback' ]
 /**
  * Host page furniture, not SMK behaviour.
  *
- * The v2 harness loads the ArcGIS API and a web font; the 1.0 reference page
- * loads neither. Comparing those would report the two documents, not the two
- * builds.
+ * The v2 harness loads the ArcGIS API and a web font; the host page loads
+ * neither. Comparing those would report the two documents, not SMK.
  */
 const FURNITURE = [ 'js.arcgis.com', 'fonts.googleapis.com', 'fonts.gstatic.com' ]
 

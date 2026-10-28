@@ -3,7 +3,7 @@
  *
  * esri-leaflet 2.x had featureLayer.legend() and SMK 1.0 used it. 3.x removed
  * it, so the call threw, createViewerLayer disabled the layer, and it never
- * drew. Axis A then showed 1.0 fetching a legend v2 had stopped asking for.
+ * drew. The Harness then showed 1.0 fetching a legend v2 had stopped asking for.
  * Found by the harness project, 2026-09-07.
  */
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest'
