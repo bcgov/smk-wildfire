@@ -409,6 +409,11 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
                 const features = map.queryRenderedFeatures( e.point, { layers: [ clusterId ] } )
                 const f = features && features[ 0 ]
                 if ( !f ) return
+                // A Leaflet cluster click never reached the map, so 1.0 did not identify.
+                if ( self.clickTimeout ) {
+                    clearTimeout( self.clickTimeout )
+                    self.clickTimeout = null
+                }
                 const src = map.getSource( id )
                 if ( !src || !src.getClusterExpansionZoom ) return
                 src.getClusterExpansionZoom( f.properties.cluster_id ).then( ( zoom: number ) => {

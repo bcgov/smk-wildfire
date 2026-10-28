@@ -229,6 +229,34 @@ describe( 'useClustering and useHeatmap', () => {
         expect( validateStyleMin( style as any ).map( ( e: any ) => e.message ) ).toEqual( [] )
     } )
 
+    it( 'zooms in on a cluster click and stops the identify the viewer queued', async () => {
+        vi.useFakeTimers()
+        const viewer: any = fakeViewer()
+        const spec = await create( viewer, { id: 'out', useClustering: true, style: {} } )
+        const clicks: Record<string, Function> = {}
+        const easeTo = vi.fn()
+        const map = {
+            on: ( type: string, layer: any, fn?: Function ) => { if ( type === 'click' ) clicks[ layer ] = fn! },
+            off: () => {},
+            getCanvas: () => ( { style: {} } ),
+            queryRenderedFeatures: () => [ { properties: { cluster_id: 7 }, geometry: { coordinates: [ -123, 50 ] } } ],
+            getSource: () => ( { getClusterExpansionZoom: () => Promise.resolve( 9 ) } ),
+            easeTo,
+        }
+        spec._smk_onAdd( map )
+        const picked = vi.fn()
+        // As the viewer's own map click does, before the layer's click runs.
+        viewer.clickTimeout = setTimeout( picked, 300 )
+
+        const onCluster = Object.keys( clicks ).find( ( k ) => k.endsWith( '_cluster' ) )!
+        clicks[ onCluster ]( { point: { x: 1, y: 1 } } )
+        await vi.runAllTimersAsync()
+        vi.useRealTimers()
+
+        expect( picked ).not.toHaveBeenCalled()
+        expect( easeTo ).toHaveBeenCalledWith( { center: [ -123, 50 ], zoom: 9 } )
+    } )
+
     it( 'leaves the source alone when useClustering is false', async () => {
         const spec = await create( fakeViewer(), { id: 'holding', useClustering: false } )
 
