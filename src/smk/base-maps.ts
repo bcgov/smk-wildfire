@@ -116,6 +116,110 @@ export function defineBaseMaps(
         url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
     } )
 
+    // The rest of SMK 1.0.39's set, which WFIM names. 1.0 gave them no order,
+    // so its picker kept the order they were defined in; these orders keep it.
+    defineBaseMap( 'bc-basemap', {
+        type: 'esri-vector-tile', order: 8, title: 'BC',
+        itemId: 'b1624fea73bd46c681fab55be53d96ae',
+        url: 'https://tiles.arcgis.com/tiles/ubm4tcTYICKBpist/arcgis/rest/services/BC_BASEMAP_20240307/VectorTileServer',
+    } )
+
+    defineBaseMap( 'bc-basemap-hillshade', {
+        type: 'esri-vector-tile', order: 9, title: 'BC (Hillshade)',
+        itemId: 'bbe05270d3a642f5b62203d6c454f457',
+        url: 'https://tiles.arcgis.com/tiles/ubm4tcTYICKBpist/arcgis/rest/services/BC_BASEMAP_20240307/VectorTileServer',
+    } )
+
+    // 1.0 listed the vector first and Leaflet drew it on top anyway. v2 stacks
+    // a composite in list order, so the vector goes last.
+    defineBaseMap( 'imagery-v2', {
+        type: 'composite', order: 12, title: 'Imagery',
+        layers: [ '--imagery-v2-tiles', '--imagery-v2-vector' ],
+    } )
+
+    // Esri's Canadian Imagery Hybrid: the roads and names over the imagery.
+    defineBaseMap( '--imagery-v2-vector', {
+        internal: true, type: 'esri-vector-tile', order: 12, title: 'Imagery',
+        itemId: '85e2f70a08494305b60af53bd6fd5cbe',
+        url: 'https://tiles.arcgis.com/tiles/B6yKvIZqzuOr0jBR/arcgis/rest/services/Canada_Topographic/VectorTileServer',
+    } )
+
+    defineBaseMap( '--imagery-v2-tiles', {
+        internal: true, type: 'esri-tiled-map', order: 12, title: 'Imagery',
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+    } )
+
+    defineBaseMap( 'streets-v2', {
+        type: 'esri-vector-tile', order: 14, title: 'Streets',
+        itemId: 'de26a3cf4cc9451298ea173c4b324736',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
+    defineBaseMap( 'streets-night', {
+        type: 'esri-vector-tile', order: 15, title: 'Streets (Night)',
+        itemId: '86f556a2d1fd468181855a35e344567f',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
+    defineBaseMap( 'oceans-v2', {
+        type: 'composite', order: 16, title: 'Oceans',
+        layers: [ '--oceans-v2-tiles', '--oceans-v2-labels-vector' ],
+    } )
+
+    defineBaseMap( '--oceans-v2-labels-vector', {
+        internal: true, type: 'esri-vector-tile', order: 16, title: 'Oceans',
+        itemId: '94329802cbfa44a18f423e6f1a0b875c',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
+    defineBaseMap( '--oceans-v2-tiles', {
+        internal: true, type: 'esri-tiled-map', order: 16, title: 'Oceans',
+        url: 'https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer',
+    } )
+
+    defineBaseMap( 'national-geographic-v2', {
+        type: 'composite', order: 17, title: 'National Geographic',
+        layers: [
+            '--national-geographic-v2-tiles',
+            '--national-geographic-v2-hillshade-tiles',
+            '--national-geographic-v2-vector',
+        ],
+    } )
+
+    defineBaseMap( '--national-geographic-v2-vector', {
+        internal: true, type: 'esri-vector-tile', order: 17, title: 'National Geographic',
+        itemId: '3d1a30626bbc46c582f148b9252676ce',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
+    defineBaseMap( '--national-geographic-v2-tiles', {
+        internal: true, type: 'esri-tiled-map', order: 17, title: 'National Geographic',
+        url: 'https://tiles.arcgis.com/tiles/P3ePLMYs2RVChkJx/arcgis/rest/services/NatGeoStyleBase/MapServer',
+    } )
+
+    defineBaseMap( '--national-geographic-v2-hillshade-tiles', {
+        internal: true, type: 'esri-tiled-map', order: 17, title: 'National Geographic',
+        url: 'https://services.arcgisonline.com/arcgis/rest/services/Elevation/World_Hillshade/MapServer',
+    } )
+
+    // 1.0 defined the label half and left it out of the composite: it drew nothing.
+    defineBaseMap( 'light-gray-v2', {
+        type: 'composite', order: 18, title: 'Light Gray',
+        layers: [ '--light-gray-v2-vector' ],
+    } )
+
+    defineBaseMap( '--light-gray-v2-vector', {
+        internal: true, type: 'esri-vector-tile', order: 18, title: 'Light Gray',
+        itemId: '291da5eab3a0412593b66d384379f89f',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
+    defineBaseMap( '--light-gray-v2-label', {
+        internal: true, type: 'esri-vector-tile', order: 18, title: 'Light Gray',
+        itemId: '1768e8369a214dfab4e2167d5c5f2454',
+        url: 'https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer',
+    } )
+
     // GeoBC's standard BC Basemap, with hillshade, as published on the item.
     // The service's own style is another one, with no hillshade.
     defineBaseMap( 'bc-roads', {
