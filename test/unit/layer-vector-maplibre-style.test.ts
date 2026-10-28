@@ -11,6 +11,8 @@
  * 3. Clustering read `cfg.cluster`, but every SMK config says `useClustering`.
  */
 import { describe, it, expect, beforeAll, vi } from 'vitest'
+// maplibre-gl's own validator, so a layer MapLibre would refuse fails here too.
+import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec'
 
 let VectorMapLibreLayer: any
 
@@ -181,6 +183,50 @@ describe( 'useClustering and useHeatmap', () => {
         expect( spec.source.cluster ).toBe( true )
         expect( layerById( spec, '_cluster' ) ).toBeTruthy()
         expect( layerById( spec, '_unclustered' ).paint[ 'circle-radius' ] ).toBe( 3.5 )
+    } )
+
+    it( 'draws the cluster as 1.0 did: 40px, green to orange by count, black number', async () => {
+        const spec = await create( fakeViewer(), {
+            id: 'out', useClustering: true, style: { strokeWidth: '7', fillColor: '#5c6671' },
+        } )
+        const paint = layerById( spec, '_cluster' ).paint
+
+        expect( paint[ 'circle-radius' ] + paint[ 'circle-stroke-width' ] ).toBe( 20 )
+        expect( paint[ 'circle-color' ] ).toEqual( [ 'step', [ 'get', 'point_count' ],
+            'rgba(110, 204, 57, 0.6)', 10, 'rgba(240, 194, 12, 0.6)', 100, 'rgba(241, 128, 23, 0.6)' ] )
+        expect( paint[ 'circle-stroke-color' ][ 2 ] ).toBe( 'rgba(181, 226, 140, 0.6)' )
+        expect( layerById( spec, '_cluster_count' ).paint[ 'text-color' ] ).toBe( '#000' )
+    } )
+
+    it( 'rings a Config colour with itself at half opacity', async () => {
+        const spec = await create( fakeViewer(), {
+            id: 'out', useClustering: { color: '#5c6671', textColor: '#fff', font: [ 'Arial Bold' ] }, style: {},
+        } )
+        const paint = layerById( spec, '_cluster' ).paint
+
+        // A plain colour: MapLibre rejects a step with no stops.
+        expect( paint[ 'circle-color' ] ).toBe( '#5c6671' )
+        expect( paint[ 'circle-stroke-color' ] ).toBe( '#5c6671' )
+        expect( paint[ 'circle-stroke-opacity' ] ).toBe( 0.5 )
+        expect( paint[ 'circle-opacity' ] ).toBe( 1 )
+        const count = layerById( spec, '_cluster_count' )
+        expect( count.paint[ 'text-color' ] ).toBe( '#fff' )
+        expect( count.layout[ 'text-font' ] ).toEqual( [ 'Arial Bold' ] )
+    } )
+
+    it.each( [
+        [ 'the 1.0 default', true ],
+        [ 'one Config colour', { color: '#5c6671', textColor: '#fff' } ],
+        [ 'Config steps', { color: '#b00020', steps: [ [ 5, '#ffb199' ], [ 50, '#b00020' ] ] } ],
+    ] )( 'gives MapLibre cluster layers it accepts, with %s', async ( _name, useClustering ) => {
+        const spec = await create( fakeViewer(), { id: 'out', useClustering, style: { fillColor: '#5c6671' } } )
+        const style = {
+            version: 8, glyphs: 'https://example.com/{fontstack}/{range}.pbf',
+            sources: { [ spec.sourceId || spec.layers[ 0 ].source ]: spec.source },
+            layers:  spec.layers.filter( ( l: any ) => /_cluster/.test( l.id ) ),
+        }
+
+        expect( validateStyleMin( style as any ).map( ( e: any ) => e.message ) ).toEqual( [] )
     } )
 
     it( 'leaves the source alone when useClustering is false', async () => {

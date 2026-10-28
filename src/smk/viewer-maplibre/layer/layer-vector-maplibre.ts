@@ -83,6 +83,16 @@ export class VectorMapLibreLayer extends VectorLayer {}
 
 const EMPTY = { type: 'FeatureCollection' as const, features: [] }
 
+// Leaflet.markercluster's default colours, which 1.0 showed: green, yellow from 10, orange from 100.
+const CLUSTER_1_0 = {
+    disc:  'rgba(110, 204, 57, 0.6)',
+    ring:  'rgba(181, 226, 140, 0.6)',
+    steps: [
+        [ 10,  'rgba(240, 194, 12, 0.6)', 'rgba(241, 211, 87, 0.6)' ],
+        [ 100, 'rgba(241, 128, 23, 0.6)', 'rgba(253, 156, 115, 0.6)' ],
+    ],
+}
+
 /**
  * A marker image made for the screen. MapLibre shrinks an icon with one
  * bilinear lookup and no mipmaps, so a 4x PNG breaks up on a 1x screen.
@@ -218,8 +228,9 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
     //   - { radius, maxZoom, ... }  → forwarded to the GeoJSON source
     //                                 (radius/maxZoom/minPoints are MapLibre
     //                                 source options); style overrides:
-    //                                 color, textColor, textSize, steps
-    //                                 (e.g. [ [10,'#f1f075'], [50,'#f28cb1'] ])
+    //                                 color, textColor, textSize, font, opacity,
+    //                                 steps (e.g. [ [10,'#f1f075'], [50,'#f28cb1'] ];
+    //                                 a third entry is the ring colour)
     //
     // Only Point/MultiPoint inputs cluster; polygons/lines pass through.
     // ------------------------------------------------------------------
@@ -343,21 +354,21 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
     }
 
     if ( clusterCfg ) {
-        // Cluster bubbles — sized & coloured by point_count via 'step' expression.
-        const steps: any[] = Array.isArray( clusterCfg.steps ) && clusterCfg.steps.length
-            ? clusterCfg.steps
-            : [ [ 10, '#f1f075' ], [ 50, '#f28cb1' ] ]
-        const baseColor = clusterCfg.color || fillColor
+        // 1.0's Leaflet.markercluster: a 30px disc in a 5px lighter ring, 40px across.
+        // A Config colour gets a ring of itself at half opacity.
+        const custom = clusterCfg.color != null || ( Array.isArray( clusterCfg.steps ) && clusterCfg.steps.length > 0 )
+        const steps: any[] = custom ? ( clusterCfg.steps || [] ) : CLUSTER_1_0.steps
 
-        // Build step expressions: [ 'step', ['get','point_count'], baseValue, threshold, value, ... ]
-        const colorExpr: any[] = [ 'step', [ 'get', 'point_count' ], baseColor ]
-        const radiusExpr: any[] = [ 'step', [ 'get', 'point_count' ], radius * 3 ]
-        steps.forEach( ( s: any, i: number ) => {
+        const discExpr: any[] = [ 'step', [ 'get', 'point_count' ], custom ? ( clusterCfg.color || fillColor ) : CLUSTER_1_0.disc ]
+        const ringExpr: any[] = [ 'step', [ 'get', 'point_count' ], custom ? discExpr[ 2 ] : CLUSTER_1_0.ring ]
+        steps.forEach( ( s: any ) => {
             const threshold = Array.isArray( s ) ? s[ 0 ] : s.threshold
-            const col       = Array.isArray( s ) ? s[ 1 ] : s.color
-            colorExpr.push( threshold, col )
-            radiusExpr.push( threshold, radius * ( 4 + i * 1.5 ) )
+            const disc      = Array.isArray( s ) ? s[ 1 ] : s.color
+            discExpr.push( threshold, disc )
+            ringExpr.push( threshold, Array.isArray( s ) ? ( s[ 2 ] ?? disc ) : ( s.ring ?? disc ) )
         } )
+        // MapLibre rejects a step with no stops, and then the cluster layer is gone.
+        const byCount = ( e: any[] ) => e.length > 3 ? e : e[ 2 ]
 
         spec.layers.push( {
             id:     clusterId,
@@ -365,11 +376,12 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
             source: id,
             filter: [ 'has', 'point_count' ],
             paint: {
-                'circle-color':        colorExpr,
-                'circle-radius':       radiusExpr,
-                'circle-opacity':      ( clusterCfg.opacity != null ? clusterCfg.opacity : 0.85 ) * opacity,
-                'circle-stroke-color': strokeColor,
-                'circle-stroke-width': 1,
+                'circle-color':          byCount( discExpr ),
+                'circle-radius':         15,
+                'circle-opacity':        ( clusterCfg.opacity != null ? clusterCfg.opacity : 1 ) * opacity,
+                'circle-stroke-color':   byCount( ringExpr ),
+                'circle-stroke-width':   5,
+                'circle-stroke-opacity': ( custom ? 0.5 : 1 ) * opacity,
             },
         } )
 
@@ -385,7 +397,7 @@ function shrink( src: any, w: number, h: number ): HTMLCanvasElement {
                 'text-allow-overlap': true,
             },
             paint: {
-                'text-color': clusterCfg.textColor || '#222',
+                'text-color': clusterCfg.textColor || '#000',
             },
         } )
 
